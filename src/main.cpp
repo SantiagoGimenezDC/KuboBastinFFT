@@ -10,7 +10,7 @@
 
 #include "static_vars.hpp"
 
-#include "test_hamiltonian.hpp"
+//#include "test_hamiltonian.hpp"
 #include "KuboBastin_solver.hpp"
 
 
