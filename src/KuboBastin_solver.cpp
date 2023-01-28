@@ -118,8 +118,11 @@ void KuboBastin_solver(solver_vars& s_vars){
     auto start_RV = std::chrono::steady_clock::now();
     std::cout<<std::endl<<r<<"/"<< R<< "-Random vector;"<<std::endl;
 
-    rand_vec[DIM_/2+r-1] = 0.0;
-    rand_vec[DIM_/2+r] = 1.0;
+    int seed = 1000;
+
+    generate_vec(rand_vec, seed, r);
+    //    rand_vec[DIM_/2+r-1] = 0.0;
+    // rand_vec[DIM_/2+r] = 1.0;
 
 
 
