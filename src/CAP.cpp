@@ -5,18 +5,26 @@
 #include"CAP.hpp"
 
 
-void set_CAP(type Emin,  type dmp_op[DIM_]){
+void set_CAP(type Emin, type eta,  type dmp_op[DIM_]){
   type func, y, c=2.66206,
-       gamma;
+    gamma, gamma_eta=exp(-asinh(-eta));
+
   
   int ctLe  = SPINS_*C_*W_;
 
-  for(int i=0;i<DIM_;i++)
+  for(int i=0;i<SUBDIM_;i++)
+    dmp_op[i+C_*W_] = gamma_eta;
+
+  for(int i=0;i<C_*W_;i++){
     dmp_op[i] = 1.0;
+    dmp_op[DIM_-i] = 1.0;    
+  }
+
+
   
   for(int i=0;i<ctLe;i++){      
     y     = (type)(i/W_)/C_; 
-    func  = (-4.0*Emin/(c*c))*(1/pow(1-y,2)+1/pow(1+y,2)-2);
+    func  = (-4.0*Emin/(c*c))*(1/pow(1-y,2)+1/pow(1+y,2)-2)+eta;
     gamma = asinh(-func);
     gamma = exp(-gamma);
 
@@ -38,4 +46,5 @@ void set_CAP(type Emin,  type dmp_op[DIM_]){
 
       
     }
+
   }

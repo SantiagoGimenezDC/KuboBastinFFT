@@ -18,13 +18,15 @@ const int subDim = spins*Le*W;
 #define M_  4000
 
 
-#define W_   10
-#define LE_  100
-#define C_   200
+#define W_   200
+#define LE_  600
+#define C_   0
 #define SPINS_   1
 
 #define DIM_     SPINS_*(2*C_+LE_)*W_
 #define SUBDIM_  SPINS_*LE_*W_
+
+
 
 
 #endif //STATIC_VARS

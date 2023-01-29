@@ -48,7 +48,7 @@ void KuboBastin_solver(solver_vars& s_vars){
   eta    /= a;
 
 
-  
+
 
 
 /*---------All static memory declaration---------*/
@@ -104,7 +104,7 @@ void KuboBastin_solver(solver_vars& s_vars){
     E_points[e] = cos(M_PI*((double)e+0.5)/(double)M_);
    
 
-  set_CAP( E_min, dmp_op);
+  set_CAP( E_min, eta, dmp_op);
 
   
   //   print_hamiltonian();  
@@ -384,6 +384,8 @@ void KuboBastin_FFTs(type bras[SUBDIM_*M_], type kets[SUBDIM_*M_], type E_points
 
   std::complex<type> factors[M_];
 
+
+    
   for(int m=0;m<M_;m++)
     factors[m] = (2-(m==0)) * kernel(m) *  std::polar(1.0,M_PI*m/(2.0*M_)) ;
     

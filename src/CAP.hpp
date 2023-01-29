@@ -3,6 +3,6 @@
 
 #include "static_vars.hpp"
 
-void set_CAP(type,  type*);
+void set_CAP(type, type,  type*);
 
 #endif //CAP_HPP
