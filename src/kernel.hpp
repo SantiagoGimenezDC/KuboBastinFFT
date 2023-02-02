@@ -11,10 +11,10 @@
 
 class Kernel {
 public:
-  virtual ~Kernel(){};
+  virtual ~Kernel(){}
   Kernel(){};
 
-  virtual type term(const int m) = 0;
+  virtual type term(const int m, const int M) = 0;
     
 };
 
@@ -23,20 +23,17 @@ public:
 
 
 class Jackson : public Kernel{
-  private:
-    int Ml_;
   public:
-    virtual ~Jackson(){};
-    Jackson(int M) : Ml_(M){};
+    Jackson(){};
 
 
-    virtual type term(const int m){
-      return 1/(Ml_+1.0)*
+  virtual type term(const int m, const int M){
+      return 1/(M+1.0) *
            (
-   	     (Ml_-m+1.0)*
-             cos(M_PI*m / (Ml_+1.0)) +
-             sin(M_PI*m / (Ml_+1.0)) /
-             tan(M_PI   / (Ml_+1.0))
+   	     (M-m+1.0) *
+             cos( M_PI * m / (M + 1.0)) +
+             sin( M_PI * m / (M + 1.0)) /
+             tan( M_PI     / (M + 1.0))
 	   );
     };
     
@@ -49,29 +46,11 @@ class None : public Kernel{
     virtual ~None(){};
     None(){};
 
-    virtual type term(const int ){
+  virtual type term(const int, const int ){
       return 1.0;
     };
     
 };
 
-
-
-
-
-
-
-
-
-
-inline type kernel(const int m){
-  return 1/(M_+1.0)*
-         (
- 	   (M_-m+1.0)*
-           cos(M_PI*m / (M_+1.0)) +
-           sin(M_PI*m / (M_+1.0)) /
-           tan(M_PI   / (M_+1.0))
-	 );
-}
 
 #endif //KERNEL_HPP

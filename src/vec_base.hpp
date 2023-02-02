@@ -4,7 +4,7 @@
 #include<random>
 #include "static_vars.hpp"
 
-void generate_vec( type*, int , int );
+void generate_vec(int, int,int, type*, int , int );
 
 
 #endif //RAND_BASE_HPP

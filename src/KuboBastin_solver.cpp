@@ -19,32 +19,50 @@
 #include "vec_base.hpp"
 #include "CAP.hpp"
 #include "kernel.hpp"
-#include "update_cheb.hpp"
+#include "Graphene.hpp"
 
 #include "complex_op.hpp"
 #include "KuboBastin_solver.hpp"
 
-void KuboBastin_solver(solver_vars& s_vars){
+
+
+
+
+KuboBastin_solver::KuboBastin_solver(solver_vars& parameters, Graphene& device) : parameters_(parameters), device_(device)
+{
+  kernel_= new Jackson();
+}
+
+
+void KuboBastin_solver::compute(){
   
   auto start0 = std::chrono::steady_clock::now();
 
-  type a = s_vars.a_,
-       b = s_vars.b_,
-       E_min = s_vars.E_min_,
-       E_start = s_vars.E_start_,
-       E_end = s_vars.E_end_,
-       eta = s_vars.eta_;
-  
-  int R = s_vars.R_;
 
-  std::string run_dir = s_vars.run_dir_,
-    filename = s_vars.filename_;
+  int W   = device_.parameters().W_,
+      C   = device_.parameters().C_,
+      LE   = device_.parameters().LE_,
+      DIM = device_.parameters().DIM_,
+      SUBDIM = device_.parameters().SUBDIM_;    
+
+  type a = parameters_.a_,
+       b = parameters_.b_,
+       E_min = parameters_.E_min_,
+    //       E_start = parameters_.E_start_,
+    //   E_end = parameters_.E_end_,
+       eta = parameters_.eta_;
+  
+  int M = parameters_.M_,
+    R = parameters_.R_;
+
+  std::string run_dir = parameters_.run_dir_,
+    filename = parameters_.filename_;
 
 
   
   E_min/=(double)a;
-  E_start = -1;//(E_start-b)/a;
-  E_end   = 1;//(E_end-b)/a;
+  // E_start = -1;//(E_start-b)/a;
+  // E_end   = 1;//(E_end-b)/a;
   eta    /= a;
 
 
@@ -53,33 +71,33 @@ void KuboBastin_solver(solver_vars& s_vars){
 
 /*---------All static memory declaration---------*/
   //Single Shot vectors
-  type bras[M_ * SUBDIM_],
-       kets[M_ * SUBDIM_];
+  type bras[M * SUBDIM],
+       kets[M * SUBDIM];
   
   //Recursion Vectors
-  type vec[DIM_],
-       p_vec[DIM_],
-       pp_vec[DIM_],
-       rand_vec[DIM_];
+  type vec[DIM],
+       p_vec[DIM],
+       pp_vec[DIM],
+       rand_vec[DIM];
   
   //Auxiliary - disorder and CAP vectors
-  type dmp_op[DIM_];
+  type dmp_op[DIM];
 
 
   //Print data
-  type r_data[M_],
-       final_data[M_],
-       E_points[M_];
+  type r_data[M],
+       final_data[M],
+       E_points[M];
 /*-----------------------------------------------*/    
 
 
-  type  integrand[M_];
+  type  integrand[M];
 
 
 
 
   
-  for(int k=0;k<DIM_;k++){
+  for(int k=0;k<DIM;k++){
     vec[k]      = 0.0;
     p_vec[k]    = 0.0;
     pp_vec[k]   = 0.0;
@@ -87,12 +105,12 @@ void KuboBastin_solver(solver_vars& s_vars){
     dmp_op[k]  = 1.0;
   }
   
-  for(int k=0;k<M_*SUBDIM_;k++){
+  for(int k=0;k<M*SUBDIM;k++){
     bras[k] = 0.0;
     kets[k] = 0.0;
   }
 
-  for(int k=0; k<M_;k++){
+  for(int k=0; k<M;k++){
     r_data[k]     = 0.0;
     final_data[k] = 0.0;
     integrand[k] = 0;
@@ -100,14 +118,14 @@ void KuboBastin_solver(solver_vars& s_vars){
 
 
 
-  for(int e=0;e<M_;e++)
-    E_points[e] = cos(M_PI*((double)e+0.5)/(double)M_);
+  for(int e=0;e<M;e++)
+    E_points[e] = cos(M_PI*((double)e+0.5)/(double)M);
    
 
-  set_CAP( E_min, eta, dmp_op);
 
-  
-  //   print_hamiltonian();  
+  create_CAP(W, C, LE, eta, E_min, dmp_op);
+
+
 
   
 
@@ -120,29 +138,27 @@ void KuboBastin_solver(solver_vars& s_vars){
 
     int seed = 1000;
 
-    generate_vec(rand_vec, seed, r);
-    //    rand_vec[DIM_/2+r-1] = 0.0;
-    // rand_vec[DIM_/2+r] = 1.0;
+    generate_vec(C, W, LE, rand_vec, seed, r);
 
 
 
     
     auto csrmv_start = std::chrono::steady_clock::now();
     
-    for(int k=0; k<M_; k++ ){
+    for(int k=0; k<M; k++ ){
       r_data[k]=0;
       integrand[k]=0;
     }
 
     
-    for(int k=0;k<DIM_;k++){
+    for(int k=0;k<DIM;k++){
       vec[k]     = 0.0;
       pp_vec[k]  = 0.0;
       p_vec[k]   = rand_vec[k];
     }    
     
-    polynomial_cycle( kets, vec, p_vec, pp_vec, dmp_op, a, b);
-    batch_vel_op( kets, vec );
+    polynomial_cycle_ket( kets, vec, p_vec, pp_vec, dmp_op, a, b);
+    //    device_.batch_vel_op(M, kets, vec );
     
     auto csrmv_end = std::chrono::steady_clock::now();
     int csrmv_time=std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end - csrmv_start).count();    
@@ -157,13 +173,13 @@ void KuboBastin_solver(solver_vars& s_vars){
 
     auto csrmv_start_2 = std::chrono::steady_clock::now();
 
-    for(int k=0;k<DIM_;k++){
+    for(int k=0;k<DIM;k++){
       vec[k]      = 0.0;
       p_vec[k]    = 0.0;
       pp_vec[k]   = 0.0;
     }
     
-    vel_op( &(p_vec[C_*W_]), &(rand_vec[C_*W_]) );
+    device_.vel_op( &(p_vec[C*W]), &(rand_vec[C*W]) );
     polynomial_cycle(  bras, vec, p_vec, pp_vec, dmp_op, a, b);	
 
     auto csrmv_end_2 = std::chrono::steady_clock::now();
@@ -207,7 +223,7 @@ void KuboBastin_solver(solver_vars& s_vars){
     
     auto plot_start = std::chrono::steady_clock::now();    
 
-    update_data(E_points, r_data, final_data, r, a, run_dir, filename);
+    update_data(E_points, integrand, r_data, final_data, r, run_dir, filename);
     plot_data(run_dir,filename);
     
     auto plot_end = std::chrono::steady_clock::now();
@@ -246,14 +262,21 @@ void KuboBastin_solver(solver_vars& s_vars){
 
 
 
-void polynomial_cycle(type polys[M_*SUBDIM_], type vec[DIM_], type p_vec[DIM_], type pp_vec[DIM_], type damp_op[DIM_],  type a, type b){
-   
+void KuboBastin_solver::polynomial_cycle(type polys[], type vec[], type p_vec[], type pp_vec[], type damp_op[],  type a, type b){
+
+  int M = parameters_.M_;
+
+  
+  int W   = device_.parameters().W_,
+      C   = device_.parameters().C_,
+      SUBDIM = device_.parameters().SUBDIM_;    
+
 //=================================KPM Step 0======================================//
 
 #pragma omp parallel for 
-  for(int i=0;i<SUBDIM_;i++)
-    polys[i*M_] = p_vec[i+C_*W_];
-    
+  for(int i=0;i<SUBDIM;i++)
+    polys[i] = p_vec[i+C*W];
+
 
   
 
@@ -261,24 +284,61 @@ void polynomial_cycle(type polys[M_*SUBDIM_], type vec[DIM_], type p_vec[DIM_], 
 //=================================KPM Step 1======================================//   
     
     
-    update_cheb ( vec, p_vec, pp_vec, damp_op, 2*a, b);
-
+    device_.update_cheb ( vec, p_vec, pp_vec, damp_op, 2*a, b);
+    
 #pragma omp parallel for 
-    for(int i=0;i<SUBDIM_;i++)
-      polys[i*M_+1] = vec[i+C_*W_];
-
+    for(int i=0;i<SUBDIM;i++)
+      polys[SUBDIM+i] = vec[i+C*W];
+    
 
     
 
 
 //=================================KPM Steps 2 and on===============================//
     
-    for( int m=2; m<M_; m++ ){
-      update_cheb( vec, p_vec, pp_vec, damp_op, a, b);
-
+    for( int m=2; m<M; m++ ){
+      device_.update_cheb( vec, p_vec, pp_vec, damp_op, a, b);
+      
 #pragma omp parallel for 
-      for(int i=0;i<SUBDIM_;i++)
-        polys[i*M_+m] = vec[i+C_*W_];
+      for(int i=0;i<SUBDIM;i++)
+        polys[m*SUBDIM+i] = vec[i+C*W];
+      
+    }
+      
+  
+}
+
+
+void KuboBastin_solver::polynomial_cycle_ket(type polys[], type vec[], type p_vec[], type pp_vec[], type damp_op[],  type a, type b){
+
+  int M = parameters_.M_;
+
+  
+  int W   = device_.parameters().W_,
+      C   = device_.parameters().C_,
+      SUBDIM = device_.parameters().SUBDIM_;    
+
+  
+//=================================KPM Step 0======================================//
+
+  device_.vel_op( &(polys[0]), &(p_vec[C*W]) );
+
+
+  
+//=================================KPM Step 1======================================//   
+    
+    
+    device_.update_cheb ( vec, p_vec, pp_vec, damp_op, 2*a, b);
+    device_.vel_op( &(polys[SUBDIM]), &(vec[C*W]) );
+
+    
+
+//=================================KPM Steps 2 and on===============================//
+    
+    for( int m=2; m<M; m++ ){
+      device_.update_cheb( vec, p_vec, pp_vec, damp_op, a, b);
+      device_.vel_op( &(polys[m*SUBDIM]), &(vec[C*W]) );
+      
     }
 
   
@@ -287,11 +347,12 @@ void polynomial_cycle(type polys[M_*SUBDIM_], type vec[DIM_], type p_vec[DIM_], 
 
 
 
-void integration(type E_points[M_], type integrand[M_], type data[M_]){
-//----------Sample data
-    
+void KuboBastin_solver::integration(type E_points[], type integrand[], type data[]){
+
+  int M = parameters_.M_;
+  
 #pragma omp parallel for 
-for(int k=0; k<M_; k++ ){
+for(int k=0; k<M; k++ ){
     for(int j=k; j>0; j-- ){//IMPLICIT PARTITION FUNCTION
       type ej  = E_points[j],
            ej1 = E_points[j-1];
@@ -317,14 +378,21 @@ for(int k=0; k<M_; k++ ){
 
 
 
-void update_data(type E_points[M_], type r_data[M_], type final_data[M_], int r, type a, std::string run_dir, std::string filename){
+void KuboBastin_solver::update_data(type E_points[], type integrand[], type r_data[], type final_data[], int r, std::string run_dir, std::string filename){
+
+  int M = parameters_.M_;
+
+  int LE  = device_.parameters().LE_,
+      SUBDIM = device_.parameters().SUBDIM_;    
+
+  type a = parameters_.a_,
+    b = parameters_.b_;
+    
+  type omega = SUBDIM/( a * a * LE * LE  );//Dimensional and normalizing constant
+  
 
   
-  type omega =  SUBDIM_/( a * a * LE_ * LE_  );//Dimensional and normalizing constant
-  
-
-  
-  for(int e=0;e<M_;e++)
+  for(int e=0;e<M;e++)
     final_data[e] = ( final_data[e] * (r-1.0) + omega * r_data[e] ) / r;
 
 
@@ -332,18 +400,26 @@ void update_data(type E_points[M_], type r_data[M_], type final_data[M_], int r,
   std::ofstream dataP;
   dataP.open(run_dir+"currentResult_"+filename);
 
-  for(int e=0;e<M_;e++)  
-    dataP<<a*E_points[e]<<"  "<<final_data[e]<<std::endl;
+  for(int e=0;e<M;e++)  
+    dataP<<a*E_points[e]+b<<"  "<<final_data[e]<<std::endl;
+
 
   
-  dataP.close();
+  std::ofstream data;
+  data.open(run_dir+"integrand_"+filename);
+
+  for(int e=0;e<M;e++)  
+    data<<a*E_points[e]+b<<"  "<<omega*integrand[e]<<std::endl;
+
+  
+  data.close();
 
 }
 
 
 
 
-void plot_data(std::string run_dir, std::string filename){
+void KuboBastin_solver::plot_data(std::string run_dir, std::string filename){
         //VIEW commands
 
      std::string exestring=
@@ -375,19 +451,25 @@ void plot_data(std::string run_dir, std::string filename){
 
 
 
-void KuboBastin_FFTs(type bras[SUBDIM_*M_], type kets[SUBDIM_*M_], type E_points[M_], type integrand[2*M_]){
-   
-  int size = SUBDIM_;
+void KuboBastin_solver::KuboBastin_FFTs(type bras[], type kets[], type E_points[], type integrand[]){
+
+  int SUBDIM = device_.parameters().SUBDIM_;    
+
+  
+  int M = parameters_.M_;
+
+  
+  int size = SUBDIM;
   const std::complex<double> im(0,1);
   //  VectorXp preFactor(N);
     
 
-  std::complex<type> factors[M_];
+  std::complex<type> factors[M];
 
 
     
-  for(int m=0;m<M_;m++)
-    factors[m] = (2-(m==0)) * kernel(m) *  std::polar(1.0,M_PI*m/(2.0*M_)) ;
+  for(int m=0;m<M;m++)
+    factors[m] = (2-(m==0)) * kernel_->term(m, M) *  std::polar(1.0,M_PI*m/(2.0*M)) ;
     
 
     #pragma omp parallel 
@@ -399,9 +481,9 @@ void KuboBastin_FFTs(type bras[SUBDIM_*M_], type kets[SUBDIM_*M_], type E_points
     l_start = id * size / Nthrds;
     l_end = (id+1) * size / Nthrds;
 
-    double thread_integrand[M_];
+    double thread_integrand[M];
 
-    for(int m=0;m<M_;m++)
+    for(int m=0;m<M;m++)
       thread_integrand[m]=0;
 
     
@@ -419,11 +501,11 @@ void KuboBastin_FFTs(type bras[SUBDIM_*M_], type kets[SUBDIM_*M_], type E_points
     fftw_complex  *ket;//[N_e_max_];
     fftw_complex  *ket_d;//[N_e_max_];
     
-    bra   = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M_ );    
-    bra_d = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M_ );
+    bra   = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );    
+    bra_d = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );
     
-    ket   = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M_ );    
-    ket_d = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M_ );
+    ket   = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );    
+    ket_d = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );
     
     
 
@@ -432,50 +514,34 @@ void KuboBastin_FFTs(type bras[SUBDIM_*M_], type kets[SUBDIM_*M_], type E_points
     
 # pragma omp critical
     {
-      plan1 = fftw_plan_dft_1d(M_, bra, bra, FFTW_FORWARD, FFTW_ESTIMATE);//bra1
-      plan2 = fftw_plan_dft_1d(M_, bra_d, bra_d, FFTW_FORWARD, FFTW_ESTIMATE); //bra_derivative
-      plan3 = fftw_plan_dft_1d(M_, ket, ket, FFTW_BACKWARD, FFTW_ESTIMATE); //ket1
-      plan4 = fftw_plan_dft_1d(M_, ket_d, ket_d, FFTW_BACKWARD, FFTW_ESTIMATE); //ket_derivative
+      plan1 = fftw_plan_dft_1d(M, bra, bra, FFTW_FORWARD, FFTW_ESTIMATE);//bra1
+      plan2 = fftw_plan_dft_1d(M, bra_d, bra_d, FFTW_FORWARD, FFTW_ESTIMATE); //bra_derivative
+      plan3 = fftw_plan_dft_1d(M, ket, ket, FFTW_BACKWARD, FFTW_ESTIMATE); //ket1
+      plan4 = fftw_plan_dft_1d(M, ket_d, ket_d, FFTW_BACKWARD, FFTW_ESTIMATE); //ket_derivative
     }
 
     for(int l=l_start; l<l_end;l++){
-      for(int m=0;m<M_;m++){
-	bra[m][0] = ( factors[m] * bras[l*M_+m]).real();
-	bra[m][1] = ( factors[m] * bras[l*M_+m]).imag();
+      for(int m=0;m<M;m++){
+	bra[m][0] = ( factors[m] * bras[m*SUBDIM+l]).real();
+	bra[m][1] = ( factors[m] * bras[m*SUBDIM+l]).imag();
+
+	bra_d[m][0] = m * bra[m][0]; 
+        bra_d[m][1] = m * bra[m][1];
+
+
+   
+
+	ket[m][0] = ( factors[m] * kets[m*SUBDIM+l] ).real();
+        ket[m][1] = ( factors[m] * kets[m*SUBDIM+l] ).imag(); 
+
+	ket_d[m][0] = m * ket[m][0];
+        ket_d[m][1] = m * ket[m][1];
       }
-      
+
+
       fftw_execute(plan1);
-      
-      
-   
-      for(int m=0;m<M_;m++){
-	bra_d[m][0] = m * ( factors[m] * bras[l*M_+m] ).real();
-        bra_d[m][1] = m * ( factors[m] * bras[l*M_+m] ).imag();
-      }
-     
-      fftw_execute(plan2);
-
-
-
-
-
-      
-
-      
-   
-      for(int n=0;n<M_;n++){
-	ket[n][0] = ( factors[n] * kets[l*M_+n] ).real();
-        ket[n][1] = ( factors[n] * kets[l*M_+n] ).imag(); 
-      }
-   
+      fftw_execute(plan2);   
       fftw_execute(plan3);
-      
-   
-      for(int n=0;n<M_;n++){
-	ket_d[n][0] = n * ( factors[n] * kets[l*M_+n] ).real(); 
-        ket_d[n][1] = n * ( factors[n] * kets[l*M_+n] ).imag(); 	
-      }
-   
       fftw_execute(plan4);
 
       
@@ -483,8 +549,42 @@ void KuboBastin_FFTs(type bras[SUBDIM_*M_], type kets[SUBDIM_*M_], type E_points
 
       
 
+      //Take only the real. part      
+    for(int j=0; j<M/2; j++ ){  
+      type ej = E_points[2*j];
+      thread_integrand[2*j] += (
+				      (
+				        ej            *  ket[j][0]      +
+				        sqrt(1-ej*ej) *  ket_d[j][1] 
+				      ) * bra[j][0]
+				      +
+				      (
+				        ej            *   bra[j][0]   -
+				        sqrt(1-ej*ej) *   bra_d[j][1] 
+				       ) * ket[j][0]
+					
+		        );	 
       
-    for(int j=0; j<M_/2; j++ ){  
+
+      
+      ej = E_points[2*j+1];
+      thread_integrand[2*j+1] += (
+				      (
+				       ej            *  ket[M-j-1][0]  -
+				       sqrt(1-ej*ej) *  ket_d[M-j-1][1] 
+				      ) * bra[M-j-1][0]
+				      +
+				      (
+				       ej            *  bra[M-j-1][0] +
+				       sqrt(1-ej*ej) *  bra_d[M-j-1][1] 
+				      ) * ket[M-j-1][0]
+			         );
+     
+      
+    }
+ 
+
+    /*{
       type ej = E_points[2*j];
       thread_integrand[2*j] += (
 				      (
@@ -504,25 +604,26 @@ void KuboBastin_FFTs(type bras[SUBDIM_*M_], type kets[SUBDIM_*M_], type E_points
       ej = E_points[2*j+1];
       thread_integrand[2*j+1] += (
 				      (
-				       ej                 * (  ket[M_-j-1][0]   - im * ket[M_-j-1][1] )  -
-				       im * sqrt(1-ej*ej) * (  ket_d[M_-j-1][0] - im * ket_d[M_-j-1][1] )
-				      ) * bra[M_-j-1][0]
+				       ej                 * (  ket[M-j-1][0]   - im * ket[M-j-1][1] )  -
+				       im * sqrt(1-ej*ej) * (  ket_d[M-j-1][0] - im * ket_d[M-j-1][1] )
+				      ) * bra[M-j-1][0]
 				      +
 				      (
-				       ej                 * (  bra[M_-j-1][0]   - im * bra[M_-j-1][1] )  +
-				       im * sqrt(1-ej*ej) * (  bra_d[M_-j-1][0] - im * bra_d[M_-j-1][1] )
-				      ) * ket[M_-j-1][0]
+				       ej                 * (  bra[M-j-1][0]   - im * bra[M-j-1][1] )  +
+				       im * sqrt(1-ej*ej) * (  bra_d[M-j-1][0] - im * bra_d[M-j-1][1] )
+				      ) * ket[M-j-1][0]
 			  ).real();
      
       
     }
- 
 
+
+    */
     }
 
     # pragma omp critical
     {
-      for(int m=0;m<M_;m++)
+      for(int m=0;m<M;m++)
 	integrand[m]+=thread_integrand[m];
       
       fftw_destroy_plan(plan1);
