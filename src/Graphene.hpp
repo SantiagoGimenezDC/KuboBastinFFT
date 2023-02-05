@@ -11,7 +11,7 @@ struct device_vars{
 class Graphene{
 private:
   device_vars graphene_vars_;
-
+  bool CYCLIC_BCs_ = false;
 public:
   ~Graphene(){};
   Graphene(){};
@@ -22,8 +22,9 @@ public:
   void update_cheb ( type*, type*, type*, type*, type , type );
   void update_cheb ( int ,  int, type*, type*, type*, type*, type*, type , type );
   void vel_op (type*, type*);
-  void batch_vel_op (int, type*, type*);
 
+  void vertical_BC(type*, type*, type*, type );
+  void horizontal_BC(type*, type*, type*, type );
 
 };
 

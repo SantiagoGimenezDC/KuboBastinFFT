@@ -38,7 +38,7 @@ public:
   void polynomial_cycle(type*, type*, type*, type*, type*,  type , type );
   void polynomial_cycle_ket(type*, type*, type*, type*, type*,  type , type );
   void KuboBastin_FFTs(type*, type*, type*, type*);
-  
+  void KuboGreenwood_FFTs(type*, type*, type*, type*);  
 };
 
 

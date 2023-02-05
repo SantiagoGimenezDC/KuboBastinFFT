@@ -125,7 +125,7 @@ void KuboBastin_solver::compute(){
 
   create_CAP(W, C, LE, eta, E_min, dmp_op);
 
-
+  
 
   
 
@@ -138,9 +138,9 @@ void KuboBastin_solver::compute(){
 
     int seed = 1000;
 
-    generate_vec(C, W, LE, rand_vec, seed, r);
-
-
+        generate_vec(C, W, LE, rand_vec, seed, r);
+    //rand_vec[DIM/2+r-1] = 0;
+    //rand_vec[DIM/2+r] = 1.0;
 
     
     auto csrmv_start = std::chrono::steady_clock::now();
@@ -196,7 +196,7 @@ void KuboBastin_solver::compute(){
     auto FFT_start_2 = std::chrono::steady_clock::now();
 
     KuboBastin_FFTs(bras,kets, E_points, integrand);
-    
+    // KuboGreenwood_FFTs(bras,kets, E_points, r_data);    
     auto FFT_end_2 = std::chrono::steady_clock::now();
     int FFT_time_2=std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count();    
     std::cout<<"       FFT operations time:        "<<FFT_time_2/1000<<"ms"<<std::endl;  
@@ -352,25 +352,27 @@ void KuboBastin_solver::integration(type E_points[], type integrand[], type data
   int M = parameters_.M_;
   
 #pragma omp parallel for 
-for(int k=0; k<M; k++ ){
-    for(int j=k; j>0; j-- ){//IMPLICIT PARTITION FUNCTION
+  for(int k=0; k<M-M/100; k++ ){ //At the very edges of the energy plot the weight function diverges, hence integration should start a little after and a little before the edge.
+                              //The safety factor guarantees that the conductivity is zero way before reaching the edge. In fact, the safety factor should be used to determine
+                              //the number of points to be ignored in the future;
+    for(int j=k; j>M/100; j-- ){//IMPLICIT PARTITION FUNCTION
       type ej  = E_points[j],
            ej1 = E_points[j-1];
 		
-      type preFactor  = ( 1.0 / (  (1.0-pow(ej, 2.0))  ) ),
-	   preFactor2 = ( 1.0 / (  (1.0-pow(ej1,2.0))  ) );
+      type preFactor  = ( 1.0 / (  (1.0 - ej  * ej   )  ) ),
+	   preFactor2 = ( 1.0 / (  (1.0 - ej1 * ej1  )  ) );
 
-      preFactor  *= -8.0 * preFactor  / 4.0 /2.0; //Minus sign from vel. op (im*im). Arbitrary division by 2! idk where it comes from
-      preFactor2 *= -8.0 * preFactor2 / 4.0 /2.0;
+      preFactor  *= -8.0 * preFactor  /4.0 ; //Minus sign from vel. op (im*im).
+      preFactor2 *= -8.0 * preFactor2 /4.0 ;
     
       type de    = ej1-ej,
            integ = ( preFactor2*integrand[j-1] + preFactor * integrand[j] ) / 2.0;     
       
-      data[k] += ( de * integ );
+      data[k] +=  de * integ ;
 		 
 	 
     }
-}
+  }
  
 }
 
@@ -388,7 +390,7 @@ void KuboBastin_solver::update_data(type E_points[], type integrand[], type r_da
   type a = parameters_.a_,
     b = parameters_.b_;
     
-  type omega = SUBDIM/( a * a * LE * LE  );//Dimensional and normalizing constant
+  type omega = SUBDIM/( a * a * (LE-1) * (LE-1) * (1+sin(M_PI/6)) * (1+sin(M_PI/6))   );//Dimensional and normalizing constant
   
 
   
@@ -464,13 +466,17 @@ void KuboBastin_solver::KuboBastin_FFTs(type bras[], type kets[], type E_points[
   //  VectorXp preFactor(N);
     
 
-  std::complex<type> factors[M];
+  std::complex<type> factors[M],IM_energies[M], IM_root[M];
 
+  type a = parameters_.a_,
+       eta = parameters_.eta_/a;
 
     
-  for(int m=0;m<M;m++)
+  for(int m=0;m<M;m++){
     factors[m] = (2-(m==0)) * kernel_->term(m, M) *  std::polar(1.0,M_PI*m/(2.0*M)) ;
-    
+    IM_energies[m] = E_points[m]-im*asinh(-eta/sqrt(1-E_points[m]*E_points[m]));
+    IM_root[m] = sqrt(1.0-IM_energies[m]*IM_energies[m]);
+  }
 
     #pragma omp parallel 
     {
@@ -550,7 +556,201 @@ void KuboBastin_solver::KuboBastin_FFTs(type bras[], type kets[], type E_points[
       
 
       //Take only the real. part      
-    for(int j=0; j<M/2; j++ ){  
+    for(int j=0; j<M/2; j++ ){ //Taking the real part only
+
+      std::complex<type> ej = IM_energies[2*j];
+      thread_integrand[2*j] +=(
+				      (
+				       ej                 * (  ket[j][0]    )  -
+				       ( -IM_root[2*j].imag() * ket_d[j][0] - IM_root[2*j].real() * ket_d[j][1] )
+				      ) * bra[j][0]
+				      +
+				      (
+				       ej                 * (  bra[j][0]    )  +
+				       ( -IM_root[2*j].imag() * bra_d[j][0] - IM_root[2*j].real() * bra_d[j][1] )
+				      ) * ket[j][0]
+				  ).real();
+
+
+
+      
+      ej = IM_energies[2*j+1];
+      thread_integrand[2*j+1] += (
+				      (
+				       ej                 * (  ket[M-j-1][0]    )  -
+				       ( -IM_root[2*j+1].imag() * ket_d[M-j-1][0] + IM_root[2*j+1].real() * ket_d[M-j-1][1] )
+				      ) * bra[M-j-1][0]
+				      +
+				      (
+				       ej                 * (  bra[M-j-1][0]    )  +
+				       ( -IM_root[2*j+1].imag() * bra_d[M-j-1][0] + IM_root[2*j+1].real() * bra_d[M-j-1][1] )
+				      ) * ket[M-j-1][0]
+				  ).real();
+     
+      
+			  }
+    
+    
+    }
+
+    # pragma omp critical
+    {
+      for(int m=0;m<M;m++)
+	integrand[m]+=thread_integrand[m];
+      
+      fftw_destroy_plan(plan1);
+      fftw_free(bra);
+      fftw_destroy_plan(plan2);
+      fftw_free(bra_d);
+      fftw_destroy_plan(plan3);
+      fftw_free(ket);
+      fftw_destroy_plan(plan4);
+      fftw_free(ket_d);
+    }
+  }
+}
+
+
+void KuboBastin_solver::KuboGreenwood_FFTs(type bras[], type kets[], type E_points[], type r_data[]){
+
+  int SUBDIM = device_.parameters().SUBDIM_;    
+
+  
+  int M = parameters_.M_;
+
+  
+  int size = SUBDIM;
+  const std::complex<double> im(0,1);
+  //  VectorXp preFactor(N);
+    
+
+  std::complex<type> factors[M],IM_energies[M], IM_root[M];
+
+  type a = parameters_.a_,
+       eta = parameters_.eta_/a;
+
+    
+  for(int m=0;m<M;m++){
+    factors[m] = (2-(m==0)) * kernel_->term(m, M) *  std::polar(1.0,M_PI*m/(2.0*M)) ;
+    IM_energies[m] = E_points[m]+im*asinh(-eta)/sqrt(1-E_points[m]*E_points[m]);
+    IM_root[m] = sqrt(1.0-IM_energies[m]*IM_energies[m]);
+    IM_root[m]*=IM_root[m]/2.0;
+  }
+
+    #pragma omp parallel 
+    {
+
+    int id,  Nthrds, l_start, l_end;
+    id = omp_get_thread_num();
+    Nthrds = omp_get_num_threads();
+    l_start = id * size / Nthrds;
+    l_end = (id+1) * size / Nthrds;
+
+    double thread_data[M];
+
+    for(int m=0;m<M;m++)
+      thread_data[m]=0;
+
+    
+    if (id == Nthrds-1) l_end = size;
+    
+    fftw_plan plan1, plan2;
+
+    fftw_complex  *bra;
+    fftw_complex  *ket;
+    
+    
+    bra   = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );        
+    ket   = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );    
+
+
+    
+# pragma omp critical
+    {
+      plan1 = fftw_plan_dft_1d(M, bra, bra, FFTW_BACKWARD, FFTW_ESTIMATE);//bra1
+      plan2 = fftw_plan_dft_1d(M, ket, ket, FFTW_BACKWARD, FFTW_ESTIMATE); //ket1
+    }
+
+    for(int l=l_start; l<l_end;l++){
+      for(int m=0;m<M;m++){
+	bra[m][0] = ( factors[m] * bras[m*SUBDIM+l]).real();
+	bra[m][1] = ( factors[m] * bras[m*SUBDIM+l]).imag();
+
+	ket[m][0] = ( factors[m] * kets[m*SUBDIM+l] ).real();
+        ket[m][1] = ( factors[m] * kets[m*SUBDIM+l] ).imag(); 
+      }
+
+
+      fftw_execute(plan1);
+      fftw_execute(plan2);   
+
+      
+
+
+      
+
+      //Take only the real. part      
+    for(int j=0; j<M/2; j++ ){ //Taking the real part only
+      thread_data[2*j]   +=  bra[j][0]*ket[j][0] / (IM_root[2*j]).real();
+      thread_data[2*j+1] +=  bra[M-j-1][0]*ket[M-j-1][0] / (IM_root[2*j+1]).real();
+    }
+    
+    
+    }
+
+    # pragma omp critical
+    {
+      for(int m=0;m<M;m++)
+	r_data[m]+=thread_data[m];
+      
+      fftw_destroy_plan(plan1);
+      fftw_free(bra);
+      fftw_destroy_plan(plan2);
+    }
+  }
+}
+
+
+
+
+
+/*   { //Lazy Imaginary case
+
+      std::complex<type> ej = IM_energies[2*j];
+      thread_integrand[2*j] += (
+				      (
+				        ej                 * (  ket[j][0]   + im * ket[j][1] )  -
+				        im * IM_root[2*j] * (  ket_d[j][0] + im * ket_d[j][1] )
+				      ) * bra[j][0]
+				      +
+				      (
+				        ej                 * (  bra[j][0]   + im * bra[j][1]  )  +
+				        im * IM_root[2*j] * (  bra_d[j][0] + im * bra_d[j][1] )
+				       ) * ket[j][0]
+					
+		        ).real();	 
+      
+
+      
+      ej = IM_energies[2*j+1];
+      thread_integrand[2*j+1] += (
+				      (
+				       ej                 * (  ket[M-j-1][0]   - im * ket[M-j-1][1] )  -
+				       im * IM_root[2*j+1] * (  ket_d[M-j-1][0] - im * ket_d[M-j-1][1] )
+				      ) * bra[M-j-1][0]
+				      +
+				      (
+				       ej                 * (  bra[M-j-1][0]   - im * bra[M-j-1][1] )  +
+				       im * IM_root[2*j+1] * (  bra_d[M-j-1][0] - im * bra_d[M-j-1][1] )
+				      ) * ket[M-j-1][0]
+			  ).real();
+     
+      
+			  }*/
+
+
+    
+      /*{  //Purely real case
       type ej = E_points[2*j];
       thread_integrand[2*j] += (
 				      (
@@ -581,59 +781,6 @@ void KuboBastin_solver::KuboBastin_FFTs(type bras[], type kets[], type E_points[
 			         );
      
       
-    }
+    }*/
  
 
-    /*{
-      type ej = E_points[2*j];
-      thread_integrand[2*j] += (
-				      (
-				        ej                 * (  ket[j][0]   + im * ket[j][1] )  -
-				        im * sqrt(1-ej*ej) * (  ket_d[j][0] + im * ket_d[j][1] )
-				      ) * bra[j][0]
-				      +
-				      (
-				        ej                 * (  bra[j][0]   + im * bra[j][1]  )  +
-				        im * sqrt(1-ej*ej) * (  bra_d[j][0] + im * bra_d[j][1] )
-				       ) * ket[j][0]
-					
-		        ).real();	 
-      
-
-      
-      ej = E_points[2*j+1];
-      thread_integrand[2*j+1] += (
-				      (
-				       ej                 * (  ket[M-j-1][0]   - im * ket[M-j-1][1] )  -
-				       im * sqrt(1-ej*ej) * (  ket_d[M-j-1][0] - im * ket_d[M-j-1][1] )
-				      ) * bra[M-j-1][0]
-				      +
-				      (
-				       ej                 * (  bra[M-j-1][0]   - im * bra[M-j-1][1] )  +
-				       im * sqrt(1-ej*ej) * (  bra_d[M-j-1][0] - im * bra_d[M-j-1][1] )
-				      ) * ket[M-j-1][0]
-			  ).real();
-     
-      
-    }
-
-
-    */
-    }
-
-    # pragma omp critical
-    {
-      for(int m=0;m<M;m++)
-	integrand[m]+=thread_integrand[m];
-      
-      fftw_destroy_plan(plan1);
-      fftw_free(bra);
-      fftw_destroy_plan(plan2);
-      fftw_free(bra_d);
-      fftw_destroy_plan(plan3);
-      fftw_free(ket);
-      fftw_destroy_plan(plan4);
-      fftw_free(ket_d);
-    }
-  }
-}
