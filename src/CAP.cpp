@@ -6,12 +6,12 @@
 
 
 
-void CAP::create_CAP(int W, int C, int LE, type dmp_op[]){
-  type func, y, c=2.66206,
+void CAP::create_CAP(int W, int C, int LE, r_type dmp_op[]){
+  r_type func, y, c=2.66206,
     gamma, gamma_eta=exp(-asinh(-eta_));
 
   
-  int DIM = LE*W,
+ int DIM = LE*W,
     SUBDIM = (2*C+LE)*W;
 
  int ctLe  = C*W;
@@ -28,7 +28,7 @@ void CAP::create_CAP(int W, int C, int LE, type dmp_op[]){
   
   for(int i=0;i<ctLe;i++){
     if(C!=0){
-      y     = (type)(i/W)/C; 
+      y     = (r_type)(i/W)/C; 
       func  = (-4.0*Emin_/(c*c))*(1/pow(1-y,2)+1/pow(1+y,2)-2)+eta_;
       gamma = asinh(-func);
       gamma = exp(-gamma);
@@ -43,8 +43,8 @@ void CAP::create_CAP(int W, int C, int LE, type dmp_op[]){
 }
 
 
-void create_CAP(int W, int C, int LE, type eta, type Emin, type dmp_op[]){
-  type func, y, c=2.66206,
+void create_CAP(int W, int C, int LE, r_type eta, r_type Emin, r_type dmp_op[]){
+  r_type func, y, c=2.66206,
     gamma, gamma_eta=exp(-asinh(-eta));
 
   
@@ -65,7 +65,7 @@ void create_CAP(int W, int C, int LE, type eta, type Emin, type dmp_op[]){
   
   for(int i=0;i<ctLe;i++){
     if(C!=0){
-      y     = (type)(i/W)/C; 
+      y     = (r_type)(i/W)/C; 
       func  = (-4.0*Emin/(c*c))*(1/pow(1-y,2)+1/pow(1+y,2)-2)+eta;
       gamma = asinh(-func);
       gamma = exp(-gamma);

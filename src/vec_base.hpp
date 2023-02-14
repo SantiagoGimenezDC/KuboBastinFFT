@@ -5,6 +5,6 @@
 #include "static_vars.hpp"
 
 void generate_vec(int, int,int, type*, int , int );
-
+void generate_vec_im(int, int,int, type*, int , int );
 
 #endif //RAND_BASE_HPP

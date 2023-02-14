@@ -37,7 +37,7 @@ int main(int , char **argv){
   
 
   //Reading simulation parameters
-  Input>>s_vars.M_, Input>>s_vars.R_, Input>>s_vars.edge_,
+  Input>>s_vars.M_, Input>>s_vars.R_, Input>>s_vars.seed_, Input>>s_vars.edge_,
   Input>>s_vars.E_start_,   Input>>s_vars.E_end_;
   Input>>s_vars.eta_;
   Input>>s_vars.E_min_;

@@ -6,15 +6,15 @@
 
 class CAP {
 private:
-  type Emin_, eta_;
+  r_type Emin_, eta_;
 public:
   ~CAP();
   CAP(){};
-  CAP( type Emin,type eta) : Emin_(Emin), eta_(eta){};
+  CAP( r_type Emin,r_type eta) : Emin_(Emin), eta_(eta){};
 
-  void create_CAP(int, int, int,  type*);  
+  void create_CAP(int, int, int,  r_type*);  
 };
 
-void create_CAP(int , int , int , type , type , type*);
+void create_CAP(int , int , int , r_type , r_type , r_type*);
 
 #endif //CAP_HPP

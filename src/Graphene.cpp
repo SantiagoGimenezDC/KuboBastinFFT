@@ -4,7 +4,7 @@
 
 #include"Graphene.hpp"
 
-const type t_standard_=2.7;
+
 
 Graphene::Graphene(device_vars& parameters) : graphene_vars_(parameters){
 
@@ -14,9 +14,9 @@ Graphene::Graphene(device_vars& parameters) : graphene_vars_(parameters){
 }
 
 
-void Graphene::update_cheb ( type vec[], type p_vec[], type pp_vec[], type damp_op[], type a, type b){
+void Graphene::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type a, r_type b){
 
-  type t   = 2.0 * t_standard_/a,
+  r_type t   = 2.0 * t_standard_/a,
        b_a = 2.0 * b/a;
 
   int W = this->parameters().W_,
@@ -70,8 +70,8 @@ void Graphene::update_cheb ( type vec[], type p_vec[], type pp_vec[], type damp_
 }
 
 
-void Graphene::vertical_BC(type vec[], type p_vec[], type damp_op[], type a){
-  type t   = 2.0 * t_standard_/a;
+void Graphene::vertical_BC(type vec[], type p_vec[], r_type damp_op[], r_type a){
+  r_type t   = 2.0 * t_standard_/a;
 
   int W = this->parameters().W_,
       LE = this->parameters().LE_,
@@ -97,8 +97,8 @@ void Graphene::vertical_BC(type vec[], type p_vec[], type damp_op[], type a){
 
 
 
-void Graphene::horizontal_BC(type vec[], type p_vec[], type damp_op[], type a){
-  type t   = 2.0 * t_standard_/a;
+void Graphene::horizontal_BC(type vec[], type p_vec[], r_type damp_op[], r_type a){
+  r_type t   = 2.0 * t_standard_/a;
 
   int W = this->parameters().W_,
       LE = this->parameters().LE_,
@@ -124,9 +124,9 @@ void Graphene::horizontal_BC(type vec[], type p_vec[], type damp_op[], type a){
 
 
 
-void Graphene::update_cheb ( int m, int M,  type polys[], type vec[], type p_vec[], type pp_vec[], type damp_op[], type a, type b){
+void Graphene::update_cheb ( int m, int M,  type polys[], type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type a, r_type b){
 
-  type t   = 2.0 * t_standard_/a,
+  r_type t   = 2.0 * t_standard_/a,
        b_a = 2.0 * b/a;
 
 
@@ -185,10 +185,10 @@ void Graphene::vel_op (type vec[], type p_vec[] ){
   int W   = this->parameters().W_,
       LE  = this->parameters().LE_;    
   
-  type dx1 = 1.0,
-       dx2 = sin(M_PI/6.0),
-       tx1 = dx1 * t_standard_,
-       tx2 = dx2 * t_standard_;
+  r_type dx1 = 1.0,
+         dx2 = sin(M_PI/6.0),
+         tx1 = dx1 * t_standard_,
+         tx2 = dx2 * t_standard_;
   
  
 #pragma omp parallel for 

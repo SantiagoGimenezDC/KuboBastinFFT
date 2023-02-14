@@ -9,8 +9,8 @@
 
 struct solver_vars{
   
-  type a_ ,b_, E_min_, eta_, E_start_, E_end_, edge_;//m_str, rsh_str, anderson_str;
-  int M_, R_;
+  r_type a_ ,b_, E_min_, eta_, E_start_, E_end_, edge_;//m_str, rsh_str, anderson_str;
+  int M_, R_, seed_;
   std::string filename_, run_dir_;
   
 };
@@ -32,13 +32,13 @@ public:
   void compute();
 
 
-  void integration(type*, type*, type* );
-  void update_data(type*, type*, type*, type*, int ,  std::string, std::string );
+  void integration(r_type*, r_type*, r_type* );
+  void update_data(r_type*,r_type*, r_type*, r_type*, r_type*, int ,  std::string, std::string );
   void plot_data(std::string, std::string );
-  void polynomial_cycle(type*, type*, type*, type*, type*,  type , type );
-  void polynomial_cycle_ket(type*, type*, type*, type*, type*,  type , type );
-  void KuboBastin_FFTs(type*, type*, type*, type*);
-  void KuboGreenwood_FFTs(type*, type*, type*, type*);  
+  void polynomial_cycle(type*, type*, type*, type*, r_type*,  r_type , r_type );
+  void polynomial_cycle_ket(type*, type*, type*, type*, r_type*,  r_type , r_type );
+  void KuboBastin_FFTs(type*, type*, r_type*, r_type*);
+  void KuboGreenwood_FFTs(type*, type*, r_type*, r_type*);  
 };
 
 

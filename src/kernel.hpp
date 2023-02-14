@@ -13,12 +13,22 @@ class Kernel {
 public:
   virtual ~Kernel(){}
   Kernel(){};
-
-  virtual type term(const int m, const int M) = 0;
+  virtual r_type term(const int m, const int M) = 0;
     
 };
 
 
+
+class Lorentz : public Kernel{
+private:
+  const r_type lambda_ = 3.5;
+  public:
+    Lorentz(){};
+    virtual r_type term(const int m, const int M){
+      return sinh(lambda_ * ( 1.0 - r_type(m) / r_type(M) ) ) / sinh( lambda_ );
+    };
+    
+};
 
 
 
@@ -27,7 +37,7 @@ class Jackson : public Kernel{
     Jackson(){};
 
 
-  virtual type term(const int m, const int M){
+    virtual r_type term(const int m, const int M){
       return 1/(M+1.0) *
            (
    	     (M-m+1.0) *
@@ -46,7 +56,7 @@ class None : public Kernel{
     virtual ~None(){};
     None(){};
 
-  virtual type term(const int, const int ){
+  virtual r_type term(const int, const int ){
       return 1.0;
     };
     

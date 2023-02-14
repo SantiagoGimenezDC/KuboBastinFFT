@@ -10,8 +10,10 @@ struct device_vars{
 
 class Graphene{
 private:
+  const r_type t_standard_ = 2.7;
   device_vars graphene_vars_;
   bool CYCLIC_BCs_ = false;
+
 public:
   ~Graphene(){};
   Graphene(){};
@@ -19,12 +21,12 @@ public:
 
   //  CAP& cap(){return cap_;};
   device_vars& parameters(){return graphene_vars_; };
-  void update_cheb ( type*, type*, type*, type*, type , type );
-  void update_cheb ( int ,  int, type*, type*, type*, type*, type*, type , type );
+  void update_cheb ( type*, type*, type*, r_type*, r_type , r_type );
+  void update_cheb ( int ,  int, type*, type*, type*, type*, r_type*, r_type , r_type );
   void vel_op (type*, type*);
 
-  void vertical_BC(type*, type*, type*, type );
-  void horizontal_BC(type*, type*, type*, type );
+  void vertical_BC(type*, type*, r_type*, r_type );
+  void horizontal_BC(type*, type*, r_type*, r_type );
 
 };
 
