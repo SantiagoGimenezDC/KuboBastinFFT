@@ -78,3 +78,30 @@ void create_CAP(int W, int C, int LE, r_type eta, r_type Emin, r_type dmp_op[]){
       
   }
 }
+
+
+
+void eff_contact(int W, int C, int LE, r_type eta, r_type dmp_op[]){
+  r_type gamma_eta = exp(-asinh(-eta));
+
+  
+  int DIM = (2*C+LE)*W;
+
+
+
+  //  for(int i=0;i<SUBDIM;i++)
+  //  dmp_op[i+C*W] = gamma_eta;
+
+  for(int i=0;i<DIM;i++)
+    dmp_op[i] = 1.0;
+    
+  
+
+
+  
+  for(int i=0;i<W;i++){
+    dmp_op[i]       *= gamma_eta; 
+    dmp_op[DIM-W+i] *= gamma_eta;
+      
+  }
+}

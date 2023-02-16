@@ -16,5 +16,6 @@ public:
 };
 
 void create_CAP(int , int , int , r_type , r_type , r_type*);
+void eff_contact(int , int , int , r_type , r_type* );
 
 #endif //CAP_HPP
