@@ -1,16 +1,88 @@
 #include "static_vars.hpp"
 #include<iostream>
 #include<complex>
-
+#include<random>
 #include"Graphene.hpp"
 
 
 
-Graphene::Graphene(device_vars& parameters) : graphene_vars_(parameters){
+Graphene::Graphene(device_vars& parameters) : graphene_vars_(parameters), rng_(parameters.dis_seed_){
 
   if(this->parameters().C_==0)
     CYCLIC_BCs_=true;
   
+}
+
+void Graphene::Anderson_disorder(r_type disorder_vec[]){
+
+  int SUBDIM = graphene_vars_.SUBDIM_;
+  r_type str = graphene_vars_.dis_str_;
+  
+  for(int i=0;i<SUBDIM; i++){
+    r_type random_potential = str * this->rng().get()-str/2;
+
+    disorder_vec[i] = random_potential;
+  }
+  
+}
+
+
+void Graphene::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], r_type a, r_type b){
+
+  r_type t   = 2.0 * t_standard_/a,
+       b_a = 2.0 * b/a;
+
+  int W = this->parameters().W_,
+      LE = this->parameters().LE_,
+    C = this->parameters().C_,
+    DIM = this->parameters().DIM_;
+
+
+  const int fullLe = 2*C+LE;
+     
+
+  
+#pragma omp parallel for 
+ for(int j=0; j<fullLe; j++){
+    for(int i=0; i<W; i++){
+      int n = j * W + i;
+      
+      vec[n] = b_a * p_vec[n] - damp_op[n] * pp_vec[n];
+
+      if( i!=0 )
+	vec[n] += t * p_vec[n-1];
+      
+      if( i != (W-1) )
+	vec[n] += t * p_vec[n+1];
+      
+      if( j != (fullLe-1) && (j+i)%2!=0 )
+	vec[n] += t * p_vec[n+W];
+      
+      if( j != 0 && (j+i)%2==0 )
+	vec[n] += t * p_vec[n-W];
+
+      
+      vec[n] *= damp_op[n];
+      
+      pp_vec[n] = p_vec[n];
+      
+    }
+ } 
+
+#pragma omp parallel for 
+ for(int n=0; n<LE*W; n++)
+   vec[C*W+n] += dis_vec[n] * p_vec[C*W+n] / a;
+
+ 
+ if(CYCLIC_BCs_){
+   vertical_BC(vec,p_vec,damp_op,a);
+   horizontal_BC(vec,p_vec,damp_op,a);  
+ }
+ 
+#pragma omp parallel for 
+ for(int n=0;n<DIM;n++)
+   p_vec[n]  = vec[n];
+ 
 }
 
 
@@ -64,8 +136,6 @@ void Graphene::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_type dam
 #pragma omp parallel for 
  for(int n=0;n<DIM;n++)
    p_vec[n]  = vec[n];
- 
-
  
 }
 

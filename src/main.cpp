@@ -1,20 +1,10 @@
 #include<iostream>
 #include<fstream>
 #include<string>
-#include<iomanip>
-#include<cstdlib>
-
-#include<complex>
-
-
 
 #include "static_vars.hpp"
 #include "Graphene.hpp"
-#include "KuboBastin_solver.hpp"
-
-
-
-
+#include "Kubo_solver/Kubo_solver.hpp"
 
 
 int main(int , char **argv){
@@ -30,14 +20,15 @@ int main(int , char **argv){
 
   //Reading device variables
   Input>>graphene_vars.W_,  Input>>graphene_vars.LE_,  Input>>graphene_vars.C_;
-
+  Input>>graphene_vars.dis_str_, Input>>graphene_vars.dis_seed_;
+  
   graphene_vars.SUBDIM_ = graphene_vars.W_*graphene_vars.LE_;
   graphene_vars.DIM_    = graphene_vars.SUBDIM_ + 2*graphene_vars.C_*graphene_vars.W_;
 
   
 
   //Reading simulation parameters
-  Input>>s_vars.M_, Input>>s_vars.R_, Input>>s_vars.seed_, Input>>s_vars.edge_,
+  Input>>s_vars.M_, Input>>s_vars.R_, Input>>s_vars.dis_real_, Input>>s_vars.seed_, Input>>s_vars.edge_,
   Input>>s_vars.E_start_,   Input>>s_vars.E_end_;
   Input>>s_vars.eta_;
   Input>>s_vars.E_min_;
@@ -50,7 +41,7 @@ int main(int , char **argv){
 
   Graphene graphene_device(graphene_vars);
   
-  KuboBastin_solver solver( s_vars, graphene_device);
+  Kubo_solver solver( s_vars, graphene_device);
   solver.compute();
   
 }

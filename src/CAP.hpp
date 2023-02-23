@@ -8,7 +8,7 @@ class CAP {
 private:
   r_type Emin_, eta_;
 public:
-  ~CAP();
+  ~CAP(){};
   CAP(){};
   CAP( r_type Emin,r_type eta) : Emin_(Emin), eta_(eta){};
 
