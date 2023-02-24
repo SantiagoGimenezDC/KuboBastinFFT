@@ -39,8 +39,8 @@ public:
   void update_data ( r_type*,r_type*, r_type*, r_type*, r_type*, int ,  std::string, std::string );
   void plot_data   ( std::string, std::string );
   
-  void polynomial_cycle     ( type*, type*, type*, type*, r_type*, r_type*, r_type , r_type );
-  void polynomial_cycle_ket ( type*, type*, type*, type*, r_type*, r_type*, r_type , r_type );
+  void polynomial_cycle     ( type*, type*, type*, type*, r_type*, r_type* );
+  void polynomial_cycle_ket ( type*, type*, type*, type*, r_type*, r_type* );
 
 
   

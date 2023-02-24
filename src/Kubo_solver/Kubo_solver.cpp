@@ -74,6 +74,8 @@ void Kubo_solver::compute(){
   E_min /= a;
   eta   /= a;
 
+  int num_parts = 4,
+    SECTION = SUBDIM/num_parts;
 
     auto start_BT = std::chrono::steady_clock::now();
 
@@ -182,7 +184,7 @@ void Kubo_solver::compute(){
     p_vec   [k] = rand_vec[k];
   }    
     
-  polynomial_cycle_ket( kets, vec, p_vec, pp_vec, dmp_op, dis_vec, a, b);
+  polynomial_cycle_ket( kets, vec, p_vec, pp_vec, dmp_op, dis_vec);
 
     
   auto csrmv_end = std::chrono::steady_clock::now();
@@ -205,7 +207,7 @@ void Kubo_solver::compute(){
   }
     
   device_.vel_op( &(p_vec[C*W]), &(rand_vec[C*W]) );
-  polynomial_cycle(  bras, vec, p_vec, pp_vec, dmp_op, dis_vec, a, b);	
+  polynomial_cycle(  bras, vec, p_vec, pp_vec, dmp_op, dis_vec);	
 
   auto csrmv_end_2 = std::chrono::steady_clock::now();
   Station(std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end_2 - csrmv_start_2).count()/1000, "       Bras cycle time:            ");
@@ -280,15 +282,16 @@ void Kubo_solver::compute(){
 
 
 
-void Kubo_solver::polynomial_cycle(type polys[], type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[],  r_type a, r_type b){
-
+void Kubo_solver::polynomial_cycle(type polys[], type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[]){
+  
   int M = parameters_.M_;
 
-  
   int W   = device_.parameters().W_,
       C   = device_.parameters().C_,
       SUBDIM = device_.parameters().SUBDIM_;    
 
+  r_type a = parameters_.a_,
+    b = parameters_.b_;
 //=================================KPM Step 0======================================//
 
 #pragma omp parallel for 
@@ -322,18 +325,18 @@ void Kubo_solver::polynomial_cycle(type polys[], type vec[], type p_vec[], type 
         polys[m*SUBDIM+i] = vec[i+C*W];
       
     }
-      
-  
 }
 
 
-void Kubo_solver::polynomial_cycle_ket(type polys[], type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[],  r_type a, r_type b){
+void Kubo_solver::polynomial_cycle_ket(type polys[], type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[]){
 
   int M = parameters_.M_,
       W   = device_.parameters().W_,
       C   = device_.parameters().C_,
       SUBDIM = device_.parameters().SUBDIM_;
-  
+
+  r_type a = parameters_.a_,
+    b = parameters_.b_;
   
 //=================================KPM Step 0======================================//
 
