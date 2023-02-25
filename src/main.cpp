@@ -29,20 +29,39 @@ int main(int , char **argv){
 
   //Reading simulation parameters
   Input>>s_vars.M_, Input>>s_vars.R_, Input>>s_vars.dis_real_, Input>>s_vars.seed_, Input>>s_vars.edge_,
+  Input>>s_vars.num_parts_;
   Input>>s_vars.E_start_,   Input>>s_vars.E_end_;
   Input>>s_vars.eta_;
   Input>>s_vars.E_min_;
   Input>>s_vars.filename_;
 
+
+  s_vars.SECTION_SIZE_ = graphene_vars.SUBDIM_/s_vars.num_parts_;
+
   
-  s_vars.a_= 10;
+  if(graphene_vars.SUBDIM_%s_vars.num_parts_!=0){
+    std::cout<<"Please select SUBDIM to be divisible by num_parts_"<<std::endl;
+    return 0;
+  }
+
+  
+
+  Graphene graphene_device(graphene_vars);
+
+  int maxIter = 300;
+  r_type Emax, Emin,  edge = s_vars.edge_, Eedge;
+  
+  graphene_device.minMax_EigenValues( maxIter,  Emax, Emin);
+  Eedge=std::max(std::abs(Emax), std::abs(Emin));
+
+  s_vars.a_ = 2*Eedge/(2.0-edge);
   s_vars.b_ = 0;
 
 
-  Graphene graphene_device(graphene_vars);
   
   Kubo_solver solver( s_vars, graphene_device);
   solver.compute();
-  
+
+  return 0;
 }
 

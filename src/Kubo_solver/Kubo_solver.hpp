@@ -9,7 +9,7 @@
 
 struct solver_vars{  
   r_type a_ ,b_, E_min_, eta_, E_start_, E_end_, edge_;//m_str, rsh_str, anderson_str;
-  int M_, R_, dis_real_, seed_;
+  int M_, R_, dis_real_, seed_, num_parts_, SECTION_SIZE_;
   std::string filename_, run_dir_;
   
 };
@@ -39,8 +39,8 @@ public:
   void update_data ( r_type*,r_type*, r_type*, r_type*, r_type*, int ,  std::string, std::string );
   void plot_data   ( std::string, std::string );
   
-  void polynomial_cycle     ( type*, type*, type*, type*, r_type*, r_type* );
-  void polynomial_cycle_ket ( type*, type*, type*, type*, r_type*, r_type* );
+  void polynomial_cycle     ( type*, type*, type*, type*, r_type*, r_type* , int);
+  void polynomial_cycle_ket ( type*, type*, type*, type*, r_type*, r_type* , int);
 
 
   

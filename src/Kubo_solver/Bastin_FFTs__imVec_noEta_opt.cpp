@@ -9,24 +9,26 @@
 #include "Kubo_solver.hpp"
 
 
-void Kubo_solver::Bastin_FFTs__imVec_noEta_opt(std::complex<r_type> bras[], std::complex<r_type> kets[], r_type E_points[], r_type integrand[]){
-
-  int SUBDIM = device_.parameters().SUBDIM_;    
-
+void Kubo_solver::Bastin_FFTs__imVec_noEta_opt(std::complex<r_type> bras[], std::complex<r_type> kets[], r_type E_points[], r_type final_integrand[]){
   
   int M = parameters_.M_;
 
   
-  int size = SUBDIM;
+  int size = parameters_.SECTION_SIZE_;
   const std::complex<double> im(0,1);
     
 
   std::complex<r_type> factors[M];
   r_type IM_root[M];
 
+  /*
   r_type a = parameters_.a_,
          eta = parameters_.eta_/a;
+  */
+  r_type integrand[M];
 
+  for(int m=0;m<M;m++)
+    integrand[m]=0;
 
 
  
@@ -109,7 +111,7 @@ void Kubo_solver::Bastin_FFTs__imVec_noEta_opt(std::complex<r_type> bras[], std:
     for(int l=l_start; l<l_end;l++){
       for(int m=0;m<M;m++){
 
-	bra_Green[m] = bras[m*SUBDIM+l]; //This single access row-wise access of a col-major matrix is the longest operation in this loop!!
+	bra_Green[m] = bras[m*size+l]; //This single access row-wise access of a col-major matrix is the longest operation in this loop!!
 	
 	bra_re[m][0] = ( conj(factors[m]) * bra_Green[m].real() ).real(); //conjugating bra beforehand; factor[m] conjugated because of the forward FFT
 	bra_re[m][1] = ( conj(factors[m]) * bra_Green[m].real() ).imag(); //conjugating bra beforehand; factor[m] conjugated because of the forward FFT
@@ -129,7 +131,7 @@ void Kubo_solver::Bastin_FFTs__imVec_noEta_opt(std::complex<r_type> bras[], std:
 
 
 
-	ket_Green[m] = kets[m*SUBDIM+l]; 	
+	ket_Green[m] = kets[m*size+l]; 	
 
 	ket_re[m][0] = ( factors[m] * (ket_Green[m].real()) ).real(); 
 	ket_re[m][1] = ( factors[m] * (ket_Green[m].real()) ).imag(); 
@@ -228,6 +230,7 @@ void Kubo_solver::Bastin_FFTs__imVec_noEta_opt(std::complex<r_type> bras[], std:
   for(int k=0; k<M; k++ ){ 
     r_type ek  = E_points[k];
     integrand[k] *= 2.0/pow((1.0 - ek  * ek ),2.0);     //2.0/(IM_root[k]*IM_root[k]);//
+    final_integrand[k] += integrand[k] ;
   }
 
     

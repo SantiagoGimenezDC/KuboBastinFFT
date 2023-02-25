@@ -79,3 +79,23 @@ void Direct::generate_vec_im( std::complex<r_type> rand_vec[], int ){
   
 }
 
+
+
+void Direct::generate_vec_re( r_type rand_vec[], int ){
+
+  int C    = this->parameters().C_,
+    W      = this->parameters().W_,
+    DIM    = this->parameters().DIM_,
+    SUBDIM = this->parameters().SUBDIM_    ;
+
+
+#pragma omp parallel for
+  for(int m=0; m < DIM; m++)
+    rand_vec[m] = 0;
+
+  int random_site = SUBDIM * this->rng().get();
+  
+  rand_vec[random_site+C*W] = 1.0;
+  
+}
+

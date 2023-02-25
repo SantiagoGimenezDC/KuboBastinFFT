@@ -27,6 +27,7 @@ public:
   void update_cheb ( type*, type*, type*, r_type*, r_type*, r_type , r_type );  
   void update_cheb ( type*, type*, type*, r_type*, r_type , r_type );
   void update_cheb ( int ,  int, type*, type*, type*, type*, r_type*, r_type , r_type );
+  void H_ket ( type*, type*, r_type , r_type );
   void vel_op (type*, type*);
   
   void vertical_BC(type*, type*, r_type*, r_type );
@@ -34,6 +35,10 @@ public:
 
 
   void Anderson_disorder(r_type*);  
+
+
+  
+  void minMax_EigenValues( int , r_type& , r_type& );
 };
 
 

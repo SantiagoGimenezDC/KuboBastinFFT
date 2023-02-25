@@ -9,28 +9,24 @@
 #include "Kubo_solver.hpp"
 
 
-void Kubo_solver::Greenwood_FFTs__reVec_noEta(r_type bras[], r_type kets[], r_type E_points[], r_type r_data[]){
-
-  int SUBDIM = device_.parameters().SUBDIM_;    
-
+void Kubo_solver::Greenwood_FFTs__reVec_noEta(r_type bras[], r_type kets[], r_type E_points[], r_type final_r_data[]){
   
   int M = parameters_.M_;
 
   
-  int size = SUBDIM;
+  int size = parameters_.SECTION_SIZE_;
   const std::complex<double> im(0,1);
-  //  VectorXp preFactor(N);
+
     
 
-  r_type IM_root[M];
-  r_type kernel[M];
-  
-  r_type a = parameters_.a_;
-
+  r_type IM_root [ M ],
+         kernel  [ M ],  
+         r_data  [ M ];
   
   for(int m=0;m<M;m++){
-    kernel[m]      =  kernel_->term(m,M);
-    IM_root[m]     =  sin( acos( E_points[m] )   );
+    kernel  [ m ]  =  kernel_->term(m,M);
+    IM_root [ m ] =  sin( acos( E_points[m] )   );
+    r_data  [ m ]  = 0;
   }
 
     #pragma omp parallel 
@@ -71,8 +67,8 @@ void Kubo_solver::Greenwood_FFTs__reVec_noEta(r_type bras[], r_type kets[], r_ty
 
     for(int l=l_start; l<l_end;l++){
       for(int m=0;m<M;m++){
-	bra[m] =  kernel[m] * bras[m*SUBDIM+l];
-	ket[m] =  kernel[m] * kets[m*SUBDIM+l];
+	bra[m] =  kernel[m] * bras[m*size+l];
+	ket[m] =  kernel[m] * kets[m*size+l];
 
       }
 
@@ -105,6 +101,8 @@ void Kubo_solver::Greenwood_FFTs__reVec_noEta(r_type bras[], r_type kets[], r_ty
   }
 
     
-  for(int m=0;m<M;m++)
-    r_data[m] *= 2.0 * ( IM_root[m] * IM_root[m] );  
+  for(int m=0;m<M;m++){
+    r_data[m] *= 2.0 / ( IM_root[m] * IM_root[m] );
+    final_r_data[m] += r_data[m];
+  }
 }

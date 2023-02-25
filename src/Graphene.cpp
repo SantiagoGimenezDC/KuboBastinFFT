@@ -2,6 +2,10 @@
 #include<iostream>
 #include<complex>
 #include<random>
+#include<chrono>
+#include<eigen-3.4.0/Eigen/Core>
+
+
 #include"Graphene.hpp"
 
 
@@ -247,7 +251,47 @@ void Graphene::update_cheb ( int m, int M,  type polys[], type vec[], type p_vec
    p_vec[n]  = vec[n];
  } 
 }
+
+
+
+void Graphene::H_ket ( type vec[], type p_vec[], r_type a, r_type b){
+
+  r_type t = t_standard_/a,
+       b_a = b/a;
+
+
+  int W   = this->parameters().W_,
+      LE  = this->parameters().LE_,
+    C   = this->parameters().C_;
   
+  const int fullLe = 2*C+LE;
+     
+  
+#pragma omp parallel for 
+ for(int j=0; j<fullLe; j++){
+    for(int i=0; i<W; i++){
+      int n = j * W + i;
+      
+      vec[n] = b_a * p_vec[n];
+
+      if( i!=0 )
+	vec[n] += t * p_vec[n-1];
+      
+      if( i != (W-1) )
+	vec[n] += t * p_vec[n+1];
+      
+      if( j != (fullLe-1) && (j+i)%2!=0 )
+	vec[n] += t * p_vec[n+W];
+      
+      if( j != 0 && (j+i)%2==0 )
+	vec[n] += t * p_vec[n-W];
+
+      
+    }
+ } 
+ 
+}
+
 
 
 void Graphene::vel_op (type vec[], type p_vec[] ){
@@ -287,5 +331,72 @@ void Graphene::vel_op (type vec[], type p_vec[] ){
 };
 
 
+
+
+void Graphene::minMax_EigenValues( int maxIter, r_type& eEmax, r_type& eEmin){ //Power Method; valid if eigenvalues are real
+  int DIM = graphene_vars_.DIM_;
+
+  Eigen::Matrix<type, -1, 1> y = Eigen::Matrix<type, -1, 1>::Constant(DIM,1, 1.0/sqrt(DIM) ),
+            y_Ant=y;
+ 
+
+  r_type y_norm = 0;
+  r_type Emax, Emin;
+
+  std::cout<<"   Calculating Energy band bounds:    "<<std::endl;
+  auto start = std::chrono::steady_clock::now();
+
+  
+  for( int i=0; i<maxIter; i++){
+    
+    this->H_ket(y.data(),y_Ant.data(),1.0,0.0);
+    y_norm=y.norm();
+
+    y=y/y_norm;
+    y_Ant=y;
+  }
+
+  
+  this->H_ket(y.data(),y_Ant.data(),1.0,0.0);
+
+  Emax = std::real(y_Ant.dot(y)/y_Ant.squaredNorm());
+
+
+
+  
+  y  =  Eigen::Matrix<type, -1, 1>::Constant(DIM,1, 1.0/sqrt(DIM) );
+    
+  for( int i=0; i<maxIter; i++){
+    this->H_ket(y.data(),y_Ant.data(),1.0,-Emax);
+    y_norm=y.norm();
+
+    y=y/y_norm;
+    y_Ant=y;  
+  }
+
+
+  this->H_ket(y.data(),y_Ant.data(),1.0,-Emax);
+  
+  Emin  = std::real(((y_Ant.dot(y))/y_Ant.squaredNorm()));
+  Emin += Emax;
+
+   
+  auto end = std::chrono::steady_clock::now();
+  std::cout<<"   Time to perform Lanczos Recursion:    ";
+  int millisec0=std::chrono::duration_cast<std::chrono::milliseconds>
+                (end - start).count();
+  int sec0=millisec0/1000, min0=sec0/60, reSec0=sec0%60;
+  std::cout<<min0<<" min, "<<reSec0<<" secs;"<<
+	     " ("<< millisec0<<"ms) "<<std::endl<<std::endl;     
+
+
+  
+  eEmin  = std::min(Emax,Emin);
+  eEmax  = std::max(Emax,Emin);
+  
+    
+  std::cout<<"    Highest absolute energy bound:    "<<eEmax<<std::endl;
+  std::cout<<"    Lower absolute energy bound:      "<<eEmin<<std::endl<<std::endl<<std::endl;
+}
 
 

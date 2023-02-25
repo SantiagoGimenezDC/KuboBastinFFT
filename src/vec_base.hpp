@@ -45,7 +45,7 @@ public:
   virtual ~Direct(){};
   Direct(device_vars& parameters, int seed) : Vec_Base(parameters, seed){};
   
-  virtual void generate_vec_re(r_type*, int ){};
+  virtual void generate_vec_re(r_type*, int );
   virtual void generate_vec_im( std::complex<r_type>*, int );  
 };
 
