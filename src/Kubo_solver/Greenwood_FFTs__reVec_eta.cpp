@@ -108,5 +108,10 @@ void Kubo_solver::Greenwood_FFTs__reVec_eta(r_type bras[], r_type kets[], r_type
       fftw_free(ket);
     }
   }
+
+  if(parameters_.eta_!=0)
+    for(int m=0;m<M;m++)
+      r_data[m] *= sin(acos(E_points[m]));
+      
 }
 

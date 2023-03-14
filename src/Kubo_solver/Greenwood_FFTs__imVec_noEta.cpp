@@ -11,43 +11,34 @@
 
 
 
-void Kubo_solver::Greenwood_FFTs__imVec_noEta(std::complex<r_type> bras[], std::complex<r_type> kets[], r_type E_points[], r_type r_data[]){
-
-  int SUBDIM = device_.parameters().SUBDIM_;    
-
-  
-  int M = parameters_.M_;
-
-  
-  int size = SUBDIM;
+void Kubo_solver::Greenwood_FFTs__imVec_noEta(std::complex<r_type> **bras, std::complex<r_type> **kets, r_type E_points[], r_type r_data[]){
   const std::complex<double> im(0,1);
-  //  VectorXp preFactor(N);
-    
 
-  std::complex<r_type> factors[M],IM_root[M];
-  r_type kernel[M];
+  int M  = parameters_.M_,
+    size = parameters_.SECTION_SIZE_;
+
   
-  r_type a = parameters_.a_,
-       eta = parameters_.eta_/a;
+ 
+  r_type *kernel  = new r_type [M],
+    *IM_root      = new r_type[M];
 
   
   for(int m=0;m<M;m++){
     kernel[m]      =  kernel_->term(m,M);
-    factors[m]     =  (2-(m==0)) * kernel_->term(m, M) *  std::polar(1.0,M_PI*m/(2.0*M)) ;
-    IM_root[m]     =  sin( acos( E_points[m] ) - im * asinh( eta )  );
-    //IM_root[m]     *= IM_root[m]/2.0;
+    IM_root[m]     =  sin( acos( E_points[m] )  );
   }
 
     #pragma omp parallel 
     {
 
     int id,  Nthrds, l_start, l_end;
-    id = omp_get_thread_num();
-    Nthrds = omp_get_num_threads();
+    id      = omp_get_thread_num();
+    Nthrds  = omp_get_num_threads();
     l_start = id * size / Nthrds;
-    l_end = (id+1) * size / Nthrds;
+    l_end   = (id+1) * size / Nthrds;
 
-    double thread_data[M];
+    
+    r_type *thread_data = new r_type [M];
 
     for(int m=0;m<M;m++)
       thread_data[m]=0;
@@ -57,16 +48,13 @@ void Kubo_solver::Greenwood_FFTs__imVec_noEta(std::complex<r_type> bras[], std::
     
     fftw_plan plan1, plan2, plan3, plan4;
 
-    double  *bra_re, *bra_im;
-    double  *ket_re, *ket_im;
+    double
+      *bra_re = ( double* ) fftw_malloc(sizeof(double) * M ),
+      *bra_im = ( double* ) fftw_malloc(sizeof(double) * M ),
+      *ket_re = ( double* ) fftw_malloc(sizeof(double) * M ),
+      *ket_im = ( double* ) fftw_malloc(sizeof(double) * M );
     
-    
-    bra_re   = ( double* ) fftw_malloc(sizeof(double) * M );
-    bra_im   = ( double* ) fftw_malloc(sizeof(double) * M );    
-
-    ket_re   = ( double* ) fftw_malloc(sizeof(double) * M );
-    ket_im   = ( double* ) fftw_malloc(sizeof(double) * M );
-    
+        
 # pragma omp critical
     {
       plan1 = fftw_plan_r2r_1d(M, bra_re, bra_re, FFTW_REDFT01, FFTW_ESTIMATE);//bra_re
@@ -78,11 +66,11 @@ void Kubo_solver::Greenwood_FFTs__imVec_noEta(std::complex<r_type> bras[], std::
 
     for(int l=l_start; l<l_end;l++){
       for(int m=0;m<M;m++){
-	bra_re[m] =  kernel[m] * bras[m*SUBDIM+l].real();
-        bra_im[m] =  - kernel[m] * bras[m*SUBDIM+l].imag();
+	bra_re[m] =  kernel[m] * bras[m][l].real();
+        bra_im[m] =  kernel[m] * bras[m][l].imag();
 
-	ket_re[m] =  kernel[m] * kets[m*SUBDIM+l].real();
-        ket_im[m] =  kernel[m] * kets[m*SUBDIM+l].imag(); 
+	ket_re[m] =  kernel[m] * kets[m][l].real();
+        ket_im[m] =  kernel[m] * kets[m][l].imag(); 
       }
 
 
@@ -94,21 +82,20 @@ void Kubo_solver::Greenwood_FFTs__imVec_noEta(std::complex<r_type> bras[], std::
       
 
 
-      
 
-
-    for(int j=0; j<M; j++ ){ 
-      thread_data[j]   +=   2.0 * (  (bra_re[j] + im * bra_im[j] ) / IM_root[j]    *   ( ket_re[j] + im *  ket_im[j] ) / IM_root[j] ).real();
-    }
+    for(int j=0; j<M; j++ )
+      thread_data[j] += (  (bra_re[j] - im * bra_im[j] )   *   ( ket_re[j] + im *  ket_im[j] )  ).real();
     
     
     }
 
     # pragma omp critical
     {
-      for(int m=0;m<M;m++)
-	r_data[m]+=thread_data[m];
+      for(int e=0;e<M;e++)
+	r_data[e] += 2.0 * thread_data[e] / ( IM_root[e] * IM_root[e] );
+
       
+      delete []thread_data;
       fftw_destroy_plan(plan1);
       fftw_free(bra_re);
       fftw_destroy_plan(plan2);
@@ -121,5 +108,8 @@ void Kubo_solver::Greenwood_FFTs__imVec_noEta(std::complex<r_type> bras[], std::
       fftw_free(ket_im);
     }
   }
+    
+  delete []IM_root;
+  delete []kernel;
 }
 

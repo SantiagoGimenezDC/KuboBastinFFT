@@ -1,41 +1,33 @@
 #include<iostream>
-#include<fstream>
+#include<cmath>
 #include<omp.h>
 #include<thread>
 #include<complex>
 
 #include<fftw3.h>
 
-#include "../static_vars.hpp"
 #include "Kubo_solver.hpp"
 
 
+void Kubo_solver::Bastin_FFTs__imVec_noEta(std::complex<r_type> **bras, std::complex<r_type> **kets, r_type E_points[], r_type final_integrand[]){
 
-void Kubo_solver::Bastin_FFTs__imVec_noEta(std::complex<r_type> bras[], std::complex<r_type> kets[], r_type E_points[], r_type integrand[]){
+  const std::complex<double> im(0,1);  
 
-  int SUBDIM = device_.parameters().SUBDIM_;    
+  int M  = parameters_.M_,
+    size = parameters_.SECTION_SIZE_;
 
-  
-  int M = parameters_.M_;
-
-  
-  int size = SUBDIM;
-  const std::complex<double> im(0,1);
-  //  VectorXp preFactor(N);
     
 
-  std::complex<r_type> factors[M];
-  r_type IM_root[M], kernel[M];
+  std::complex<r_type> *factors = new std::complex<r_type> [M];
+  r_type *IM_root = new r_type [M],
+   *integrand     = new r_type [M];
 
-  r_type a = parameters_.a_,
-         eta = parameters_.eta_/a;
+  for(int m=0;m<M;m++)
+    integrand[m]=0;
 
 
-
- 
   for(int m=0;m<M;m++){
-    kernel[m] =  kernel_->term(m, M);    
-    factors[m] = (2.0-(m==0)) * kernel[m] * std::polar(1.0,M_PI*m/(2.0*M)) ;
+    factors[m] = (2.0-(m==0)) * kernel_->term(m, M) * std::polar(1.0,M_PI*m/(2.0*M)) ;
     IM_root[m] = sin( acos(E_points[m]) );
   }
 
@@ -52,41 +44,46 @@ void Kubo_solver::Bastin_FFTs__imVec_noEta(std::complex<r_type> bras[], std::com
     l_start = id * size / Nthrds;
     l_end = (id+1) * size / Nthrds;
 
-    r_type thread_integrand[M];
-
-    for(int m=0;m<M;m++)
-      thread_integrand[m]=0;
+    if (id == Nthrds-1) l_end = size;
 
     
-    if (id == Nthrds-1) l_end = size;
+
+
+    //8 planos+ 14 vetores [M] por thread. Pode ser reduzido a 2 planos e uns 4 vetores?
     
     fftw_plan plan1, plan2, plan3, plan4,
               plan5, plan6, plan7, plan8;
 
-    std::complex<r_type> bra_Green[M], bra_Delta[M], bra_Dfull[M],
-                         ket_Green[M], ket_Delta[M], ket_Dfull[M];
+    std::complex<r_type>
+      *bra_Green = new std::complex<r_type> [M],
+      *bra_Delta = new std::complex<r_type> [M],
+      *bra_Dfull = new std::complex<r_type> [M],
       
-    fftw_complex  *bra_re,   *bra_im;
-    fftw_complex  *bra_D_re, *bra_D_im;
-
-    fftw_complex  *ket_re,   *ket_im;
-    fftw_complex  *ket_D_re, *ket_D_im;
+      *ket_Green = new std::complex<r_type> [M],
+      *ket_Delta = new std::complex<r_type> [M],
+      *ket_Dfull = new std::complex<r_type> [M];   
 
     
-    bra_re   = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );
-    bra_im   = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );
+    fftw_complex   
+      *bra_re   = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M ),
+      *bra_im   = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M ),
 
-    bra_D_re = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );
-    bra_D_im = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );
+      *bra_D_re = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M ),
+      *bra_D_im = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M ),
 
 
-    ket_re   = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );
-    ket_im   = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );
+      *ket_re   = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M ),
+      *ket_im   = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M ),
 
-    ket_D_re = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );
-    ket_D_im = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );
+      *ket_D_re = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M ),
+      *ket_D_im = ( fftw_complex* ) fftw_malloc(sizeof(fftw_complex) * M );
+
 
     
+    r_type *thread_integrand = new r_type [M];
+
+    for(int m=0;m<M;m++)
+      thread_integrand[m]=0;
     
 
     
@@ -109,12 +106,14 @@ void Kubo_solver::Bastin_FFTs__imVec_noEta(std::complex<r_type> bras[], std::com
     for(int l=l_start; l<l_end;l++){
       for(int m=0;m<M;m++){
 
-	bra_re[m][0] = ( conj(factors[m]) * bras[m*SUBDIM+l].real() ).real(); //conjugating bra beforehand; factor[m] conjugated because of the forward FFT
-	bra_re[m][1] = ( conj(factors[m]) * bras[m*SUBDIM+l].real() ).imag(); //conjugating bra beforehand; factor[m] conjugated because of the forward FFT
+	bra_Green[m] = bras[m][l]; //This single access row-wise access of a col-major matrix is the longest operation in this loop!!
+	
+	bra_re[m][0] = ( conj(factors[m]) ).real() * bra_Green[m].real(); 
+	bra_re[m][1] = ( conj(factors[m]) ).imag() * bra_Green[m].real(); 
 
 
-	bra_im[m][0] = ( conj(factors[m]) * bras[m*SUBDIM+l].imag() ).real(); //conjugating bra beforehand again
-	bra_im[m][1] = ( conj(factors[m]) * bras[m*SUBDIM+l].imag() ).imag(); 
+	bra_im[m][0] = ( conj(factors[m]) ).real() * bra_Green[m].imag(); 
+	bra_im[m][1] = ( conj(factors[m]) ).imag() * bra_Green[m].imag(); 
 
 
 	bra_D_re[m][0] = m * bra_re[m][0]; 
@@ -127,14 +126,14 @@ void Kubo_solver::Bastin_FFTs__imVec_noEta(std::complex<r_type> bras[], std::com
 
 
 
-	
+	ket_Green[m] = kets[m][l]; 	
 
-	ket_re[m][0] = ( factors[m] * (kets[m*SUBDIM+l].real()) ).real(); 
-	ket_re[m][1] = ( factors[m] * (kets[m*SUBDIM+l].real()) ).imag(); 
+	ket_re[m][0] = ( factors[m] ).real() * ket_Green[m].real(); 
+	ket_re[m][1] = ( factors[m] ).imag() * ket_Green[m].real(); 
 
 
-	ket_im[m][0] = ( factors[m] * (kets[m*SUBDIM+l].imag()) ).real(); 
-	ket_im[m][1] = ( factors[m] * (kets[m*SUBDIM+l].imag()) ).imag(); 
+	ket_im[m][0] = ( factors[m] ).real() * ket_Green[m].imag(); 
+	ket_im[m][1] = ( factors[m] ).imag() * ket_Green[m].imag(); 
 
 
 	ket_D_re[m][0] = m * ket_re[m][0]; 
@@ -161,7 +160,7 @@ void Kubo_solver::Bastin_FFTs__imVec_noEta(std::complex<r_type> bras[], std::com
       for(int j=0; j<M/2; j++){
 	
 	bra_Delta[2*j] = bra_re  [j][0]                       - im *   bra_im  [j][0];	
-	bra_Green[2*j] = bra_re  [j][0] + im * bra_re  [j][1] - im * ( bra_im  [j][0] + im * bra_im  [j][1] );//remember bra has been conjugated already
+	bra_Green[2*j] = bra_re  [j][0] + im * bra_re  [j][1] - im * ( bra_im  [j][0] + im * bra_im  [j][1] );//BRA is conjugated for the dot product
 	bra_Dfull[2*j] = bra_D_re[j][0] + im * bra_D_re[j][1] - im * ( bra_D_im[j][0] + im * bra_D_im[j][1] );
 
 	ket_Delta[2*j] = ket_re  [j][0]                       + im *   ket_im  [j][0];	
@@ -169,10 +168,10 @@ void Kubo_solver::Bastin_FFTs__imVec_noEta(std::complex<r_type> bras[], std::com
 	ket_Dfull[2*j] = ket_D_re[j][0] + im * ket_D_re[j][1] + im * ( ket_D_im[j][0] + im * ket_D_im[j][1] );
 
 
+	
 	bra_Delta[2*j+1] = bra_re  [M-j-1][0]                           - im *   bra_im  [M-j-1][0];	
 	bra_Green[2*j+1] = bra_re  [M-j-1][0] - im * bra_re  [M-j-1][1] - im * ( bra_im  [M-j-1][0] - im * bra_im  [M-j-1][1] );//FFT algo conversion forces conjugation in re and im parts
 	bra_Dfull[2*j+1] = bra_D_re[M-j-1][0] - im * bra_D_re[M-j-1][1] - im * ( bra_D_im[M-j-1][0] - im * bra_D_im[M-j-1][1] );
-
 
 	ket_Delta[2*j+1] = ket_re  [M-j-1][0]                           + im * ( ket_im  [M-j-1][0]  );	
 	ket_Green[2*j+1] = ket_re  [M-j-1][0] - im * ket_re  [M-j-1][1] + im * ( ket_im  [M-j-1][0] - im * ket_im  [M-j-1][1] );//FFT algo conversion forces conjugation in re and im parts
@@ -216,6 +215,16 @@ void Kubo_solver::Bastin_FFTs__imVec_noEta(std::complex<r_type> bras[], std::com
       fftw_free(ket_D_re);
       fftw_destroy_plan(plan8);
       fftw_free(ket_D_im); 
+
+      delete []bra_Green;
+      delete []bra_Delta;
+      delete []bra_Dfull;
+      
+      delete []ket_Green;
+      delete []ket_Delta;
+      delete []ket_Dfull;
+        
+      delete []thread_integrand;
       
       
     }
@@ -226,7 +235,10 @@ void Kubo_solver::Bastin_FFTs__imVec_noEta(std::complex<r_type> bras[], std::com
   for(int k=0; k<M; k++ ){ 
     r_type ek  = E_points[k];
     integrand[k] *= 2.0/pow((1.0 - ek  * ek ),2.0);     //2.0/(IM_root[k]*IM_root[k]);//
+    final_integrand[k] += integrand[k] ;
   }
 
-    
+  delete []factors;
+  delete []IM_root;
+  delete []integrand;    
 }

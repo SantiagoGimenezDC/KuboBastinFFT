@@ -30,9 +30,29 @@
 
 Kubo_solver::Kubo_solver(solver_vars& parameters, Graphene& device) : parameters_(parameters), device_(device)
 {
-  kernel_   = new Jackson();
-  vec_base_ = new Direct(device_.parameters(), parameters_.seed_);
-  cap_      = new CAP();
+
+  if(parameters_.cap_choice_==0)
+    cap_      = new Mandelshtam(parameters_.E_min_, parameters_.eta_/parameters_.a_);
+  else if(parameters_.cap_choice_==1)
+    cap_      = new Effective_Contact(parameters_.E_min_, parameters_.eta_/parameters_.a_);
+  else
+    cap_      = new Mandelshtam(parameters_.E_min_, parameters_.eta_/parameters_.a_);
+
+
+  
+  if(parameters_.base_choice_==0)
+    vec_base_ = new Direct(device_.parameters(), parameters_.seed_);
+  else if(parameters_.base_choice_==1)
+    vec_base_ = new Complex_Phase(device_.parameters(), parameters_.seed_);
+  else
+    vec_base_ = new Direct(device_.parameters(), parameters_.seed_);
+
+  if(parameters_.kernel_choice_==0)
+    kernel_   = new None();
+  else if(parameters_.kernel_choice_==1)
+    kernel_   = new Jackson();
+  else
+    kernel_   = new None();
 }
 
 void Station(int millisec, std::string msg ){
@@ -83,18 +103,24 @@ void Kubo_solver::compute(){
 
 /*------------Big memory allocation--------------*/
   //Single Shot vectors
-  type bras [ M * SEC_SIZE ],
-       kets [ M * SEC_SIZE ];
+  type **bras = new type* [ M ],
+       **kets = new type* [ M ];
+
+  for(int m=0;m<M;m++){
+    bras[m] = new type [ SEC_SIZE ],
+    kets[m] = new type [ SEC_SIZE ];
+  }
+
   
   //Recursion Vectors
-  type vec      [ DIM ],
-       p_vec    [ DIM ],
-       pp_vec   [ DIM ],
-       rand_vec [ DIM ];
+  type *vec      = new type [ DIM ],
+       *p_vec    = new type [ DIM ],
+       *pp_vec   = new type [ DIM ],
+       *rand_vec = new type [ DIM ];
   
   //Auxiliary - disorder and CAP vectors
-  r_type dmp_op  [ DIM ],
-         dis_vec [ SUBDIM ];
+  r_type *dmp_op  = new r_type [ DIM ],
+         *dis_vec = new r_type [ SUBDIM ];
 /*-----------------------------------------------*/
 
 
@@ -102,12 +128,12 @@ void Kubo_solver::compute(){
 
   
 /*---------------Dataset vectors----------------*/
-  r_type r_data     [ M ],
-         final_data [ M ],
-         E_points   [ M ],
-         conv_R     [ 2*D*R ];
+  r_type *r_data     = new r_type [ M ],
+         *final_data = new r_type [ M ],
+         *E_points   = new r_type [ M ],
+         *conv_R     = new r_type [ 2*D*R ];
 
-  r_type integrand[M];
+  r_type *integrand  = new r_type [M] ;
 /*-----------------------------------------------*/  
 
 
@@ -116,10 +142,11 @@ void Kubo_solver::compute(){
   
 /*----------------Initializations----------------*/
 #pragma omp parallel for  
-  for(int k=0;k<M*SEC_SIZE;k++){
-    bras [k] = 0.0;
-    kets [k] = 0.0;
-  }
+  for(int m=0;m<M;m++)
+    for(int n=0;n<SEC_SIZE;n++){    
+      bras [m][n] = 0.0;
+      kets [m][n] = 0.0;
+    }
   
 #pragma omp parallel for  
   for(int k=0;k<DIM;k++){
@@ -145,7 +172,7 @@ void Kubo_solver::compute(){
    
 
 
-  create_CAP(W, C, LE, eta, E_min, dmp_op);
+  cap_->create_CAP(W, C, LE,  dmp_op);
   //eff_contact(W, C, LE, eta, dmp_op);
   
 
@@ -171,7 +198,7 @@ void Kubo_solver::compute(){
 
 
 
-       vec_base_->generate_vec_re( rand_vec, r);
+       vec_base_->generate_vec_im( rand_vec, r);
        //generate_vec_im(C, W, LE,  rand_vec, this->parameters().seed_, r);
 
 
@@ -231,12 +258,28 @@ void Kubo_solver::compute(){
 
          auto FFT_start_2 = std::chrono::steady_clock::now();
 
-         //Bastin_FFTs__imVec_noEta_opt(bras,kets, E_points, integrand);
+         //Bastin_FFTs__reVec_noEta(bras,kets, E_points, integrand);    	 
+         Bastin_FFTs__imVec_noEta(bras,kets, E_points, integrand);
+         
+	 
+	 //Greenwood_FFTs__reVec_noEta(bras,kets, E_points, r_data);         
          //Greenwood_FFTs__imVec_noEta(bras,kets, E_points, r_data);
-	 Greenwood_FFTs__reVec_noEta(bras,kets, E_points, r_data);
+
+
+	 
+	 /*
+         These 3 are meant to correct the pre factor .As it turns out, for small values of eta<0.1,
+	 those corrections are almost invisible and not worthwhile the huge increase in computational
+	 cost. The correction is meaningfull at the -1 and 1 edges, however, it is a lot more 
+         reasonable to adjuste edge_ variable to deal with those 
+	 
+	 //Bastin_FFTs__imVec_eta(bras,kets, E_points, integrand);
          //Greenwood_FFTs__reVec_eta(bras,kets, E_points, r_data);
-         //Bastin_FFTs__reVec_noEta(bras,kets, E_points, integrand);    
-         auto FFT_end_2 = std::chrono::steady_clock::now();
+	 //Greenwood_FFTs__imVec_eta(bras,kets, E_points, r_data);
+	 
+         */
+	 
+	 auto FFT_end_2 = std::chrono::steady_clock::now();
          Station(std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000, "           FFT operations time:        ");
     
 	 total_FFTs += std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000;
@@ -246,19 +289,26 @@ void Kubo_solver::compute(){
        std::cout<<std::endl<<"       Total CSRMV time:           "<< total_csrmv<<" (ms)"<<std::endl;
        std::cout<<"       Total FFTs time:            "<< total_FFTs<<" (ms)"<<std::endl;
 
-       /*
+       
        auto start_pr = std::chrono::steady_clock::now();
     
        integration(E_points, integrand, r_data);
     
        auto end_pr = std::chrono::steady_clock::now();
        Station(std::chrono::duration_cast<std::chrono::microseconds>(end_pr - start_pr).count()/1000, "       Integration time:           ");
-       */
+       
 
        
     
        auto plot_start = std::chrono::steady_clock::now();    
 
+       /*When introducing a const. eta with modified polynomials, the result is equals to that of a
+       simulation with regular polynomials and an variable eta_{var}=eta*sin(acos(E)). The following
+       heuristical correction greatly improves the result far from the CNP to match that of the
+       desired regular polys and const. eta.*/
+       if( parameters_.eta_!=0 )
+         eta_CAP_correct(E_points, r_data);
+       
        update_data(E_points, integrand, r_data, final_data, conv_R, (d-1)*R+r, run_dir, filename);
        plot_data(run_dir,filename);
     
@@ -274,7 +324,42 @@ void Kubo_solver::compute(){
        std::cout<<std::endl;
     }
   }
+
+
   
+/*------------Delete everything--------------*/
+  //Single Shot vectors
+  for(int m=0;m<M;m++){
+    delete []bras[m];
+    delete []kets[m];
+  }
+  delete []bras;
+  delete []kets;
+
+  //Recursion Vectors
+  delete []vec;
+  delete []p_vec;
+  delete []pp_vec;
+  delete []rand_vec;
+  
+  //Auxiliary - disorder and CAP vectors
+  delete []dmp_op;
+  delete []dis_vec;
+/*-----------------------------------------------*/
+
+
+
+
+  
+/*---------------Dataset vectors----------------*/
+  delete []r_data;
+  delete []final_data;
+  delete []E_points;
+  delete []conv_R;
+
+  delete []integrand;
+/*-----------------------------------------------*/  
+
   auto end = std::chrono::steady_clock::now();   
   Station(std::chrono::duration_cast<std::chrono::milliseconds>(end - start0).count(), "Total case execution time:             ");
   std::cout<<std::endl;
@@ -284,10 +369,7 @@ void Kubo_solver::compute(){
 
 
 
-
-
-
-void Kubo_solver::polynomial_cycle(type polys[], type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
+void Kubo_solver::polynomial_cycle(type** polys, type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
   
   int M = parameters_.M_;
 
@@ -301,7 +383,7 @@ void Kubo_solver::polynomial_cycle(type polys[], type vec[], type p_vec[], type 
 
 #pragma omp parallel for 
   for(int i=0;i<SEC_SIZE;i++)
-    polys[ i ] = p_vec[ s*SEC_SIZE + i+C*W];
+    polys[0][ i ] = p_vec[ s*SEC_SIZE + i+C*W];
 
 
   
@@ -314,7 +396,7 @@ void Kubo_solver::polynomial_cycle(type polys[], type vec[], type p_vec[], type 
     
 #pragma omp parallel for 
     for(int i=0;i<SEC_SIZE;i++)
-      polys[ SEC_SIZE + i] = vec[s*SEC_SIZE + i+C*W];
+      polys[1][i] = vec[s*SEC_SIZE + i+C*W];
     
 
     
@@ -327,13 +409,13 @@ void Kubo_solver::polynomial_cycle(type polys[], type vec[], type p_vec[], type 
       
 #pragma omp parallel for 
       for(int i=0;i<SEC_SIZE;i++)
-        polys[ m*SEC_SIZE + i ] = vec[s*SEC_SIZE + i+C*W];
+        polys[m][i] = vec[s*SEC_SIZE + i+C*W];
       
     }
 }
 
 
-void Kubo_solver::polynomial_cycle_ket(type polys[], type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
+void Kubo_solver::polynomial_cycle_ket(type** polys, type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
 
   int M   = parameters_.M_,
       W   = device_.parameters().W_,
@@ -344,14 +426,14 @@ void Kubo_solver::polynomial_cycle_ket(type polys[], type vec[], type p_vec[], t
   r_type a = parameters_.a_,
     b = parameters_.b_;
 
-  type tmp[SUBDIM];
+  type *tmp = new type [SUBDIM];
 //=================================KPM Step 0======================================//
 
   device_.vel_op( tmp, &(p_vec[C*W]) );
   
 #pragma omp parallel for 
   for(int i=0;i<SEC_SIZE;i++)
-    polys[ i ] = tmp[ s*SEC_SIZE + i];
+    polys[0][i] = tmp[ s*SEC_SIZE + i];
 
 
   
@@ -362,7 +444,7 @@ void Kubo_solver::polynomial_cycle_ket(type polys[], type vec[], type p_vec[], t
 
 #pragma omp parallel for 
   for(int i=0;i<SEC_SIZE;i++)
-    polys[ SEC_SIZE + i ] = tmp[ s*SEC_SIZE + i];
+    polys[1][i] = tmp[ s*SEC_SIZE + i];
   
     
 
@@ -375,23 +457,33 @@ void Kubo_solver::polynomial_cycle_ket(type polys[], type vec[], type p_vec[], t
 
 #pragma omp parallel for 
   for(int i=0;i<SEC_SIZE;i++)
-    polys[ m * SEC_SIZE + i ] = tmp[ s*SEC_SIZE + i];
+    polys[m][i] = tmp[ s*SEC_SIZE + i];
   
   }
+  
+  delete []tmp;
 }
 
 
+
+void Kubo_solver::eta_CAP_correct(r_type E_points[], r_type r_data[]){
+  int M = parameters_.M_;
+  
+  for(int e=0;e<M;e++)
+    r_data[e] *= sin(acos(E_points[e]));
+}
 
 
 void Kubo_solver::integration(r_type E_points[], r_type integrand[], r_type data[]){
 
   int M = parameters_.M_;
+  r_type edge = parameters_.edge_;
   
 #pragma omp parallel for 
-  for(int k=0; k<M-M/100; k++ ){  //At the very edges of the energy plot the weight function diverges, hence integration should start a little after and a little before the edge.
-                                  //The safety factor guarantees that the conductivity is zero way before reaching the edge. In fact, the safety factor should be used to determine
-                                  //the number of points to be ignored in the future;
-    for(int j=k; j<M-M/100; j++ ){//IMPLICIT PARTITION FUNCTION. Energies are decrescent with e (bottom of the band structure is at e=M);
+  for(int k=0; k<M-int(M*edge/4.0); k++ ){  //At the very edges of the energy plot the weight function diverges, hence integration should start a little after and a little before the edge.
+                                       //The safety factor guarantees that the conductivity is zero way before reaching the edge. In fact, the safety factor should be used to determine
+                                      //the number of points to be ignored in the future;
+    for(int j=k; j<M-int(M*edge/4.0); j++ ){//IMPLICIT PARTITION FUNCTION. Energies are decrescent with e (bottom of the band structure is at e=M);
       r_type ej  = E_points[j],
 	ej1      = E_points[j+1],
 	de       = ej-ej1,
@@ -399,7 +491,7 @@ void Kubo_solver::integration(r_type E_points[], r_type integrand[], r_type data
       
       data[k] +=  de * integ;
     }
-  } 
+  }
 }
 
 

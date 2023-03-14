@@ -37,8 +37,8 @@ void Graphene::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_type dam
        b_a = 2.0 * b/a;
 
   int W = this->parameters().W_,
-      LE = this->parameters().LE_,
-    C = this->parameters().C_,
+    LE  = this->parameters().LE_,
+    C   = this->parameters().C_,
     DIM = this->parameters().DIM_;
 
 

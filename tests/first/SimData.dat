@@ -1,11 +1,35 @@
 ./tests/first/
 
-50 50 150 
+256 256 0  
 0.0 1001
 
-2000 1 1 1000 0.01
+1
+1
+0
+5000 1 1 1000 0.1
 1
 -8.5  8.5
 -0.0
-0.005
-benchmark_small.txt
+0.0
+quick.txt
+
+
+
+
+
+
+W LE C
+dis_str dis_seed
+
+
+
+cap_choice
+base_choice
+kernel_choice
+
+M R D D_seed edge
+num_parts
+E_min Emax
+Eta
+Emin_cap
+src_dir
