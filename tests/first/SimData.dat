@@ -1,16 +1,16 @@
 ./tests/first/
 
-256 256 0  
+10 100 256  0 1.1
 0.0 1001
 
-1
-1
 0
+0
+1
 5000 1 1 1000 0.1
 1
 -8.5  8.5
 -0.0
-0.0
+0.01
 quick.txt
 
 
@@ -18,7 +18,7 @@ quick.txt
 
 
 
-W LE C
+W LE C theta d_min
 dis_str dis_seed
 
 

@@ -3,7 +3,8 @@
 
 #include<string>
 #include"../static_vars.hpp"
-#include "../Graphene.hpp"
+#include "../Device/Device.hpp"
+#include "../Device/Graphene.hpp"
 #include "../kernel.hpp"
 #include "../vec_base.hpp"
 
@@ -19,7 +20,7 @@ struct solver_vars{
 class Kubo_solver{
 private:
   solver_vars parameters_;
-  Graphene    device_;
+  Device&  device_;
   
   Kernel*   kernel_;
   CAP*      cap_;
@@ -29,7 +30,7 @@ private:
 public:
   ~Kubo_solver(){delete kernel_, delete cap_, delete vec_base_;};
   Kubo_solver();
-  Kubo_solver( solver_vars&, Graphene&);
+  Kubo_solver( solver_vars&, Device&);
   
   solver_vars& parameters(){return parameters_;};
   void compute();

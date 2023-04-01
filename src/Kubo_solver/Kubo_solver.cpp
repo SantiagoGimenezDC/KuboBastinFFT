@@ -19,7 +19,8 @@
 #include "../vec_base.hpp"
 #include "../CAP.hpp"
 #include "../kernel.hpp"
-#include "../Graphene.hpp"
+#include "../Device/Device.hpp"
+#include "../Device/Graphene.hpp"
 
 #include "../complex_op.hpp"
 #include "Kubo_solver.hpp"
@@ -28,7 +29,7 @@
 
 
 
-Kubo_solver::Kubo_solver(solver_vars& parameters, Graphene& device) : parameters_(parameters), device_(device)
+Kubo_solver::Kubo_solver(solver_vars& parameters, Device& device) : parameters_(parameters), device_(device)
 {
 
   if(parameters_.cap_choice_==0)
@@ -70,6 +71,24 @@ void Kubo_solver::compute(){
   
   auto start0 = std::chrono::steady_clock::now();
 
+  
+  device_.build_Hamiltonian();
+  device_.setup_velOp();
+  
+  if(parameters_.a_==1.0){
+    r_type Emin, Emax;
+    device_.minMax_EigenValues(300, Emax,Emin);
+
+    parameters_.a_ = (Emax-Emin)/(2.0-parameters_.edge_);
+    parameters_.b_ = -(Emax+Emin)/2.0;
+
+  }
+
+  
+  device_.adimensionalize(parameters_.a_, parameters_.b_);
+
+
+  
 
   int W      = device_.parameters().W_,
       C      = device_.parameters().C_,
@@ -78,7 +97,10 @@ void Kubo_solver::compute(){
       SUBDIM = device_.parameters().SUBDIM_;    
 
   int num_parts = parameters_.num_parts_,
-    SEC_SIZE    = parameters_.SECTION_SIZE_;
+    SEC_SIZE    = 0;
+
+  SEC_SIZE = SUBDIM / num_parts;
+  parameters_.SECTION_SIZE_ = SEC_SIZE;
 
   
   r_type a       = parameters_.a_,
@@ -171,9 +193,8 @@ void Kubo_solver::compute(){
 /*-----------------------------------------------*/  
    
 
-
   cap_->create_CAP(W, C, LE,  dmp_op);
-  //eff_contact(W, C, LE, eta, dmp_op);
+  device_.damp(dmp_op);
   
 
   
@@ -211,16 +232,18 @@ void Kubo_solver::compute(){
          integrand [k] = 0;
        }
 
-       for(int s=0;s<num_parts;s++){
+       for(int s=0;s<=num_parts;s++){
 
+	 if( s==num_parts && SUBDIM % num_parts==0  )
+	   break;
 	 
          std::cout<< "    -Part: "<<s+1<<"/"<<num_parts<<std::endl;
 	 
          auto csrmv_start = std::chrono::steady_clock::now();
 	 for(int k=0;k<DIM;k++){
            vec     [k] = 0.0;
-           pp_vec  [k] = 0.0;
-           p_vec   [k] = rand_vec[k];
+           pp_vec  [k] = rand_vec[k];
+           p_vec   [k] = 0.0;
          }    
 
          polynomial_cycle_ket( kets, vec, p_vec, pp_vec, dmp_op, dis_vec, s);
@@ -245,7 +268,7 @@ void Kubo_solver::compute(){
            pp_vec [k] = 0.0;
          }
     
-         device_.vel_op( &(p_vec[C*W]), &(rand_vec[C*W]) );
+         device_.vel_op( pp_vec, rand_vec );
          polynomial_cycle(  bras, vec, p_vec, pp_vec, dmp_op, dis_vec, s);	
 
          auto csrmv_end_2 = std::chrono::steady_clock::now();
@@ -371,46 +394,31 @@ void Kubo_solver::compute(){
 
 void Kubo_solver::polynomial_cycle(type** polys, type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
   
-  int M = parameters_.M_;
+  int M = parameters_.M_,
+      num_parts = parameters_.num_parts_;
 
-  int W   = device_.parameters().W_,
-      C   = device_.parameters().C_,
-    SEC_SIZE = parameters_.SECTION_SIZE_;
 
-  r_type a = parameters_.a_,
-    b = parameters_.b_;
 //=================================KPM Step 0======================================//
 
-#pragma omp parallel for 
-  for(int i=0;i<SEC_SIZE;i++)
-    polys[0][ i ] = p_vec[ s*SEC_SIZE + i+C*W];
 
-
+  device_.traceover(polys[0], pp_vec, s, num_parts);
   
 
   
 //=================================KPM Step 1======================================//   
     
     
-  device_.update_cheb ( vec, p_vec, pp_vec, damp_op, dis_vec, 2*a, b);
-    
-#pragma omp parallel for 
-    for(int i=0;i<SEC_SIZE;i++)
-      polys[1][i] = vec[s*SEC_SIZE + i+C*W];
-    
+  device_.H_ket ( p_vec, pp_vec, damp_op, dis_vec);
 
+  device_.traceover(polys[1], p_vec, s, num_parts);
     
-
+    
 
 //=================================KPM Steps 2 and on===============================//
     
     for( int m=2; m<M; m++ ){
-      device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec,  a, b);
-      
-#pragma omp parallel for 
-      for(int i=0;i<SEC_SIZE;i++)
-        polys[m][i] = vec[s*SEC_SIZE + i+C*W];
-      
+      device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
+      device_.traceover(polys[m], vec, s, num_parts);
     }
 }
 
@@ -421,44 +429,36 @@ void Kubo_solver::polynomial_cycle_ket(type** polys, type vec[], type p_vec[], t
       W   = device_.parameters().W_,
       C   = device_.parameters().C_,
       SUBDIM   = device_.parameters().SUBDIM_,
-      SEC_SIZE = parameters_.SECTION_SIZE_;
+      DIM   = device_.parameters().DIM_,
+      SEC_SIZE = parameters_.SECTION_SIZE_,
+      buffer_length= SEC_SIZE,
+      num_parts = parameters_.num_parts_;
 
-  r_type a = parameters_.a_,
-    b = parameters_.b_;
+    if( s == num_parts )
+      buffer_length =  SUBDIM % num_parts;
 
-  type *tmp = new type [SUBDIM];
+  type *tmp = new type [DIM];
 //=================================KPM Step 0======================================//
-
-  device_.vel_op( tmp, &(p_vec[C*W]) );
   
-#pragma omp parallel for 
-  for(int i=0;i<SEC_SIZE;i++)
-    polys[0][i] = tmp[ s*SEC_SIZE + i];
-
-
+  device_.vel_op( tmp, pp_vec );
+  device_.traceover(polys[0], tmp, s, num_parts);  
+  
   
 //=================================KPM Step 1======================================//       
     
-  device_.update_cheb ( vec, p_vec, pp_vec, damp_op, dis_vec, 2*a, b);
-  device_.vel_op( tmp, &(vec[C*W]) );
-
-#pragma omp parallel for 
-  for(int i=0;i<SEC_SIZE;i++)
-    polys[1][i] = tmp[ s*SEC_SIZE + i];
+  device_.H_ket ( p_vec, pp_vec, damp_op, dis_vec);
+  device_.vel_op( tmp, p_vec );
+  
+  device_.traceover(polys[1], tmp, s, num_parts);  
   
     
 
 //=================================KPM Steps 2 and on===============================//
     
   for( int m=2; m<M; m++ ){
-    device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec,  a, b);
-    device_.vel_op( tmp, &(vec[C*W]) );      
-
-
-#pragma omp parallel for 
-  for(int i=0;i<SEC_SIZE;i++)
-    polys[m][i] = tmp[ s*SEC_SIZE + i];
-  
+    device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
+    device_.vel_op( tmp, vec );
+    device_.traceover(polys[m], tmp, s, num_parts);
   }
   
   delete []tmp;
@@ -540,7 +540,7 @@ void Kubo_solver::update_data(r_type E_points[], r_type integrand[], r_type r_da
   dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
 
   for(int e=0;e<nump;e++)  
-    dataR<< a * E_points[e] + b<<"  "<< r_data [e] <<std::endl;
+    dataR<< a * E_points[e] - b<<"  "<< r_data [e] <<std::endl;
 
   dataR.close();
 
@@ -551,7 +551,7 @@ void Kubo_solver::update_data(r_type E_points[], r_type integrand[], r_type r_da
   dataP.open(run_dir+"currentResult_"+filename);
 
   for(int e=0;e<nump;e++)  
-    dataP<< a * E_points[e] + b<<"  "<< final_data [e] <<std::endl;
+    dataP<< a * E_points[e] - b<<"  "<< final_data [e] <<std::endl;
 
   dataP.close();
 
@@ -573,7 +573,7 @@ void Kubo_solver::update_data(r_type E_points[], r_type integrand[], r_type r_da
   data2.open(run_dir+"integrand_"+filename);
 
   for(int e=0;e<nump;e++)  
-    data2<< a * E_points[e] + b<<"  "<< omega * integrand[e] <<std::endl;
+    data2<< a * E_points[e] - b<<"  "<< omega * integrand[e] <<std::endl;
 
   
   data2.close();

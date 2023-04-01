@@ -3,7 +3,9 @@
 #include<string>
 
 #include "static_vars.hpp"
-#include "Graphene.hpp"
+#include "Device/Device.hpp"
+#include "Device/Graphene.hpp"
+#include "Device/TBG/TBG.hpp"
 #include "Kubo_solver/Kubo_solver.hpp"
 
 
@@ -19,7 +21,7 @@ int main(int , char **argv){
 
 
   //Reading device variables
-  Input>>graphene_vars.W_,  Input>>graphene_vars.LE_,  Input>>graphene_vars.C_;
+  Input>>graphene_vars.W_,  Input>>graphene_vars.LE_,  Input>>graphene_vars.C_, Input>>graphene_vars.theta_, Input>>graphene_vars.d_min_;
   Input>>graphene_vars.dis_str_, Input>>graphene_vars.dis_seed_;
   Input>>s_vars.cap_choice_;
     
@@ -47,22 +49,15 @@ int main(int , char **argv){
     return 0;
   }
 
-  
 
-  Graphene graphene_device(graphene_vars);
-
-  int maxIter = 300;
-  r_type Emax, Emin,  edge = s_vars.edge_, Eedge;
-  
-  graphene_device.minMax_EigenValues( maxIter,  Emax, Emin);
-  Eedge=std::max(std::abs(Emax), std::abs(Emin));
-
-  s_vars.a_ = 2*Eedge/(2.0-edge);
-  s_vars.b_ = 0;
-
+  s_vars.a_ = 1.0;
+  s_vars.b_ = 0.0;
 
   
-  Kubo_solver solver( s_vars, graphene_device);
+  //  Graphene graph(graphene_vars);
+    TBG tbg(graphene_vars);
+  
+  Kubo_solver solver( s_vars, tbg);
   solver.compute();
 
   return 0;

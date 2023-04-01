@@ -3,7 +3,7 @@
 
 #include<random>
 #include "static_vars.hpp"
-#include "Graphene.hpp"
+#include "Device/Device.hpp"
 #include "Random.hpp"
 
 void generate_vec(int, int,int, type*, int , int );
