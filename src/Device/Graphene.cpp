@@ -9,10 +9,41 @@
 
 
 Graphene::Graphene(device_vars& parameters) : Device(parameters){
+    int Le     = this->parameters().LE_,
+        C      = this->parameters().C_,
+        fullLe = (2*C+Le);
 
   if(this->parameters().C_==0)
     CYCLIC_BCs_=true;
-  
+
+  this->set_sysLength( (fullLe-1) * (1.0+sin(M_PI/6)) ); 
+  this->set_sysSubLength( (Le-1)*(1.0+sin(M_PI/6)) );  
+}
+
+
+void Graphene::rearrange_initial_vec(type r_vec[]){ //supe duper hacky
+  int Dim = this->parameters().DIM_,
+    subDim = this->parameters().SUBDIM_;
+
+  int C   = this->parameters().C_,
+      Le  = this->parameters().LE_,
+      W   = this->parameters().W_;
+
+  type tmp[subDim];
+
+#pragma omp parallel for
+    for(int n=0;n<subDim;n++)
+      tmp[n]=r_vec[n];
+
+#pragma omp parallel for
+    for(int n=0;n<Dim;n++)
+      r_vec[n] = 0;
+        
+
+#pragma omp parallel for
+    for(int n=0;n<Le*W;n++)
+      r_vec[C*W + n ]=tmp[ n];
+
 }
 
 

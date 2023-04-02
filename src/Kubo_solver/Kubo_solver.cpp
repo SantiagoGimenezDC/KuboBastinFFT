@@ -83,7 +83,6 @@ void Kubo_solver::compute(){
     parameters_.b_ = -(Emax+Emin)/2.0;
 
   }
-
   
   device_.adimensionalize(parameters_.a_, parameters_.b_);
 
@@ -210,7 +209,7 @@ void Kubo_solver::compute(){
 
     
     device_.Anderson_disorder(dis_vec);
-
+    device_.update_dis(dis_vec, dmp_op);
     
     for(int r=1; r<=R;r++){
        
@@ -219,11 +218,8 @@ void Kubo_solver::compute(){
 
 
 
-       vec_base_->generate_vec_im( rand_vec, r);
-       //generate_vec_im(C, W, LE,  rand_vec, this->parameters().seed_, r);
-
-
-
+       vec_base_->generate_vec_im( rand_vec, r);       
+       device_.rearrange_initial_vec(rand_vec); //very hacky
   
 
     
@@ -236,8 +232,11 @@ void Kubo_solver::compute(){
 
 	 if( s==num_parts && SUBDIM % num_parts==0  )
 	   break;
-	 
-         std::cout<< "    -Part: "<<s+1<<"/"<<num_parts<<std::endl;
+
+	 if(SUBDIM % num_parts==0)
+           std::cout<< "    -Part: "<<s+1<<"/"<<num_parts<<std::endl;
+         else
+	   std::cout<< "    -Part: "<<s+1<<"/"<<num_parts+1<<std::endl;
 	 
          auto csrmv_start = std::chrono::steady_clock::now();
 	 for(int k=0;k<DIM;k++){
@@ -282,11 +281,11 @@ void Kubo_solver::compute(){
          auto FFT_start_2 = std::chrono::steady_clock::now();
 
          //Bastin_FFTs__reVec_noEta(bras,kets, E_points, integrand);    	 
-         Bastin_FFTs__imVec_noEta(bras,kets, E_points, integrand);
+         //Bastin_FFTs__imVec_noEta(bras,kets, E_points, integrand);
          
 	 
 	 //Greenwood_FFTs__reVec_noEta(bras,kets, E_points, r_data);         
-         //Greenwood_FFTs__imVec_noEta(bras,kets, E_points, r_data);
+         Greenwood_FFTs__imVec_noEta(bras,kets, E_points, r_data);
 
 
 	 
@@ -315,7 +314,7 @@ void Kubo_solver::compute(){
        
        auto start_pr = std::chrono::steady_clock::now();
     
-       integration(E_points, integrand, r_data);
+       //integration(E_points, integrand, r_data);
     
        auto end_pr = std::chrono::steady_clock::now();
        Station(std::chrono::duration_cast<std::chrono::microseconds>(end_pr - start_pr).count()/1000, "       Integration time:           ");
@@ -426,16 +425,8 @@ void Kubo_solver::polynomial_cycle(type** polys, type vec[], type p_vec[], type 
 void Kubo_solver::polynomial_cycle_ket(type** polys, type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
 
   int M   = parameters_.M_,
-      W   = device_.parameters().W_,
-      C   = device_.parameters().C_,
-      SUBDIM   = device_.parameters().SUBDIM_,
       DIM   = device_.parameters().DIM_,
-      SEC_SIZE = parameters_.SECTION_SIZE_,
-      buffer_length= SEC_SIZE,
       num_parts = parameters_.num_parts_;
-
-    if( s == num_parts )
-      buffer_length =  SUBDIM % num_parts;
 
   type *tmp = new type [DIM];
 //=================================KPM Step 0======================================//
@@ -505,13 +496,15 @@ void Kubo_solver::update_data(r_type E_points[], r_type integrand[], r_type r_da
     R = parameters_.R_,
     D = parameters_.dis_real_;
   
-  int LE   = device_.parameters().LE_,
-    SUBDIM = device_.parameters().SUBDIM_;    
+  int SUBDIM = device_.parameters().SUBDIM_;    
 
   r_type a = parameters_.a_,
-         b = parameters_.b_;
-    
-  r_type omega = SUBDIM/( a * a * (LE-1) * (LE-1) * (1+sin(M_PI/6)) * (1+sin(M_PI/6))   );//Dimensional and normalizing constant
+    b = parameters_.b_,
+    sysSubLength = device_.sysSubLength();
+
+
+  
+  r_type omega = SUBDIM/( a * a * sysSubLength * sysSubLength );//Dimensional and normalizing constant
   
 
   r_type tmp, max=0, av=0;

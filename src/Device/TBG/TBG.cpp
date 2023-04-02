@@ -9,7 +9,7 @@
 
 
 TBG::TBG(device_vars& device_data) : Device(device_data),
-				     all_coordinates_(device_data.W_,2*device_data.LE_,2*device_data.C_),
+				     all_coordinates_(device_data.W_,2*device_data.LE_,4*device_data.C_),
 				     top_coordinates_(device_data.W_,device_data.LE_,device_data.C_),
 				     bottom_coordinates_(device_data.W_,device_data.LE_,device_data.C_){
     int W      = this->parameters().W_,
@@ -21,8 +21,8 @@ TBG::TBG(device_vars& device_data) : Device(device_data),
 
   fullLe_ = fullLe;
 
-  sysLength_   = fullLe/2 * (1.0+sin(M_PI/6))*a0_; 
-  sysSubLength_= Le*(1.0+sin(M_PI/6))*a0_;
+  this->set_sysLength( (fullLe/2-1) * (1.0+sin(M_PI/6)) * a0_); 
+  this->set_sysSubLength( (Le-1)  *(1.0+sin(M_PI/6)) * a0_);
   
   this->parameters().DIM_         = Dim;
   this->parameters().SUBDIM_      = subDim;
@@ -478,7 +478,8 @@ void TBG::traceover(type* traced, type* full_vec, int s, int num_reps){
       C   = this->parameters().C_,
       Le  = this->parameters().LE_,
       W   = this->parameters().W_,
-      buffer_length = subDim/num_reps;
+      o_buffer_length = subDim/num_reps,
+      buffer_length = o_buffer_length;
 	
   if( s == num_reps )
       buffer_length =  subDim % num_reps;
@@ -487,18 +488,25 @@ void TBG::traceover(type* traced, type* full_vec, int s, int num_reps){
     
 #pragma omp parallel for
   for(int n=0; n<buffer_length;n++){
-    int n_full = C*W+s*buffer_length+n;
+    int n_full = C*W+s*o_buffer_length+n;
 
-    if(  s*buffer_length + n < Le * W ){
+    if(  s*o_buffer_length + n < Le * W ){
       traced[n] = full_vec[n_full];
     }
     else {
-	traced[n] = full_vec[ ( 3*C+Le ) * W + (s*buffer_length+n) % (Le * W)];
+	traced[n] = full_vec[ ( 3*C+Le ) * W + (s*o_buffer_length+n) % (Le * W)];
 	//	std::cout<<n<<"   "<<( 3*C+Le ) * W + (s*buffer_length+n) % (Le * W)<<"/"<<this->parameters().DIM_-C*W<<std::endl;
    
     }
   }
 
+  
+  if( s == num_reps ){
+#pragma omp parallel for
+    for(int n = buffer_length; n<o_buffer_length; n++)
+      traced[n] = 0.0;
+  }
+  
 };
 
 
@@ -513,12 +521,35 @@ void TBG::adimensionalize ( r_type a, r_type b){
   H_=(H_+b*Id)/a;
 }
 
-
-void TBG::damp ( r_type damp_op[]){
+void TBG::rearrange_initial_vec(type r_vec[]){ //supe duper hacky
   int Dim = this->parameters().DIM_,
-      C   = this->parameters().C_,
+    subDim = this->parameters().SUBDIM_;
+
+  int C   = this->parameters().C_,
       Le  = this->parameters().LE_,
       W   = this->parameters().W_;
+
+  type tmp[subDim];
+
+#pragma omp parallel for
+    for(int n=0;n<subDim;n++)
+      tmp[n]=r_vec[n];
+
+#pragma omp parallel for
+    for(int n=0;n<Dim;n++)
+      r_vec[n] = 0;
+        
+
+#pragma omp parallel for
+    for(int n=0;n<Le*W;n++){
+      r_vec[C*W + n ]=tmp[ n];
+      r_vec[ 3*C*W + Le*W + n]=tmp[Le*W + n];
+    }
+ }
+
+
+void TBG::damp ( r_type damp_op[]){
+  int Dim = this->parameters().DIM_;
  
   SpMatrixXp Id(Dim,Dim), gamma(Dim,Dim);//, dis(Dim,Dim);  dis.setZero();
   Id.setIdentity();
@@ -529,19 +560,32 @@ void TBG::damp ( r_type damp_op[]){
   for(int i=0; i<Dim;i++)
     gamma.coeffRef(i,i) *=damp_op[ i%(Dim/2) ];
 
-  /*
+  H_ = gamma*H_;
+  
+}
+
+void TBG::update_dis ( r_type dis_vec[], r_type damp_op[]){
+  int Dim = this->parameters().DIM_;
+  int C   = this->parameters().C_,
+      Le  = this->parameters().LE_,
+      W   = this->parameters().W_;
+
+
+  #pragma omp parallel for
+  for(int i=0; i<Le*W;i++){
+     H_.coeffRef(C*W + i, C*W +i) = b_/a_;
+     H_.coeffRef(singleLayerDim_ + C*W + i, singleLayerDim_ + C*W +i) = damp_op[ C*W + i%(Dim/2) ] * b_/a_;
+  }
+  
   #pragma omp parallel for
   for(int i=0; i<Le*W;i++)
-     dis.coeffRef(C*W + i, C*W +i)   +=dis_vec[i];
+     H_.coeffRef(C*W + i, C*W +i) += damp_op[  C*W + i%(Dim/2) ] * dis_vec[i]/a_;
   
   #pragma omp parallel for
-  for(int i=Le*W; i<2*Le*W;i++)
-     dis.coeffRef(singleLayerDim_ + C*W + i, singleLayerDim_ +C*W +i) += dis_vec[Le*W + i];
-  */
+  for(int i=0; i<Le*W;i++)
+     H_.coeffRef(singleLayerDim_ + C*W + i, singleLayerDim_ +C*W +i) += damp_op[  C*W + i%(Dim/2) ] * dis_vec[Le*W + i]/a_;
 
 
-  H_ = gamma*(H_);
-  
 }
 
 
@@ -550,7 +594,7 @@ void TBG::H_ket ( type* vec, type* p_vec){
   Eigen::Map<VectorXdT> eig_vec(vec,Dim),
     eig_p_vec(p_vec, Dim);
 
-  eig_vec=H_*eig_p_vec;   
+  eig_vec = H_ * eig_p_vec;   
 
 
 }
@@ -569,7 +613,7 @@ void TBG::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_type damp_op[
     eig_pp_vec(pp_vec, Dim);
 
   
-  eig_vec = 2.0*H_*eig_p_vec-eig_pp_vec;
+  eig_vec = 2.0*H_*eig_p_vec - eig_pp_vec;
 
   eig_pp_vec = eig_p_vec;
   eig_p_vec = eig_vec;

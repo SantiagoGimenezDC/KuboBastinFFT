@@ -44,18 +44,14 @@ int main(int , char **argv){
   s_vars.SECTION_SIZE_ = graphene_vars.SUBDIM_/s_vars.num_parts_;
 
   
-  if(graphene_vars.SUBDIM_%s_vars.num_parts_!=0){
-    std::cout<<"Please select SUBDIM to be divisible by num_parts_"<<std::endl;
-    return 0;
-  }
 
 
   s_vars.a_ = 1.0;
   s_vars.b_ = 0.0;
 
   
-  //  Graphene graph(graphene_vars);
-    TBG tbg(graphene_vars);
+  //Graphene graph(graphene_vars);
+  TBG tbg(graphene_vars);
   
   Kubo_solver solver( s_vars, tbg);
   solver.compute();

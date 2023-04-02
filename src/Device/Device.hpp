@@ -16,16 +16,26 @@ private:
   device_vars device_vars_;
   Random rng_;
 
+  r_type sysLength_;
+  r_type sysSubLength_;
+
 public:
   ~Device(){};
   Device(device_vars& device_vars):device_vars_(device_vars),rng_(device_vars.dis_seed_){};
 
 
+  void set_sysLength(r_type sysLength){sysLength_=sysLength;};
+  r_type sysLength(){return sysLength_;};
+  void set_sysSubLength(r_type sysSubLength){sysSubLength_=sysSubLength;};
+  r_type sysSubLength(){return sysSubLength_;};
+
+  
   virtual void build_Hamiltonian() = 0;
   virtual void damp   ( r_type*) = 0;
+  virtual void update_dis(r_type*,r_type*) = 0; 
   virtual void adimensionalize ( r_type,  r_type ) = 0;
   
-
+  virtual void rearrange_initial_vec(type*) = 0; //very hacky
   virtual void traceover(type*, type*, int, int) = 0;
   
   Random& rng(){return rng_;};

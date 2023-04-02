@@ -36,8 +36,6 @@ class TBG: public Device{
     top_coordinates_,
     bottom_coordinates_;
   
-    r_type sysLength_;
-    r_type sysSubLength_;
 
     SpMatrixXp H_, vx_;
     r_type Emin_, Emax_, a_, b_;
@@ -62,10 +60,11 @@ class TBG: public Device{
 
 
     virtual void build_Hamiltonian() {SlaterCoster_Hamiltonian(H_);  };
-    virtual void damp ( r_type*);
     virtual void adimensionalize(r_type, r_type);
-  
+    virtual void damp ( r_type*);
+    virtual void update_dis(r_type*, r_type*); 
 
+    virtual void rearrange_initial_vec(type*); //very hacky
     virtual void traceover(type*, type*, int, int) ;
   
     virtual void H_ket ( type*, type*);
