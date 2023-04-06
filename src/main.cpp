@@ -50,10 +50,10 @@ int main(int , char **argv){
   s_vars.b_ = 0.0;
 
   
-  //Graphene graph(graphene_vars);
-  TBG tbg(graphene_vars);
+  Graphene graph(graphene_vars);
+  //TBG tbg(graphene_vars);
   
-  Kubo_solver solver( s_vars, tbg);
+  Kubo_solver solver( s_vars, graph);
   solver.compute();
 
   return 0;
