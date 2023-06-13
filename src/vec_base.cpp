@@ -58,6 +58,16 @@ void Complex_Phase::generate_vec_im( std::complex<r_type> rand_vec[], int ){
 }
 
 
+void Complex_Phase::generate_vec_re( r_type rand_vec[], int ){
+
+  int SUBDIM = this->parameters().SUBDIM_;
+
+  
+  for( int j = 0; j <  SUBDIM; j++ )
+    rand_vec [j] = (2.0*this->rng().get() - 1.)*sqrt(3.0)/ sqrt(double(SUBDIM));   
+  
+}
+
 
 void Direct::generate_vec_im( std::complex<r_type> rand_vec[], int ){
 

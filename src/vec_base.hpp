@@ -32,7 +32,7 @@ class Complex_Phase: public Vec_Base{
 public:
   virtual ~Complex_Phase(){};
   Complex_Phase(device_vars& parameters, int seed) : Vec_Base(parameters, seed){};
-  virtual void generate_vec_re ( r_type*, int ){};
+  virtual void generate_vec_re ( r_type*, int );
   virtual void generate_vec_im ( std::complex<r_type>*, int );  
 };
 

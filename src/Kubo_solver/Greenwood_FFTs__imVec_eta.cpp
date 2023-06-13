@@ -18,6 +18,7 @@ void Kubo_solver::Greenwood_FFTs__imVec_eta(std::complex<r_type> **bras, std::co
 
   
   std::complex<r_type>
+    IM_energies[M],
     *factors = new std::complex<r_type> [M],
     *IM_root = new std::complex<r_type> [M];
   
@@ -26,7 +27,6 @@ void Kubo_solver::Greenwood_FFTs__imVec_eta(std::complex<r_type> **bras, std::co
   r_type a = parameters_.a_,
        eta = parameters_.eta_/a;
 
-  type IM_energies[M];
 
   for(int m=0;m<M;m++){
     kernel[m]      =  kernel_->term(m,M);

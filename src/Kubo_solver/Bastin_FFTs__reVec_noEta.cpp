@@ -9,7 +9,7 @@
 #include "Kubo_solver.hpp"
 
 
-void Kubo_solver::Bastin_FFTs__reVec_noEta(r_type bras[], r_type kets[], r_type E_points[], r_type integrand[]){
+void Kubo_solver::Bastin_FFTs__reVec_noEta(r_type** bras, r_type** kets, r_type E_points[], r_type integrand[]){
 
   int SUBDIM = device_.parameters().SUBDIM_;    
 
@@ -85,8 +85,8 @@ void Kubo_solver::Bastin_FFTs__reVec_noEta(r_type bras[], r_type kets[], r_type 
 
     for(int l=l_start; l<l_end;l++){
       for(int m=0;m<M;m++){
-	bra[m][0] = ( conj(factors[m] *  bras[m*SUBDIM+l] )  ).real();
-	bra[m][1] = ( conj(factors[m] *  bras[m*SUBDIM+l] )  ).imag();
+	bra[m][0] = ( conj(factors[m] *  bras[m][l] )  ).real();
+	bra[m][1] = ( conj(factors[m] *  bras[m][l] )  ).imag();
 
 	bra_d[m][0] = m * bra[m][0]; 
         bra_d[m][1] = m * bra[m][1];
@@ -94,8 +94,8 @@ void Kubo_solver::Bastin_FFTs__reVec_noEta(r_type bras[], r_type kets[], r_type 
 
    
 
-	ket[m][0] = ( factors[m] * kets[m*SUBDIM+l] ).real();
-        ket[m][1] = ( factors[m] * kets[m*SUBDIM+l] ).imag(); 
+	ket[m][0] = ( factors[m] * kets[m][l] ).real();
+        ket[m][1] = ( factors[m] * kets[m][l] ).imag(); 
 
 	ket_d[m][0] = m * ket[m][0];
         ket_d[m][1] = m * ket[m][1];

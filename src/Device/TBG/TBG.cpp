@@ -34,7 +34,7 @@ TBG::TBG(device_vars& device_data) : Device(device_data),
   
   this->setCoordinates();
 
-  all_coordinates_.plotSample();
+  //  all_coordinates_.plotSample();
 
 }
 

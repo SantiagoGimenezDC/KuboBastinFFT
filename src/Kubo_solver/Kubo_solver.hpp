@@ -8,9 +8,11 @@
 #include "../kernel.hpp"
 #include "../vec_base.hpp"
 
+#include<eigen-3.4.0/Eigen/Core>
+
 struct solver_vars{  
   r_type a_ ,b_, E_min_, eta_, E_start_, E_end_, edge_;//m_str, rsh_str, anderson_str;
-  int M_, R_, dis_real_, seed_, num_parts_, SECTION_SIZE_;
+  int M_, R_, dis_real_, seed_, num_parts_, num_p_, SECTION_SIZE_;
   std::string filename_, run_dir_;
   int cap_choice_, base_choice_, kernel_choice_;  
 };
@@ -46,7 +48,10 @@ public:
 
 
   
-  void Bastin_FFTs__reVec_noEta     ( r_type*, r_type*, r_type*, r_type*);
+  void Bastin_FFTs__reVec_noEta_2     ( r_type**, r_type**, r_type*, r_type*);
+  void Bastin_FFTs__imVec_noEta_2 ( std::complex<r_type>**, std::complex<r_type>**, r_type*, r_type*);
+  
+  void Bastin_FFTs__reVec_noEta     ( r_type**, r_type**, r_type*, r_type*);
   void Bastin_FFTs__imVec_noEta     ( std::complex<r_type>**, std::complex<r_type>**, r_type*, r_type*);
   void Bastin_FFTs__imVec_eta       ( std::complex<r_type>**, std::complex<r_type>**, r_type*, r_type*);
 
@@ -55,6 +60,16 @@ public:
   void Greenwood_FFTs__imVec_noEta ( std::complex<r_type>**, std::complex<r_type>**, r_type*, r_type*);
   void Greenwood_FFTs__imVec_eta ( std::complex<r_type>**, std::complex<r_type>**, r_type*, r_type*);
 
+
+
+  
+  void StandardProcess_Bastin(std::complex<r_type> **, std::complex<r_type> **, r_type*, r_type* );
+  void StandardProcess_Greenwood(std::complex<r_type> **, std::complex<r_type> **, r_type*, r_type* );  
+  Eigen::Matrix<type, -1,-1, Eigen::ColMajor> fill_green(r_type*, int , int );
+  type green(int , type );
+  type dgreen(int , type );
+  Eigen::Matrix<type, -1,-1, Eigen::RowMajor> fill_dgreen(r_type*, int , int );
+  
 };
 
 
