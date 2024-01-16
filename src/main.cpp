@@ -7,7 +7,7 @@
 #include "Device/Graphene.hpp"
 #include "Device/TBG/TBG.hpp"
 #include "Kubo_solver/Kubo_solver.hpp"
-
+#include "Kubo_solver/Kubo_solver_SSD.hpp"
 
 int main(int , char **argv){
 
@@ -65,7 +65,7 @@ int main(int , char **argv){
   if(device_choice==1)
     device = new TBG(graphene_vars);
   
-  Kubo_solver solver( s_vars, *device);
+  Kubo_solver_SSD solver( s_vars, *device);
   solver.compute();
 
   return 0;

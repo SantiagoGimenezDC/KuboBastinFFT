@@ -16,7 +16,7 @@ Debug_CFLAGS := -I/usr/local/include -Isrc/Includes -g -std=c++17 $(WARNING)
 
 
 #-------------Standard build flags----------#
-STD_LDFLAGS := -L/usr/local/lib -lfftw3 -lm -std=c++17
+STD_LDFLAGS := -L/usr/local/lib -lfftw3 -lz -lm -std=c++17
 STD_CFLAGS  := -I/usr/local/include  -O3 -msse2  -std=c++17 $(WARNING)
 #-----------------------------------------------#
 

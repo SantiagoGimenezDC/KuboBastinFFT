@@ -23,7 +23,7 @@
 #include "../Device/Graphene.hpp"
 
 #include "../complex_op.hpp"
-#include "Kubo_solver.hpp"
+#include "Kubo_solver_SSD.hpp"
 
 
 
@@ -31,7 +31,7 @@
 #include <zlib.h>
 
 
-void Station(int millisec, std::string msg ){
+void Station2(int millisec, std::string msg ){
   int sec=millisec/1000;
   int min=sec/60;
   int reSec=sec%60;
@@ -40,11 +40,128 @@ void Station(int millisec, std::string msg ){
 
 }
 
-
-
-Kubo_solver::Kubo_solver(solver_vars& parameters, Device& device) : parameters_(parameters), device_(device)
+namespace myEigen{
+  
+  
+void write_binary(
+		  const std::string &filename,
+		  const int M,
+		  const int D,
+                   type **matrix)
 {
 
+  auto write_start = std::chrono::steady_clock::now();
+  FILE* create = fopen( filename.c_str(), "wb");
+  fclose(create);
+  
+  for(int m=0;m<M;m++){
+    FILE* out = fopen( filename.c_str(), "a+");
+    fwrite( matrix[m], 1, D*sizeof(type), out );
+    fclose(out);
+  }
+  auto write_end = std::chrono::steady_clock::now();
+
+  Station2(std::chrono::duration_cast<std::chrono::microseconds>(write_end - write_start).count()/1000, "           SSD writing time:           ");
+}
+  
+
+void read_binary(
+		  const std::string &filename,
+		  const int M,
+		  const int D,
+                   type **matrix)
+{
+
+  auto write_start = std::chrono::steady_clock::now();
+  for(int m=0;m<M;m++){
+    FILE* in = fopen(filename.c_str(), "rb");
+    fseek(in, m*D*sizeof(type), SEEK_CUR);
+    fread( matrix[m], 1, D*sizeof(type), in );
+    fclose(in);
+  }
+  auto write_end = std::chrono::steady_clock::now();
+  
+  Station2(std::chrono::duration_cast<std::chrono::microseconds>(write_end - write_start).count()/1000, "           SSD reading time:           ");
+
+}
+} // myEigen::
+
+
+
+void Kubo_solver_SSD::transfer_to_buffer(const std::string &side, type vec[]){
+
+  int SUBDIM = device_.parameters().SUBDIM_;
+  std::string filename=parameters_.run_dir_+"/buffer/"+side+"_";
+  
+  for(int n=0;n<num_buffers_;n++){
+    FILE* out = fopen( (filename+std::to_string(n)).c_str(), "a+");
+    fwrite( &vec[n*SUBDIM/num_buffers_], 1, SUBDIM*sizeof(type)/num_buffers_, out );
+    fclose(out);
+  }
+}
+
+void Kubo_solver_SSD::create_buffers(){
+  
+  std::string filename=parameters_.run_dir_+"/buffer/";
+
+  for(int n=0;n<num_buffers_;n++){
+    FILE* create_bra = fopen( (filename+"bras_"+std::to_string(n)).c_str(), "wb");
+    fclose(create_bra);
+
+    
+    FILE* create_ket = fopen( (filename+"kets_"+std::to_string(n)).c_str(), "wb");
+    fclose(create_ket);
+  }
+}
+
+void Kubo_solver_SSD::transfer_to_SSD(const std::string &side, type vec[]){
+
+  int SEC_SIZE = parameters_.SECTION_SIZE_,
+      M = parameters_.M_;
+
+  std::string filename=parameters_.run_dir_+"/buffer/"+side+"_";
+
+  for(int n=0;n<num_buffers_;n++){
+     FILE* out = fopen( (filename+std::to_string(n)).c_str(), "a+");
+
+     for(int m=0; m<num_buffers_;m++)
+       fwrite( &vec[ (m/M) * SEC_SIZE + n * SEC_SIZE / num_buffers_ ], 1, SEC_SIZE*sizeof(type)/num_buffers_, out );
+    
+    fclose(out);
+  }
+}
+
+
+
+
+
+
+
+
+
+void Kubo_solver_SSD::update_SSD_buffer( const std::string &side, const int M_size, type matrix[])
+{
+
+  int SEC_SIZE = parameters_.SECTION_SIZE_;
+
+  std::string filename=parameters_.run_dir_+"/buffer/"+side;
+
+    FILE* out = fopen( filename.c_str(), "a+");
+    fwrite( matrix, 1, SEC_SIZE * M_size * sizeof(type), out );
+    fclose(out);
+}
+
+
+
+
+
+
+
+Kubo_solver_SSD::Kubo_solver_SSD(solver_vars& parameters, Device& device) : parameters_(parameters), device_(device)
+{
+  
+  RAM_buffer_size_=0.01; //In GB
+  
   if(parameters_.cap_choice_==0)
     cap_      = new Mandelshtam(parameters_.E_min_, parameters_.eta_/parameters_.a_);
   else if(parameters_.cap_choice_==1)
@@ -71,10 +188,9 @@ Kubo_solver::Kubo_solver(solver_vars& parameters, Device& device) : parameters_(
 
 
 
-void Kubo_solver::compute(){
+void Kubo_solver_SSD::compute(){
   
   auto start0 = std::chrono::steady_clock::now();
-
   
   device_.build_Hamiltonian();
   device_.setup_velOp();
@@ -127,15 +243,15 @@ void Kubo_solver::compute(){
   auto start_BT = std::chrono::steady_clock::now();
 
 
+  num_buffers_=std::ceil(2*M*SUBDIM*sizeof(type) / ( 1E9*RAM_buffer_size_ ) );
+  std::cout<<"Number of buffers:  "<<num_buffers_<<"  Cheb buffer size: "<< 2*M*SUBDIM*sizeof(type)/1000000<<"MB"<<std::endl;
+
+  //create_buffers();
+  
 /*------------Big memory allocation--------------*/
   //Single Shot vectors
-  type **bras = new type* [ M ],
-       **kets = new type* [ M ];
-
-  for(int m=0;m<M;m++){
-    bras[m] = new type [ SEC_SIZE ],
-    kets[m] = new type [ SEC_SIZE ];
-  }
+  type *bras = new type [ SEC_SIZE * M ],
+       *kets = new type [ SEC_SIZE * M ];
 
   
   //Recursion Vectors
@@ -170,8 +286,8 @@ void Kubo_solver::compute(){
 #pragma omp parallel for  
   for(int m=0;m<M;m++)
     for(int n=0;n<SEC_SIZE;n++){    
-      bras [m][n] = 0.0;
-      kets [m][n] = 0.0;
+      bras [ m * SEC_SIZE + n ] = 0.0;
+      kets [ m * SEC_SIZE + n ] = 0.0;
     }
   
 #pragma omp parallel for  
@@ -204,7 +320,7 @@ void Kubo_solver::compute(){
 
   
   auto end_BT = std::chrono::steady_clock::now();
-  Station( std::chrono::duration_cast<std::chrono::microseconds>(end_BT - start_BT).count()/1000, "    Bloat time:            ");
+  Station2( std::chrono::duration_cast<std::chrono::microseconds>(end_BT - start_BT).count()/1000, "    Bloat time:            ");
 
 
   
@@ -255,7 +371,7 @@ void Kubo_solver::compute(){
 
     
          auto csrmv_end = std::chrono::steady_clock::now();
-         Station( std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end - csrmv_start).count()/1000, "           Kets cycle time:            ");
+         Station2( std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end - csrmv_start).count()/1000, "           Kets cycle time:            ");
 
 	 total_csrmv += std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end - csrmv_start).count()/1000;
     
@@ -277,22 +393,26 @@ void Kubo_solver::compute(){
          polynomial_cycle(  bras, vec, p_vec, pp_vec, dmp_op, dis_vec, s);	
 
          auto csrmv_end_2 = std::chrono::steady_clock::now();
-         Station(std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end_2 - csrmv_start_2).count()/1000, "           Bras cycle time:            ");
+         Station2(std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end_2 - csrmv_start_2).count()/1000, "           Bras cycle time:            ");
   
 	 total_csrmv += std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end_2 - csrmv_start_2).count()/1000;  
 
 
+	 //myEigen::write_binary(run_dir+"/buffer/bras", M, SEC_SIZE, bras);
+	 //myEigen::write_binary(run_dir+"/buffer/kets", M, SEC_SIZE, kets);
 
-	 
+	 //myEigen::read_binary(run_dir+"/buffer/bras", M, SEC_SIZE, bras);
+	 //myEigen::read_binary(run_dir+"/buffer/kets", M, SEC_SIZE, kets); 
+
          auto FFT_start_2 = std::chrono::steady_clock::now();
 
          //Bastin_FFTs__reVec_noEta_2(bras,kets, E_points, integrand);    	 
          //Bastin_FFTs__imVec_noEta_2(bras,kets, E_points, integrand);
        
 
-	 
+
 	 //Greenwood_FFTs__reVec_noEta(bras,kets, E_points, r_data);         
-	 Greenwood_FFTs__imVec_noEta(bras,kets, E_points, r_data);
+	 Greenwood_FFTs__imVec_noEta_SSD(bras,kets, E_points, r_data);
 
 
 	 //StandardProcess_Greenwood(bras,kets, E_points, r_data);
@@ -311,7 +431,7 @@ void Kubo_solver::compute(){
          */
 	 
 	 auto FFT_end_2 = std::chrono::steady_clock::now();
-         Station(std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000, "           FFT operations time:        ");
+         Station2(std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000, "           FFT operations time:        ");
     
 	 total_FFTs += std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000;
 
@@ -326,7 +446,7 @@ void Kubo_solver::compute(){
        //integration(E_points, integrand, r_data);
     
        auto end_pr = std::chrono::steady_clock::now();
-       Station(std::chrono::duration_cast<std::chrono::microseconds>(end_pr - start_pr).count()/1000, "       Integration time:           ");
+       Station2(std::chrono::duration_cast<std::chrono::microseconds>(end_pr - start_pr).count()/1000, "       Integration time:           ");
        
 
        
@@ -344,13 +464,13 @@ void Kubo_solver::compute(){
        plot_data(run_dir,filename);
     
        auto plot_end = std::chrono::steady_clock::now();
-       Station(std::chrono::duration_cast<std::chrono::microseconds>(plot_end - plot_start).count()/1000, "       Plot and update time:       ");
+       Station2(std::chrono::duration_cast<std::chrono::microseconds>(plot_end - plot_start).count()/1000, "       Plot and update time:       ");
 
 
     
        
        auto end_RV = std::chrono::steady_clock::now();    
-       Station(std::chrono::duration_cast<std::chrono::milliseconds>(end_RV - start_RV).count(), "       Total RandVec time:         ");
+       Station2(std::chrono::duration_cast<std::chrono::milliseconds>(end_RV - start_RV).count(), "       Total RandVec time:         ");
 
        std::cout<<std::endl;
     }
@@ -360,10 +480,6 @@ void Kubo_solver::compute(){
   
 /*------------Delete everything--------------*/
   //Single Shot vectors
-  for(int m=0;m<M;m++){
-    delete []bras[m];
-    delete []kets[m];
-  }
   delete []bras;
   delete []kets;
 
@@ -381,7 +497,7 @@ void Kubo_solver::compute(){
 
 
   auto end = std::chrono::steady_clock::now();   
-  Station(std::chrono::duration_cast<std::chrono::milliseconds>(end - start0).count(), "Total case execution time:             ");
+  Station2(std::chrono::duration_cast<std::chrono::milliseconds>(end - start0).count(), "Total case execution time:             ");
   std::cout<<std::endl;
   
 }
@@ -389,16 +505,23 @@ void Kubo_solver::compute(){
 
 
 
-void Kubo_solver::polynomial_cycle(type** polys, type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
+void Kubo_solver_SSD::polynomial_cycle(type polys[], type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
   
   int M = parameters_.M_,
-    num_parts = parameters_.num_parts_;
+      num_parts = parameters_.num_parts_,
+    interval = M/(num_buffers_-1),
+    SEC_SIZE  = parameters_.SECTION_SIZE_,
+    M_buffer_size = M/(num_buffers_-1);
   
+
+  std::string filename=parameters_.run_dir_+"/buffer/";
+  FILE* create_ket = fopen( (filename+"brass").c_str(), "wb");
+  fclose(create_ket);
 
 //=================================KPM Step 0======================================//
 
 
-  device_.traceover(polys[0], pp_vec, s, num_parts);
+  device_.traceover( &polys[0], pp_vec, s, num_parts);
   
 
   
@@ -407,47 +530,89 @@ void Kubo_solver::polynomial_cycle(type** polys, type vec[], type p_vec[], type 
     
   device_.H_ket ( p_vec, pp_vec, damp_op, dis_vec);
 
-  device_.traceover(polys[1], p_vec, s, num_parts);
-    
+  device_.traceover( &polys[ SEC_SIZE ], p_vec, s, num_parts);
     
 
+
 //=================================KPM Steps 2 and on===============================//
-    
-    for( int m=2; m<M; m++ ){
-      device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
-      device_.traceover(polys[m], vec, s, num_parts);
-    }
+
+  int count=0;
+  
+  for( int m=2; m<M; m++ ){
+    device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
+    device_.traceover( &polys[ m * SEC_SIZE ], vec, s, num_parts);
+
+      
+    if( (m+1) % interval == 0 ){
+      if( M % num_buffers_ != 0 && count == num_buffers_ )		  
+	update_SSD_buffer("brass", M % (num_buffers_-1) , &polys[count * interval * SEC_SIZE] ); //at the last buffer, if (M%num_buffers_!=0), this will
+	else
+        update_SSD_buffer("brass", M_buffer_size, &polys[count * interval * SEC_SIZE] ); //at the last buffer, if (M%num_buffers_!=0), this will
+
+
+      count++;
+    }  
+
+  }
 }
 
 
-void Kubo_solver::polynomial_cycle_ket(type** polys, type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
+void Kubo_solver_SSD::polynomial_cycle_ket(type polys[], type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
 
   int M   = parameters_.M_,
       DIM   = device_.parameters().DIM_,
-      num_parts = parameters_.num_parts_;
+      num_parts = parameters_.num_parts_,
+    interval = M/(num_buffers_-1),
+      SEC_SIZE  = parameters_.SECTION_SIZE_,
+    M_buffer_size = M/(num_buffers_-1);
 
+
+
+  
   type *tmp = new type [DIM];
+
+  
+  std::string filename=parameters_.run_dir_+"/buffer/";
+  FILE* create_ket = fopen( (filename+"ketss").c_str(), "wb");
+  fclose(create_ket);
+
 //=================================KPM Step 0======================================//
   
   device_.vel_op( tmp, pp_vec );
-  device_.traceover(polys[0], tmp, s, num_parts);  
+  device_.traceover(&polys[0], tmp, s, num_parts);  
   
   
+    
 //=================================KPM Step 1======================================//       
     
   device_.H_ket ( p_vec, pp_vec, damp_op, dis_vec);
   device_.vel_op( tmp, p_vec );
   
-  device_.traceover(polys[1], tmp, s, num_parts);  
+  device_.traceover(&polys[SEC_SIZE], tmp, s, num_parts);  
   
-    
+  
 
 //=================================KPM Steps 2 and on===============================//
-    
+
+  int count=0;
+  
   for( int m=2; m<M; m++ ){
     device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
     device_.vel_op( tmp, vec );
-    device_.traceover(polys[m], tmp, s, num_parts);
+    device_.traceover(&polys[ m * SEC_SIZE ], tmp, s, num_parts);
+
+    
+    if( (m+1) % interval == 0 ){
+      if( M % num_buffers_ !=0  &&  count == num_buffers_ )
+	update_SSD_buffer("ketss", M % (num_buffers_-1) , &polys[count * interval * SEC_SIZE ] ); 
+      else
+        update_SSD_buffer("ketss", M_buffer_size, &polys[count * interval * SEC_SIZE ] );
+
+     
+     
+      count++;
+    }
+  
   }
   
   delete []tmp;
@@ -455,7 +620,7 @@ void Kubo_solver::polynomial_cycle_ket(type** polys, type vec[], type p_vec[], t
 
 
 
-void Kubo_solver::eta_CAP_correct(r_type E_points[], r_type r_data[]){
+void Kubo_solver_SSD::eta_CAP_correct(r_type E_points[], r_type r_data[]){
   int num_p = parameters_.num_p_;
   
   for(int e=0;e<num_p;e++)
@@ -463,7 +628,7 @@ void Kubo_solver::eta_CAP_correct(r_type E_points[], r_type r_data[]){
 }
 
 
-void Kubo_solver::integration(r_type E_points[], r_type integrand[], r_type data[]){
+void Kubo_solver_SSD::integration(r_type E_points[], r_type integrand[], r_type data[]){
 
   int M = parameters_.M_,
       num_p = parameters_.num_p_;
@@ -490,7 +655,7 @@ void Kubo_solver::integration(r_type E_points[], r_type integrand[], r_type data
 
 
 
-void Kubo_solver::update_data(r_type E_points[], r_type integrand[], r_type r_data[], r_type final_data[], r_type conv_R[], int r, std::string run_dir, std::string filename){
+void Kubo_solver_SSD::update_data(r_type E_points[], r_type integrand[], r_type r_data[], r_type final_data[], r_type conv_R[], int r, std::string run_dir, std::string filename){
 
   int nump = parameters_.num_p_,
     R = parameters_.R_,
@@ -577,7 +742,7 @@ void Kubo_solver::update_data(r_type E_points[], r_type integrand[], r_type r_da
 
 
 
-void Kubo_solver::plot_data(std::string run_dir, std::string filename){
+void Kubo_solver_SSD::plot_data(std::string run_dir, std::string filename){
         //VIEW commands
 
      std::string exestring=
