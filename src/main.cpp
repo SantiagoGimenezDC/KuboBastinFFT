@@ -8,6 +8,7 @@
 #include "Device/TBG/TBG.hpp"
 #include "Kubo_solver/Kubo_solver.hpp"
 #include "Kubo_solver/Kubo_solver_SSD.hpp"
+#include "Kubo_solver/Kubo_solver_filtered.hpp"
 
 int main(int , char **argv){
 
@@ -21,13 +22,16 @@ int main(int , char **argv){
 
 
   int device_choice=0;
+  double   RAM_size=0; //in GB
+  std::string sim_type;
+  
   Input>>device_choice;
   //Reading device variables
   Input>>graphene_vars.W_,  Input>>graphene_vars.LE_,  Input>>graphene_vars.C_, Input>>graphene_vars.theta_, Input>>graphene_vars.d_min_;
   Input>>graphene_vars.dis_str_, Input>>graphene_vars.dis_seed_;
   Input>>s_vars.cap_choice_;
 
-  graphene_vars.theta_*= 2.0*M_PI/360.0;
+  graphene_vars.theta_*= 2.0 * M_PI/360.0;
   graphene_vars.SUBDIM_ = graphene_vars.W_*graphene_vars.LE_;
   graphene_vars.DIM_    = graphene_vars.SUBDIM_ + 2*graphene_vars.C_*graphene_vars.W_;
 
@@ -43,6 +47,8 @@ int main(int , char **argv){
   Input>>s_vars.E_min_;
   Input>>s_vars.filename_;
 
+  Input>>sim_type;
+  Input>>RAM_size;
 
   s_vars.SECTION_SIZE_ = graphene_vars.SUBDIM_/s_vars.num_parts_;
 
@@ -64,10 +70,42 @@ int main(int , char **argv){
     device = new Graphene(graphene_vars);
   if(device_choice==1)
     device = new TBG(graphene_vars);
-  
-  Kubo_solver_SSD solver( s_vars, *device);
-  solver.compute();
 
+  
+  if(sim_type == "SSD"){
+    Kubo_solver_SSD solver( s_vars, RAM_size,  *device);
+    solver.compute();
+  }
+  if(sim_type == "normal"){
+    Kubo_solver solver( s_vars, *device);
+    solver.compute();
+  }
+  if(sim_type == "filtered"){
+    
+    filter_vars f_vars;
+
+    f_vars.M_ = s_vars.M_;
+    Input>>f_vars.post_filter_;
+    Input>>f_vars.filter_;
+    Input>>f_vars.L_,   Input>>f_vars.decRate_;
+    Input>>f_vars.k_dis_, Input>>f_vars.f_cutoff_;
+    Input>>f_vars.att_;
+
+    if(!f_vars.post_filter_ && !f_vars.filter_)
+      f_vars.decRate_=1;
+  
+    s_vars.num_p_ = s_vars.M_ / f_vars.decRate_;
+
+    //f_vars.k_dis_ = f_vars.M_/4;
+    //f_vars.f_cutoff_ = f_vars.M_/ 30; 
+    //f_vars.att_ = 96;
+
+    
+    KB_filter filter(f_vars); 
+    Kubo_solver_filtered solver( s_vars, *device, filter);
+    solver.compute();
+  }
+  
   return 0;
 }
 

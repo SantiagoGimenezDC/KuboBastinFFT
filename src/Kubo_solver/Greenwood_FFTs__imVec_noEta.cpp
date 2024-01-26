@@ -117,7 +117,7 @@ void Kubo_solver::Greenwood_FFTs__imVec_noEta(std::complex<r_type> **bras, std::
     # pragma omp critical
     {
       for(int k=0;k<num_p;k++)
-	r_data[k] += 2.0 * thread_data[num_p-k-1] / pre_factor[k] ;
+	r_data[k] += 2.0 * thread_data[k] / pre_factor[k] ;
 
       
       fftw_free(input);

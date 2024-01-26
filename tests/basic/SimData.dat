@@ -6,14 +6,25 @@
 
 0
 0
-1
+0
 
-5000 1 1 1000 0.1
+4096 1 1 1000 0.1
 1 1000
 -8.5  8.5
 0.0
 0.001
-basic.txt
+basic_filtered_3.txt
+filtered
+0.1
+
+
+1
+0
+615 4
+0 515.1
+96
+
+
 
 
 
@@ -35,3 +46,11 @@ E_min Emax
 Eta
 Emin_cap
 src_dir
+
+
+//Filter Vars:
+pos_filter?
+filter?
+L decRate
+k_dis cutoff
+att

@@ -30,7 +30,9 @@
 #include <string>
 #include <zlib.h>
 
+#include "SSD_buffer.hpp"
 
+/*
 void Station2(int millisec, std::string msg ){
   int sec=millisec/1000;
   int min=sec/60;
@@ -38,105 +40,7 @@ void Station2(int millisec, std::string msg ){
   std::cout<<msg;
   std::cout<<min<<" min, "<<reSec<<" secs;"<<" ("<< millisec<<"ms) "<<std::endl;
 
-}
-
-namespace myEigen{
-  
-  
-void write_binary(
-		  const std::string &filename,
-		  const int M,
-		  const int D,
-                   type **matrix)
-{
-
-  auto write_start = std::chrono::steady_clock::now();
-  FILE* create = fopen( filename.c_str(), "wb");
-  fclose(create);
-  
-  for(int m=0;m<M;m++){
-    FILE* out = fopen( filename.c_str(), "a+");
-    fwrite( matrix[m], 1, D*sizeof(type), out );
-    fclose(out);
-  }
-  auto write_end = std::chrono::steady_clock::now();
-
-  Station2(std::chrono::duration_cast<std::chrono::microseconds>(write_end - write_start).count()/1000, "           SSD writing time:           ");
-}
-  
-
-void read_binary(
-		  const std::string &filename,
-		  const int M,
-		  const int D,
-                   type **matrix)
-{
-
-  auto write_start = std::chrono::steady_clock::now();
-  for(int m=0;m<M;m++){
-    FILE* in = fopen(filename.c_str(), "rb");
-    fseek(in, m*D*sizeof(type), SEEK_CUR);
-    fread( matrix[m], 1, D*sizeof(type), in );
-    fclose(in);
-  }
-  auto write_end = std::chrono::steady_clock::now();
-  
-  Station2(std::chrono::duration_cast<std::chrono::microseconds>(write_end - write_start).count()/1000, "           SSD reading time:           ");
-
-}
-} // myEigen::
-
-
-
-void Kubo_solver_SSD::transfer_to_buffer(const std::string &side, type vec[]){
-
-  int SUBDIM = device_.parameters().SUBDIM_;
-  std::string filename=parameters_.run_dir_+"/buffer/"+side+"_";
-  
-  for(int n=0;n<num_buffers_;n++){
-    FILE* out = fopen( (filename+std::to_string(n)).c_str(), "a+");
-    fwrite( &vec[n*SUBDIM/num_buffers_], 1, SUBDIM*sizeof(type)/num_buffers_, out );
-    fclose(out);
-  }
-}
-
-void Kubo_solver_SSD::create_buffers(){
-  
-  std::string filename=parameters_.run_dir_+"/buffer/";
-
-  for(int n=0;n<num_buffers_;n++){
-    FILE* create_bra = fopen( (filename+"bras_"+std::to_string(n)).c_str(), "wb");
-    fclose(create_bra);
-
-    
-    FILE* create_ket = fopen( (filename+"kets_"+std::to_string(n)).c_str(), "wb");
-    fclose(create_ket);
-  }
-}
-
-void Kubo_solver_SSD::transfer_to_SSD(const std::string &side, type vec[]){
-
-  int SEC_SIZE = parameters_.SECTION_SIZE_,
-      M = parameters_.M_;
-
-  std::string filename=parameters_.run_dir_+"/buffer/"+side+"_";
-
-  for(int n=0;n<num_buffers_;n++){
-     FILE* out = fopen( (filename+std::to_string(n)).c_str(), "a+");
-
-     for(int m=0; m<num_buffers_;m++)
-       fwrite( &vec[ (m/M) * SEC_SIZE + n * SEC_SIZE / num_buffers_ ], 1, SEC_SIZE*sizeof(type)/num_buffers_, out );
-    
-    fclose(out);
-  }
-}
-
-
-
-
-
-
-
+  }*/
 
 
 void Kubo_solver_SSD::update_SSD_buffer( const std::string &side, const int M_size, type matrix[])
@@ -157,10 +61,9 @@ void Kubo_solver_SSD::update_SSD_buffer( const std::string &side, const int M_si
 
 
 
-Kubo_solver_SSD::Kubo_solver_SSD(solver_vars& parameters, Device& device) : parameters_(parameters), device_(device)
+Kubo_solver_SSD::Kubo_solver_SSD(solver_vars& parameters, double RAM_size, Device& device) : parameters_(parameters), RAM_buffer_size_(RAM_size), device_(device)
 {
-  
-  RAM_buffer_size_=0.01; //In GB
+  RAM_buffer_size_*=1E9;
   
   if(parameters_.cap_choice_==0)
     cap_      = new Mandelshtam(parameters_.E_min_, parameters_.eta_/parameters_.a_);
@@ -243,15 +146,18 @@ void Kubo_solver_SSD::compute(){
   auto start_BT = std::chrono::steady_clock::now();
 
 
-  num_buffers_=std::ceil(2*M*SUBDIM*sizeof(type) / ( 1E9*RAM_buffer_size_ ) );
-  std::cout<<"Number of buffers:  "<<num_buffers_<<"  Cheb buffer size: "<< 2*M*SUBDIM*sizeof(type)/1000000<<"MB"<<std::endl;
-
   //create_buffers();
+
   
 /*------------Big memory allocation--------------*/
+
+  SSD_buffer bras_SSD(M, SEC_SIZE, RAM_buffer_size_, parameters_.run_dir_+"buffer/bras.bin"),
+             kets_SSD(M, SEC_SIZE, RAM_buffer_size_, parameters_.run_dir_+"buffer/kets.bin");
+
+
   //Single Shot vectors
-  type *bras = new type [ SEC_SIZE * M ],
-       *kets = new type [ SEC_SIZE * M ];
+  type *bras = new type [ int(RAM_buffer_size_  * 0.5 / double(sizeof(type)) ) ],
+       *kets = new type [ int(RAM_buffer_size_  * 0.5 / double(sizeof(type)) ) ];
 
   
   //Recursion Vectors
@@ -281,15 +187,15 @@ void Kubo_solver_SSD::compute(){
 
 
 
-  
+
 /*----------------Initializations----------------*/
 #pragma omp parallel for  
-  for(int m=0;m<M;m++)
+  for(int m=0;m<kets_SSD.COLS_stride();m++)
     for(int n=0;n<SEC_SIZE;n++){    
       bras [ m * SEC_SIZE + n ] = 0.0;
       kets [ m * SEC_SIZE + n ] = 0.0;
     }
-  
+
 #pragma omp parallel for  
   for(int k=0;k<DIM;k++){
     vec      [k] = 0.0;
@@ -320,7 +226,7 @@ void Kubo_solver_SSD::compute(){
 
   
   auto end_BT = std::chrono::steady_clock::now();
-  Station2( std::chrono::duration_cast<std::chrono::microseconds>(end_BT - start_BT).count()/1000, "    Bloat time:            ");
+  Station( std::chrono::duration_cast<std::chrono::microseconds>(end_BT - start_BT).count()/1000, "    Bloat time:            ");
 
 
   
@@ -367,12 +273,16 @@ void Kubo_solver_SSD::compute(){
            p_vec   [k] = 0.0;
          }    
 
-         polynomial_cycle_ket( kets, vec, p_vec, pp_vec, dmp_op, dis_vec, s);
+	 bras_SSD.reset_buffer();
+	 kets_SSD.reset_buffer();
+	 
+         polynomial_cycle_ket( kets, kets_SSD, vec, p_vec, pp_vec, dmp_op, dis_vec, s);
 
     
          auto csrmv_end = std::chrono::steady_clock::now();
-         Station2( std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end - csrmv_start).count()/1000, "           Kets cycle time:            ");
-
+         Station( std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end - csrmv_start).count()/1000, "           Kets cycle time:            ");
+	 std::cout<<std::endl;
+	 
 	 total_csrmv += std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end - csrmv_start).count()/1000;
     
 
@@ -390,11 +300,12 @@ void Kubo_solver_SSD::compute(){
          }
     
          device_.vel_op( pp_vec, rand_vec );
-         polynomial_cycle(  bras, vec, p_vec, pp_vec, dmp_op, dis_vec, s);	
+         polynomial_cycle(  bras, bras_SSD, vec, p_vec, pp_vec, dmp_op, dis_vec, s);	
 
          auto csrmv_end_2 = std::chrono::steady_clock::now();
-         Station2(std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end_2 - csrmv_start_2).count()/1000, "           Bras cycle time:            ");
-  
+         Station(std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end_2 - csrmv_start_2).count()/1000, "           Bras cycle time:            ");
+  	 std::cout<<std::endl;
+	 
 	 total_csrmv += std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end_2 - csrmv_start_2).count()/1000;  
 
 
@@ -412,7 +323,7 @@ void Kubo_solver_SSD::compute(){
 
 
 	 //Greenwood_FFTs__reVec_noEta(bras,kets, E_points, r_data);         
-	 Greenwood_FFTs__imVec_noEta_SSD(bras,kets, E_points, r_data);
+       	 Greenwood_FFTs__imVec_noEta_SSD(bras,kets, bras_SSD, kets_SSD, E_points, r_data);
 
 
 	 //StandardProcess_Greenwood(bras,kets, E_points, r_data);
@@ -431,7 +342,7 @@ void Kubo_solver_SSD::compute(){
          */
 	 
 	 auto FFT_end_2 = std::chrono::steady_clock::now();
-         Station2(std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000, "           FFT operations time:        ");
+         Station(std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000, "           FFT operations time:        ");
     
 	 total_FFTs += std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000;
 
@@ -446,7 +357,7 @@ void Kubo_solver_SSD::compute(){
        //integration(E_points, integrand, r_data);
     
        auto end_pr = std::chrono::steady_clock::now();
-       Station2(std::chrono::duration_cast<std::chrono::microseconds>(end_pr - start_pr).count()/1000, "       Integration time:           ");
+       Station(std::chrono::duration_cast<std::chrono::microseconds>(end_pr - start_pr).count()/1000, "       Integration time:           ");
        
 
        
@@ -464,13 +375,13 @@ void Kubo_solver_SSD::compute(){
        plot_data(run_dir,filename);
     
        auto plot_end = std::chrono::steady_clock::now();
-       Station2(std::chrono::duration_cast<std::chrono::microseconds>(plot_end - plot_start).count()/1000, "       Plot and update time:       ");
+       Station(std::chrono::duration_cast<std::chrono::microseconds>(plot_end - plot_start).count()/1000, "       Plot and update time:       ");
 
 
     
        
        auto end_RV = std::chrono::steady_clock::now();    
-       Station2(std::chrono::duration_cast<std::chrono::milliseconds>(end_RV - start_RV).count(), "       Total RandVec time:         ");
+       Station(std::chrono::duration_cast<std::chrono::milliseconds>(end_RV - start_RV).count(), "       Total RandVec time:         ");
 
        std::cout<<std::endl;
     }
@@ -497,7 +408,7 @@ void Kubo_solver_SSD::compute(){
 
 
   auto end = std::chrono::steady_clock::now();   
-  Station2(std::chrono::duration_cast<std::chrono::milliseconds>(end - start0).count(), "Total case execution time:             ");
+  Station(std::chrono::duration_cast<std::chrono::milliseconds>(end - start0).count(), "Total case execution time:             ");
   std::cout<<std::endl;
   
 }
@@ -505,19 +416,15 @@ void Kubo_solver_SSD::compute(){
 
 
 
-void Kubo_solver_SSD::polynomial_cycle(type polys[], type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
-  
+void Kubo_solver_SSD::polynomial_cycle(type polys[], SSD_buffer& bras_SSD, type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
+
   int M = parameters_.M_,
       num_parts = parameters_.num_parts_,
-    interval = M/(num_buffers_-1),
-    SEC_SIZE  = parameters_.SECTION_SIZE_,
-    M_buffer_size = M/(num_buffers_-1);
+      SEC_SIZE  = parameters_.SECTION_SIZE_,
+      interval = bras_SSD.COLS_stride();
+    
+  int upload_time = 0;
   
-
-  std::string filename=parameters_.run_dir_+"/buffer/";
-  FILE* create_ket = fopen( (filename+"brass").c_str(), "wb");
-  fclose(create_ket);
-
 //=================================KPM Step 0======================================//
 
 
@@ -536,46 +443,52 @@ void Kubo_solver_SSD::polynomial_cycle(type polys[], type vec[], type p_vec[], t
 
 //=================================KPM Steps 2 and on===============================//
 
-  int count=0;
+  bras_SSD.begin_upload();
   
+  int buffer_num=0, index = 2;  
   for( int m=2; m<M; m++ ){
+    
     device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
-    device_.traceover( &polys[ m * SEC_SIZE ], vec, s, num_parts);
+    device_.traceover( &polys[ index * SEC_SIZE ], vec, s, num_parts);
+    index++;
+
+    
+    if( (m+1) % interval == 0 || (m == (M-1)) ){
+      auto up_start = std::chrono::steady_clock::now();   
+
+      bras_SSD.upload_col_buffer_to_SSD(buffer_num, polys);
+
+      auto up_end = std::chrono::steady_clock::now();   
+      upload_time += std::chrono::duration_cast<std::chrono::microseconds>(up_end - up_start).count();
 
       
-    if( (m+1) % interval == 0 ){
-      if( M % num_buffers_ != 0 && count == num_buffers_ )		  
-	update_SSD_buffer("brass", M % (num_buffers_-1) , &polys[count * interval * SEC_SIZE] ); //at the last buffer, if (M%num_buffers_!=0), this will
-	else
-        update_SSD_buffer("brass", M_buffer_size, &polys[count * interval * SEC_SIZE] ); //at the last buffer, if (M%num_buffers_!=0), this will
-
-
-      count++;
+      buffer_num++;
+      index = 0;
     }  
-
   }
+  
+  bras_SSD.end_upload();
+
+  Station( upload_time/1000, "               SSD upload time:                 ");
+  std::cout<<                 "               Average SSD upload bandwidth:    "<<   double(SEC_SIZE * M * sizeof(type))/ (double(upload_time) * 1000)<<" GB/s" <<std::endl;
 }
 
 
-void Kubo_solver_SSD::polynomial_cycle_ket(type polys[], type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
+void Kubo_solver_SSD::polynomial_cycle_ket(type polys[], SSD_buffer& kets_SSD, type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
 
   int M   = parameters_.M_,
       DIM   = device_.parameters().DIM_,
       num_parts = parameters_.num_parts_,
-    interval = M/(num_buffers_-1),
-      SEC_SIZE  = parameters_.SECTION_SIZE_,
-    M_buffer_size = M/(num_buffers_-1);
+    SEC_SIZE  = parameters_.SECTION_SIZE_,
+    interval = kets_SSD.COLS_stride();
 
 
+  int upload_time = 0;
 
   
   type *tmp = new type [DIM];
 
   
-  std::string filename=parameters_.run_dir_+"/buffer/";
-  FILE* create_ket = fopen( (filename+"ketss").c_str(), "wb");
-  fclose(create_ket);
-
 //=================================KPM Step 0======================================//
   
   device_.vel_op( tmp, pp_vec );
@@ -594,26 +507,34 @@ void Kubo_solver_SSD::polynomial_cycle_ket(type polys[], type vec[], type p_vec[
 
 //=================================KPM Steps 2 and on===============================//
 
-  int count=0;
+  int buffer_num = 0, index = 2;
+  kets_SSD.begin_upload();
   
   for( int m=2; m<M; m++ ){
     device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
     device_.vel_op( tmp, vec );
-    device_.traceover(&polys[ m * SEC_SIZE ], tmp, s, num_parts);
+    device_.traceover(&polys[ index * SEC_SIZE ], tmp, s, num_parts);
 
-    
-    if( (m+1) % interval == 0 ){
-      if( M % num_buffers_ !=0  &&  count == num_buffers_ )
-	update_SSD_buffer("ketss", M % (num_buffers_-1) , &polys[count * interval * SEC_SIZE ] ); 
-      else
-        update_SSD_buffer("ketss", M_buffer_size, &polys[count * interval * SEC_SIZE ] );
+    index++;
+    if( (m+1) % interval == 0 || (m == (M-1)) ){
+      auto up_start = std::chrono::steady_clock::now();   
 
-     
-     
-      count++;
-    }
-  
+      kets_SSD.upload_col_buffer_to_SSD(buffer_num, polys);
+
+      auto up_end = std::chrono::steady_clock::now();   
+      upload_time += std::chrono::duration_cast<std::chrono::microseconds>(up_end - up_start).count();
+
+
+      buffer_num++;
+      index = 0;
+    }  
   }
+
+  kets_SSD.end_upload();
+  
+  Station( upload_time/1000, "               SSD upload time:            ");
+  std::cout<<                 "               Average SSD upload bandwidth:    "<<   double(SEC_SIZE * M * sizeof(type))/ ( double(upload_time)  * 1000)<<" GB/s" <<std::endl;
+
   
   delete []tmp;
 }

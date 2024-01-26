@@ -28,15 +28,12 @@ void fetch_buffer(
 }
 
 
-void Kubo_solver_SSD::Greenwood_FFTs__imVec_noEta_SSD(std::complex<r_type> bras[], std::complex<r_type> kets[], r_type E_points[], r_type r_data[]){
+void Kubo_solver_SSD::Greenwood_FFTs__imVec_noEta_SSD(std::complex<r_type> bras[], std::complex<r_type> kets[], SSD_buffer& bras_SSD, SSD_buffer& kets_SSD, r_type E_points[], r_type r_data[]){
   const std::complex<double> im(0,1);
 
-  int SEC_SIZE = parameters_.SECTION_SIZE_,
-      M     = parameters_.M_,
-      size  = SEC_SIZE/num_buffers_,
+  int M     = parameters_.M_,
       num_p = parameters_.num_p_;
 
-  int stride=size;
  
   r_type kernel [ M ],
          pre_factor [ num_p ];
@@ -53,47 +50,20 @@ void Kubo_solver_SSD::Greenwood_FFTs__imVec_noEta_SSD(std::complex<r_type> bras[
 
 
   
-  
-  type *bras_l = new type [ size * M ],
-       *kets_l = new type [ size * M ];
-  
+    
   int  total_read=0;
+  int size = 0;
   
-for(int buffer = 0; buffer < num_buffers_; buffer++ ){
-
-  std::string filename=parameters_.run_dir_+"/buffer/";
+  for(int buffer = 0; buffer <= bras_SSD.num_buffers(); buffer++ ){
   
-  
-  if(buffer == (num_buffers_ -1) ){
-    if (SEC_SIZE % num_buffers_ != 0) {
-     size = SEC_SIZE % num_buffers_;
-     //   std::cout<<"yes"<<std::endl;
-    }
-    else if(SEC_SIZE % num_buffers_ == 0)
-     break;
-  }
-
-  
+ 
   auto read_start = std::chrono::steady_clock::now();
+    
+  size = bras_SSD.retrieve_row_buffer_from_SSD(buffer, bras);
+  size = kets_SSD.retrieve_row_buffer_from_SSD(buffer, kets);
 
-  for(int m=0;m<M;m++){
-    FILE* in = fopen((filename+"brass").c_str(), "rb");
-    fseek(in, ( buffer * stride + m * SEC_SIZE )   * sizeof(type), SEEK_CUR);
-    fread( &bras_l[m*stride], 1, size*sizeof(type), in );
-    fclose(in);
-  }
-
-  for(int m=0;m<M;m++){
-    FILE* in = fopen((filename+"ketss").c_str(), "rb");
-    fseek(in, ( buffer * stride + m * SEC_SIZE )   * sizeof(type), SEEK_CUR);
-    fread( &kets_l[m*stride], 1, size*sizeof(type), in );
-    fclose(in);
-  }
-
-
-  //fetch_buffer( filename+"brass", M, buffer, size, bras_l);
-  //fetch_buffer( filename+"ketss", M, buffer, size, kets_l);
   auto read_end = std::chrono::steady_clock::now();  
+
 
   total_read += std::chrono::duration_cast<std::chrono::microseconds>(read_end - read_start).count();
 
@@ -147,13 +117,13 @@ for(int buffer = 0; buffer < num_buffers_; buffer++ ){
  
 
 	  for(int m=0;m<M;m++)
-	    input[m] = kernel[m] * bras_l[m*size+l].real();
+	    input[m] = kernel[m] * bras[m*size+l].real();
      
 	  fftw_execute(plan1);
 
 
 	  for(int m=0;m<M;m++)
-	    input[m] = kernel[m] * bras_l[m*size+l].imag();
+	    input[m] = kernel[m] * bras[m*size+l].imag();
 
 	  fftw_execute(plan2);
 
@@ -162,13 +132,13 @@ for(int buffer = 0; buffer < num_buffers_; buffer++ ){
 
       
 	  for(int m=0;m<M;m++)
-	    input[m] = kernel[m] * kets_l[m*size+l].real();
+	    input[m] = kernel[m] * kets[m*size+l].real();
 
 	
 	  fftw_execute(plan3);
       
 	  for(int m=0;m<M;m++)
-	    input[m] = kernel[m] * kets_l[m*size+l].imag(); 
+	    input[m] = kernel[m] * kets[m*size+l].imag(); 
 
 	  fftw_execute(plan4);   
 
@@ -202,9 +172,9 @@ for(int buffer = 0; buffer < num_buffers_; buffer++ ){
     }
   }
 
- std::cout<<"           Time spent reading SSD buffer:   "<<total_read/1000<<"ms "<<std::endl;
-
- delete [] bras_l;
- delete [] kets_l;
+  int SEC_SIZE     = parameters_.SECTION_SIZE_;
+  
+  std::cout<<"              Time spent reading SSD buffer:    "<<total_read/1000<<"ms "<<std::endl;
+  std::cout<<"              Average SSD download bandwidth:   "<<   double( 2 * SEC_SIZE * M * sizeof(type) )/ (double(total_read) *1000)<<" GB/s" <<std::endl;
 }
 

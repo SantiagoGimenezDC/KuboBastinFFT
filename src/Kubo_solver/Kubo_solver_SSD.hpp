@@ -11,6 +11,8 @@
 #include<eigen-3.4.0/Eigen/Core>
 
 #include "Kubo_solver.hpp" //For the input struct;
+
+#include "SSD_buffer.hpp"
 /*
 struct solver_vars{  
   r_type a_ ,b_, E_min_, eta_, E_start_, E_end_, edge_;//m_str, rsh_str, anderson_str;
@@ -32,10 +34,13 @@ private:
 
   double RAM_buffer_size_;//In GBs
   int num_buffers_;
+  int interval_,
+      M_rest_ ;  
+
 public:
   ~Kubo_solver_SSD(){delete kernel_, delete cap_, delete vec_base_;};
   Kubo_solver_SSD();
-  Kubo_solver_SSD( solver_vars&, Device&);
+  Kubo_solver_SSD( solver_vars&, double, Device&);
   
   solver_vars& parameters(){return parameters_;};
   void compute();
@@ -46,10 +51,10 @@ public:
   void update_data ( r_type*,r_type*, r_type*, r_type*, r_type*, int ,  std::string, std::string );
   void plot_data   ( std::string, std::string );
   
-  void polynomial_cycle     ( type*, type*, type*, type*, r_type*, r_type* , int);
-  void polynomial_cycle_ket ( type*, type*, type*, type*, r_type*, r_type* , int);
+  void polynomial_cycle     ( type*, SSD_buffer&, type*, type*, type*, r_type*, r_type* , int);
+  void polynomial_cycle_ket ( type*, SSD_buffer&, type*, type*, type*, r_type*, r_type* , int);
   
-  void Greenwood_FFTs__imVec_noEta_SSD ( std::complex<r_type>*, std::complex<r_type>*, r_type*, r_type*);
+  void Greenwood_FFTs__imVec_noEta_SSD ( std::complex<r_type>*, std::complex<r_type>*, SSD_buffer&, SSD_buffer&, r_type*, r_type*);
 
   
   void create_buffers();
