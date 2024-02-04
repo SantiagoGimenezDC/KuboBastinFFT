@@ -93,9 +93,14 @@ int main(int , char **argv){
 
     if(!f_vars.post_filter_ && !f_vars.filter_)
       f_vars.decRate_=1;
-  
-    s_vars.num_p_ = s_vars.M_ / f_vars.decRate_;
 
+    f_vars.M_ext_ =  2*f_vars.M_;
+    f_vars.k_dis_ += f_vars.M_ext_/4;
+    f_vars.nump_  = f_vars.M_ext_/f_vars.decRate_;
+
+    s_vars.num_p_ = f_vars.nump_;
+
+    
     //f_vars.k_dis_ = f_vars.M_/4;
     //f_vars.f_cutoff_ = f_vars.M_/ 30; 
     //f_vars.att_ = 96;

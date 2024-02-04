@@ -7,13 +7,16 @@
 
 KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
 
-  parameters_.k_dis_+=parameters_.M_/4;
+
   
   int M =parameters_.M_,
+    M_ext=parameters_.M_ext_,
     decRate = parameters_.decRate_,
     k_dis = parameters_.k_dis_,
-    nump = M/decRate;
+    nump = parameters_.nump_;
 
+
+  
   if(M%decRate != 0 )
     std::cout<<"You should choose M divisible by decRate for best precision"<<std::endl;
 
@@ -22,8 +25,6 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
   
   r_type att = parameters.att_;
 
-
-  parameters_.nump_ = nump;
   //parameters to try:
   //int k_dis=-M/4, decRate=8;  
   //  r_type f_cutoff=M/15;
@@ -33,14 +34,12 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
   E_points_.resize(parameters_.nump_);
 
   
-  for(int k = 0; k < nump/2; k++)
-    E_points_(k) = cos(M_PI * ( 2 * ( k - k_dis ) + 0.5 ) / M);//  -  M_PI *  ( decRate - 1) / decRate ); 
-  
-  for(int k=0; k < nump/2; k++)
-    E_points_(nump/2+k) = cos(M_PI * ( 2 * (  M - nump/2  + k - k_dis ) + 0.5 ) / M );// -  M_PI *  ( decRate - 1) / decRate ); 
-  
+  for(int k = 0; k < nump/2; k++){
+    E_points_(k) = cos(M_PI * ( 2 * ( k - k_dis ) + 0.5 ) / M_ext);
+    E_points_(nump/2+k) = cos(M_PI * ( 2 * (  M_ext - nump/2  + k - k_dis ) + 0.5 ) / M_ext );
+  }
 
- 
+
   /* 
   for(int k=0;k<nump;k++)
     E_points_(k) = cos(  M_PI * (r_type) ( (  2 * ( - k + k_dis - M/2 - ( decRate - 1) * M / ( 2 * decRate ) ) ) + 0.5 ) /  (r_type)  M );
@@ -60,12 +59,12 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
 
 void KB_filter::compute_filter(){   
   int L = this->parameters().L_,
-    M = this->parameters().M_;
+    M_ext = parameters_.M_ext_;
   
   int Np = (L-1)/2;
  
   r_type  f_a = 0,
-    f_s = M,
+    f_s = M_ext,
     f_b = this->parameters().f_cutoff_;
 
 
@@ -84,7 +83,8 @@ void KB_filter::compute_filter(){
     KB_window_(Np+l) = A(l)*boost::math::cyl_bessel_i(0,  beta_ * sqrt (1.0 - pow(  double(l)/double(Np) , 2.0) ) ) / boost::math::cyl_bessel_i(0, beta_);
     KB_window_(Np-l) = KB_window_(l+Np);
   }
-  
+
+
   if(Np == 0 )
     KB_window_(0) = 1.0;
 
@@ -205,6 +205,7 @@ void KB_filter::post_process_filter(type**  polys, int subDim){
   std::complex<r_type> ImUnit(0,1.0);
   
   int M   = this->parameters().M_,
+    M_ext = this->parameters().M_ext_,
     L     = this->parameters().L_,
     Np    = (L-1)/2,
     decRate = this->parameters().decRate_,
@@ -214,68 +215,58 @@ void KB_filter::post_process_filter(type**  polys, int subDim){
 
   Eigen::Matrix<std::complex<r_type>,-1,-1> filtered_polys(subDim,M);
 
+  bool cyclic =true;
 
     
   for(int m=0; m<M;m++){
-    std::complex<r_type> phase = ( 2 - ( m == 0) ) * std::polar(1.0,  M_PI * m * (  - 2 * k_dis + 0.5) / M );//( std::polar( 1.0, (  2* M_PI * (r_type) ( - m * k_dis - 0.) / (r_type) M ) ) );
+    std::complex<r_type> phase = ( 2 - ( m == 0) ) * std::polar(1.0,  M_PI * m * (  - 2 * k_dis + 0.5) / M_ext );//( std::polar( 1.0, (  2* M_PI * (r_type) ( - m * k_dis - 0.) / (r_type) M ) ) );
     #pragma omp parallel for
     for(int l=0;l<subDim;l++)
       polys[m][l] *= phase;
   }
+
   
   filtered_polys.setZero();
-    
-  for(int m=0;m<M;m++)
-    if(m%decRate==0)
-    for(int i=-Np;  i<=Np; i++){
-	
-      if(m+i<0){
-	//break;
-#pragma omp parallel for
-	for(int l=0;l<subDim;l++)
-  	  filtered_polys(l,m)+=polys[M-m+i][l] * KB_window_(Np+i);
-
-       }
-
-      
-      else if(m+i>=M){
-	//break;
-#pragma omp parallel for
-	for(int l=0;l<subDim;l++)
-	  filtered_polys(l,m) += polys[m+i-M][l] * KB_window_(Np+i);	
-       }
-
-      
-      else{
-#pragma omp parallel for
-	for(int l=0;l<subDim;l++)
- 	  filtered_polys(l,m)+=polys[m+i][l] * KB_window_(Np+i);  
-      }
-
-      /*    
-      if(m+i>0 && m+i<M){
-#pragma omp parallel for
-	for(int l=0;l<subDim;l++)
-	 filtered_polys(l,m) += polys[m+i][l]*KB_window_(i);
-      }
-*/      
-    }
-
   
-  /*
-  for(int i=0; i<M; i+=decRate)
-    if(i<Np || i>M-Np){
+  for(int m=0;m<M;m++)
+    if( m % decRate == 0 ){
+      if(cyclic){
+	
+        for(int i=-Np;  i<=Np; i++){	
+          if(m+i<0){
 #pragma omp parallel for
-     for(int l=0;l<subDim;l++)
-        filtered_polys(l,i)=0;
-	}*/
-    
-
+	    for(int l=0;l<subDim;l++)
+  	      filtered_polys(l,m) += polys[M-m+i][l] * KB_window_(Np+i);
+	  }      
+          else if(m+i>=M){
+#pragma omp parallel for
+            for(int l=0;l<subDim;l++)
+	      filtered_polys(l,m) += polys[m+i-M][l] * KB_window_(Np+i);	
+          }      
+          else{
+#pragma omp parallel for
+            for(int l=0;l<subDim;l++)
+ 	      filtered_polys(l,m) += polys[m+i][l] * KB_window_(Np+i);  
+          }      
+	}
+      }
+      else{
+	
+        for(int i=-Np;  i<=Np; i++){
+          if(m+i>=0 && m+i<M){
+#pragma omp parallel for
+	    for(int l=0;l<subDim;l++)
+	      filtered_polys(l,m)+=polys[m+i][l] * KB_window_(Np+i);  
+	  }
+        }
+      }
+    }
+  
   for(int m=0, i=0; i<M; m++, i+=decRate){
 #pragma omp parallel for
      for(int l=0;l<subDim;l++)
        polys[m][l] = filtered_polys(l,i);
-  }
+       }
 }
 
 

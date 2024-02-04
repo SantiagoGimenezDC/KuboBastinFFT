@@ -48,7 +48,7 @@ public:
   
   void polynomial_cycle     ( type**, type*, type*, type*, r_type*, r_type* , int);
   void polynomial_cycle_ket ( type**, type*, type*, type*, r_type*, r_type* , int);
-
+  void filtered_polynomial_cycle( type** , type*, type*, type*, r_type* , r_type* , int , int );
 
   
   //  void Bastin_FFTs__reVec_noEta     ( r_type*, r_type*, r_type*, r_type*);

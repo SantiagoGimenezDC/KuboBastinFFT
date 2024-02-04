@@ -106,8 +106,6 @@ void Kubo_solver::Greenwood_FFTs__imVec_noEta(std::complex<r_type> **bras, std::
       fftw_execute(plan4);   
 
 
-
-
       
       for(int k=0; k<num_p; k++ )
         thread_data[k] += (  (bra_re[k] - im * bra_im[k] )   *   ( ket_re[k] + im *  ket_im[k] )  ).real();

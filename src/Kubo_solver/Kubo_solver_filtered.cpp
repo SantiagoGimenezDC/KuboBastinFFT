@@ -190,15 +190,11 @@ void Kubo_solver_filtered::compute(){
     r_data     [e] = 0.0;
     final_data [e] = 0.0;
     integrand  [e] = 0;
-    if(!filter_.parameters().filter_ && !filter_.parameters().post_filter_)
-      E_points   [e] = cos( M_PI * ( (r_type)e + 0.5) / (r_type)M );
   }
 /*-----------------------------------------------*/  
-   
 
   filter_.compute_filter();
-  if(filter_.parameters().filter_ || filter_.parameters().post_filter_)
-    E_points = filter_.E_points();
+  E_points = filter_.E_points();
 
   cap_->create_CAP(W, C, LE,  dmp_op);
   device_.damp(dmp_op);
@@ -263,8 +259,8 @@ void Kubo_solver_filtered::compute(){
     
 
 	 /*---------------Post process filter--------------*/
-         if(filter_.parameters().post_filter_)
-	   filter_.post_process_filter(kets, SUBDIM);
+	 //         if(filter_.parameters().post_filter_)
+	 // filter_.post_process_filter(kets, SEC_SIZE);
 
          /*------------------------------------------------*/
 
@@ -288,8 +284,18 @@ void Kubo_solver_filtered::compute(){
 
 	 /*---------------Post process filter--------------*/
          if(filter_.parameters().post_filter_)
-	   filter_.post_process_filter(bras, SUBDIM);
+	   filter_.post_process_filter(bras, SEC_SIZE);
+
 	 
+	 #pragma omp parallel for
+         for(int k=0;k<DIM;k++){
+           vec    [k] = 0.0;
+           p_vec  [k] = 0.0;
+           pp_vec [k] = 0.0;
+         }
+
+         device_.vel_op( pp_vec, rand_vec );
+         filtered_polynomial_cycle(bras, vec, p_vec, pp_vec,  dmp_op, dis_vec, s, 1);
          /*------------------------------------------------*/
 
          auto FFT_start_2 = std::chrono::steady_clock::now();
@@ -299,12 +305,8 @@ void Kubo_solver_filtered::compute(){
          
 	 
 	 //Greenwood_FFTs__reVec_noEta(bras,kets, E_points, r_data);         
-         
 
-         if(filter_.parameters().post_filter_ || filter_.parameters().filter_)
-	   Greenwood_FFTs__imVec_eta_adjusted(bras,kets, E_points, r_data);
-	 else
-	   Greenwood_FFTs__imVec_noEta_adjusted(bras,kets, E_points, r_data);
+	 Greenwood_FFTs__imVec_eta_adjusted(bras,kets, E_points, r_data);
 	 
 	 /*
          These 3 are meant to correct the pre factor .As it turns out, for small values of eta<0.1,
@@ -409,6 +411,192 @@ void Kubo_solver_filtered::compute(){
 }
 
 
+void copy_vector(type vec_destination[], type vec_original[], int size){
+#pragma omp parallel for
+  for(int i=0;i<size;i++)
+    vec_destination[i] = vec_original[i];
+}
+
+
+void plus_eq(type vec_1[], type vec_2[], type factor, int size){
+#pragma omp parallel for
+  for(int i=0;i<size;i++)
+    vec_1[i] += factor * vec_2[i];
+}
+
+void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s, int bra_or_ket){
+  
+  int M         = parameters_.M_,
+      M_ext     = filter_.parameters().M_ext_,
+      k_dis     = filter_.parameters().k_dis_,
+      DIM       = device_.parameters().DIM_,
+      num_parts = parameters_.num_parts_,
+      L         = filter_.parameters().L_,
+      Np        = (L-1)/2,
+      decRate   = filter_.parameters().decRate_,  
+      SEC_SIZE  = parameters_.SECTION_SIZE_ ;
+
+
+  type tmp[DIM], tmp2[DIM],
+       vec_f[DIM], p_vec_f[DIM], pp_vec_f[DIM];
+
+  type disp_factor=std::polar(1.0,   M_PI * ( -2 * k_dis + 0.5 )  / M_ext );
+  
+  r_type* KB_window = filter_.KB_window();
+
+  bool cyclic = true;
+
+  #pragma omp parallel for
+  for(int l=0;l<DIM;l++){
+    p_vec_f[l] = 0;
+    pp_vec_f[l] = 0;
+    tmp[l] = 0;
+    tmp2[l] = 0;
+  }
+
+
+  for(int i=0; i<=2*L; i++)
+#pragma omp parallel for
+    for(int l=0;l<SEC_SIZE;l++)
+      poly_buffer[L+i][l]=0;
+  
+  //=================================KPM Step 0======================================//
+  
+
+  device_.traceover(tmp, pp_vec, s, num_parts);
+  for(int i=0;i<Np/decRate; i++)
+    plus_eq(poly_buffer[L+i], tmp,  KB_window[Np - i * decRate], SEC_SIZE );
+
+  
+  
+//=================================KPM Step 1======================================//   
+    
+    
+  device_.H_ket ( p_vec, pp_vec, damp_op, dis_vec);
+  
+    
+  type factor = std::polar(1.0,  M_PI * 1 * (  - 2 * k_dis + 0.5) / M_ext );
+
+  
+  plus_eq(pp_vec_f, p_vec, 2 * factor * KB_window[0], DIM);
+  
+  device_.traceover(tmp, p_vec, s, num_parts);
+  for(int i=0;i<Np/decRate; i++){
+    plus_eq(poly_buffer[ L + i ], tmp, 2 * factor * KB_window[Np + 1 - i * decRate], SEC_SIZE );
+
+    if(cyclic)
+      plus_eq(poly_buffer[  2 * L  - i ], tmp, 2 * factor * KB_window[ Np + 1 + i * decRate ], SEC_SIZE );
+  }
+  
+  //=================================KPM Steps 2 and on===============================//
+
+    for( int m=2; m<M; m++ ){
+
+      
+      device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
+
+
+      
+      factor = std::polar(1.0,  M_PI * m * (  - 2 * k_dis + 0.5) / M_ext );
+      
+      //=============Constructing filtered recursion initial vectors========//
+      if( m < L+1 )
+        plus_eq(pp_vec_f, vec, 2 * factor * KB_window[Np+(m-(Np+1))], DIM);
+
+      if( m < L+2  &&  m > 2)
+        plus_eq(p_vec_f, vec, 2 * factor * KB_window[Np+(m-(Np+2))], DIM);
+      //===================================================================//
+
+
+      
+      if( m < L ){
+	device_.traceover(tmp, vec, s, num_parts);
+
+	for(int i=0;i<=Np/decRate; i++)
+          if( (m-i) <= Np )
+	    plus_eq(poly_buffer[ L + i ], tmp, 2 * factor * KB_window[Np + m - i * decRate], SEC_SIZE );
+
+	if(cyclic)
+       	  for(int i=0;i<=Np/decRate; i++)
+            if( ( m - i ) <= Np)
+	      plus_eq(poly_buffer[  2 * L  - i ], tmp, 2 * factor * KB_window[ Np + m - i * decRate ], SEC_SIZE );
+      }
+
+
+      
+      if( M-m < L ){
+	device_.traceover(tmp, vec, s, num_parts);
+
+	for(int i=0;i<=Np/decRate; i++)
+          if( ( M - m -i ) <= Np)
+	    plus_eq(poly_buffer[  2 * L  - i ], tmp, 2 * factor * KB_window[ Np + ( M - m ) - i * decRate ], SEC_SIZE );
+
+	if(cyclic)
+          for(int i=0;i<=Np/decRate; i++)
+            if( (  M - m + i * decRate ) <= Np )
+	      plus_eq(poly_buffer[ L + i ],    tmp,  2 * factor * KB_window[ Np - ( M - m  + i * decRate ) ], SEC_SIZE );
+
+      }
+      
+
+      
+      if( m == M-1 ) {
+	device_.traceover(tmp, pp_vec_f, s, num_parts);
+
+	device_.update_cheb_filtered( vec_f, p_vec_f, pp_vec_f, damp_op, dis_vec, disp_factor);
+	
+
+        device_.update_cheb_filtered( vec_f, p_vec_f, pp_vec_f, damp_op, dis_vec, disp_factor);
+	device_.traceover(tmp2, vec_f, s, num_parts);
+
+		for(int l=0;l<SEC_SIZE;l++)
+	  //	  std::cout<<tmp[l]<<"  "<<poly_buffer[Np+1][l]<<"      "<<tmp2[l]<<"  "<<poly_buffer[Np+2][l]<<std::endl;
+	  	  std::cout<<poly_buffer[  L + 1  ][ l ]<<"  "<<poly_buffer[ 0 + 1 ][ l ]<<std::endl;
+      }
+	/*
+      if(m>L){
+        device_.update_cheb( vec_f, p_vec_f, pp_vec_f, damp_op, dis_vec);
+
+	if( m % decRate == 0 )
+	  device_.traceover(poly_buffer[ m / decRate ], vec_f, s, num_parts);
+	  }*/
+
+
+      /*      
+      if(m<Np){
+        device_.traceover(tmp, vec, s, num_parts);
+	for(int k=0; k < Np; k += decRate){
+	  if( abs(m-k) < Np )
+            plus_eq(poly_buffer[k],tmp,KB_window[Np-(m-k)], SEC_SIZE);
+            plus_eq(poly_buffer[M-Np+k],tmp,KB_window[Np-(m-k)], SEC_SIZE);
+	}
+
+	if(m>1)
+	  plus_eq(pp_vec_f,tmp,KB_window[Np-(m-Np)],   SEC_SIZE);
+	if(m>2)
+	  plus_eq(p_vec_f, tmp,KB_window[Np-(m-Np+1)], SEC_SIZE);
+	
+      }
+
+
+      
+      if(M-m<Np){
+        device_.traceover(tmp, vec, s, num_parts);
+
+	for(int k=0; k < Np; k += decRate){
+	  if( abs(m-k) < Np )
+            plus_eq(poly_buffer[M-Np+k],tmp,KB_window[Np-(m-k)], SEC_SIZE);
+	    plus_eq(poly_buffer[k],tmp,KB_window[Np-(m-k)], SEC_SIZE);
+	}	  
+      }
+
+      */
+      
+  }
+}
+
+
+
 
 
 void Kubo_solver_filtered::polynomial_cycle(type** polys, type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){
@@ -440,6 +628,10 @@ void Kubo_solver_filtered::polynomial_cycle(type** polys, type vec[], type p_vec
       device_.traceover(polys[m], vec, s, num_parts);
     }
 }
+
+
+
+
 
 
 void Kubo_solver_filtered::polynomial_cycle_ket(type** polys, type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[], int s){

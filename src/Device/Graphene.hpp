@@ -30,7 +30,8 @@ public:
 
   
   
-
+  virtual  void update_cheb_filtered ( type*, type*, type*, r_type*, r_type*, type);
+  
   virtual  void update_cheb ( type*, type*, type*, r_type*, r_type*);  
 
   virtual void update_cheb ( type*, type*, type*, r_type*, r_type , r_type ){};

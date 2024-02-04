@@ -42,6 +42,9 @@ public:
   //  CAP& cap(){return cap_;};
   device_vars& parameters(){return device_vars_; };
 
+
+  virtual void update_cheb_filtered ( type*, type*, type*, r_type*, r_type* , type) {};  
+
   virtual void update_cheb ( type*, type*, type*, r_type*, r_type* ) = 0;  
   virtual void update_cheb ( type*, type*, type*, r_type*, r_type , r_type ){};
   virtual void update_cheb ( int ,  int, type*, type*, type*, type*, r_type*, r_type , r_type ){};

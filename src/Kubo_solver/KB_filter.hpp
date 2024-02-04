@@ -10,7 +10,7 @@
 
 struct filter_vars{
   bool post_filter_, filter_;
-  int M_, L_, k_dis_, decRate_, nump_;
+  int M_, M_ext_, L_, k_dis_, decRate_, nump_;
   r_type f_cutoff_, att_;
 };
 
@@ -28,5 +28,7 @@ public:
   void print_filter(std::string);
   r_type* E_points(){return E_points_.data();};
   void post_process_filter(type**  , int );
+
+  r_type* KB_window(){return KB_window_.data();};
 };
 #endif //KB_FILTER_HPP
