@@ -182,9 +182,44 @@ void TBG::SlaterCoster_Hamiltonian(SpMatrixXp& H){
   H.resize(Dim,Dim);  
   H.setFromTriplets(tripletList.begin(), tripletList.end(), [] (const r_type &,const r_type &b) { return b; });
   H.makeCompressed();
-  H.makeCompressed();
 
   tripletList.clear();
+
+    
+  Eigen::SparseMatrix<type,Eigen::ColMajor> printH(H.cast<type>());
+  printH.makeCompressed();
+  
+  int nnz = printH.nonZeros(), cols = printH.cols(), rows = printH.rows();
+  type * valuePtr = printH.valuePtr();//(nnz)
+  int * innerIndexPtr = printH.innerIndexPtr(),//(nnz)
+      * outerIndexPtr = printH.outerIndexPtr();//(cols+1)
+  
+  
+
+  std::ofstream data2;
+  data2.open("TBG.HAM.CSR");
+
+  data2.setf(std::ios::fixed,std::ios::floatfield);
+  data2.precision(3);
+
+  data2<<cols<<" "<<nnz<<std::endl;
+
+  for (int i=0;i<nnz;i++)
+    data2<<real(valuePtr[i])<<" "<<imag(valuePtr[i])<<" ";
+
+  data2<<std::endl;
+  for (int i=0;i<nnz;i++)
+    data2<<innerIndexPtr[i]<<" ";
+
+  
+  data2<<std::endl;
+  for (int i=0;i<cols;i++)
+    data2<<outerIndexPtr[i]<<" ";
+
+  
+  data2.close();
+  
+  
   
   auto end_RV = std::chrono::steady_clock::now();
 

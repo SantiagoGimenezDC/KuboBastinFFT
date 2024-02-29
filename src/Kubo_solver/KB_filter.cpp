@@ -3,7 +3,9 @@
 #include<iostream>
 
 #include<boost/math/special_functions/bessel.hpp> 
+
 #include "KB_filter.hpp"
+#include "../kernel.hpp"
 
 KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
 
@@ -212,14 +214,15 @@ void KB_filter::post_process_filter(type**  polys, int subDim){
     k_dis = this->parameters().k_dis_;  
 
 
+  //  Jackson kernel;
 
   Eigen::Matrix<std::complex<r_type>,-1,-1> filtered_polys(subDim,M);
 
-  bool cyclic =true;
+  bool cyclic = true;
 
     
   for(int m=0; m<M;m++){
-    std::complex<r_type> phase = ( 2 - ( m == 0) ) * std::polar(1.0,  M_PI * m * (  - 2 * k_dis + 0.5) / M_ext );//( std::polar( 1.0, (  2* M_PI * (r_type) ( - m * k_dis - 0.) / (r_type) M ) ) );
+    std::complex<r_type> phase = ( 2 - ( m == 0) ) * std::polar(1.0,  M_PI * m * (  - 2 * k_dis + 0.5) / M_ext ) ;//( std::polar( 1.0, (  2* M_PI * (r_type) ( - m * k_dis - 0.) / (r_type) M ) ) );
     #pragma omp parallel for
     for(int l=0;l<subDim;l++)
       polys[m][l] *= phase;
