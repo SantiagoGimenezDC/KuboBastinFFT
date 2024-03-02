@@ -239,12 +239,14 @@ void KB_filter::post_process_filter(type**  polys, int subDim){
           if(m+i<0){
 #pragma omp parallel for
 	    for(int l=0;l<subDim;l++)
-  	      filtered_polys(l,m) += polys[M-m+i][l] * KB_window_(Np+i);
+  	      filtered_polys(l,m) += polys[M+m+i][l] * KB_window_(Np+i);
+	    //std::cout<<"Filt: "<< M+m+i<<"  "<<m<<" "<<std::abs(i)<<std::endl;
 	  }      
           else if(m+i>=M){
 #pragma omp parallel for
             for(int l=0;l<subDim;l++)
-	      filtered_polys(l,m) += polys[m+i-M][l] * KB_window_(Np+i);	
+	      filtered_polys(l,m) += polys[m+i-M][l] * KB_window_(Np+i);
+	    //std::cout<<"Filt: "<< m+i-M<<"  "<<m<<" "<<std::abs(i)<<std::endl;
           }      
           else{
 #pragma omp parallel for

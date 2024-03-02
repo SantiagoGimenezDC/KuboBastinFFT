@@ -260,25 +260,28 @@ void Kubo_solver_filtered::compute(){
            p_vec   [k] = 0.0;
          }    
 
-	      polynomial_cycle_ket( kets, vec, p_vec, pp_vec, dmp_op, dis_vec, s);
-
-    
+	 //polynomial_cycle_ket( kets, vec, p_vec, pp_vec, dmp_op, dis_vec, s);
+	 filtered_polynomial_cycle(kets, vec, p_vec, pp_vec,  dmp_op, dis_vec, s, 1);
+	 
          auto csrmv_end = std::chrono::steady_clock::now();
          Station( std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end - csrmv_start).count()/1000, "           Kets cycle time:            ");
 
 	 total_csrmv += std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end - csrmv_start).count()/1000;
 
-	 //for(int m=0; m<M; m++)
-	 // for(int l=0; l<SEC_SIZE ; l++)
-	 //  kets_post[m][l] = kets[m][l];
+	 /*
+	 for(int m=0; m<M; m++)
+	   for(int l=0; l<SEC_SIZE ; l++){
+	     kets_post[m][l] = kets[m][l];
+             kets[m][l] = 0;
+	   }
 
 	 
-	 /*---------------Post process filter--------------*/
-	 // if(filter_.parameters().post_filter_)
-	 // filter_.post_process_filter(kets_post, SEC_SIZE);
+	 //---------------Post process filter--------------//
+	  if(filter_.parameters().post_filter_)
+	    filter_.post_process_filter(kets_post, SEC_SIZE);
 
-         /*------------------------------------------------*/
-
+         //------------------------------------------------//
+	 
 
 	 #pragma omp parallel for
          for(int k=0;k<DIM;k++){
@@ -287,9 +290,21 @@ void Kubo_solver_filtered::compute(){
            pp_vec [k] = rand_vec[k];
          }
 
-	 //filtered_polynomial_cycle(kets, vec, p_vec, pp_vec,  dmp_op, dis_vec, s, 1);
+	 filtered_polynomial_cycle(kets, vec, p_vec, pp_vec,  dmp_op, dis_vec, s, 1);
+         */
 
-   	  
+
+
+
+
+
+
+
+
+
+
+
+	 //===================================================================BRAS
          auto csrmv_start_2 = std::chrono::steady_clock::now();
 
 #pragma omp parallel for
@@ -330,16 +345,16 @@ void Kubo_solver_filtered::compute(){
 	 device_.vel_op( pp_vec, rand_vec );
          filtered_polynomial_cycle(bras, vec, p_vec, pp_vec,  dmp_op, dis_vec, s, 0);
 
-
-	 for(int m=0; m<M; m++){
+         int decRate   = filter_.parameters().decRate_;  
+	 for(int m = M/decRate - 1; m>=0; m--){
 	   std::complex<double> error = 0;
 	   double max=0, tmp=0;
 	   int l_max=0;
            //if(m==5){
 	     for(int l=0; l<SEC_SIZE ; l++){
-	       error += std::abs(bras_post[m][l] - bras[m][l]);//
-               tmp=std::abs(bras[m][l]-bras_post[m][l]);
-	       if(tmp>max)max=tmp,l_max=l;
+	       error += std::abs(bras_post[m*decRate][l] - bras[m][l]);//
+               tmp=std::abs(bras[m][l]-bras_post[m*decRate][l]);
+	       if(tmp>max) max =tmp, l_max = l;
 	       //std::cout<< bras[m][l]-bras_post[m][l]<<std::endl;
 	       }
 	     std::cout<<m<<"   lmax: "<<l_max<<"  max:"<<max<< "      error tot"<<error<<std::endl;
@@ -357,7 +372,7 @@ void Kubo_solver_filtered::compute(){
 	 
 	 //Greenwood_FFTs__reVec_noEta(bras,kets, E_points, r_data);         
 
-	 Greenwood_FFTs__imVec_eta_adjusted(bras_post,kets_post, E_points, r_data);
+	 Greenwood_FFTs__imVec_eta_adjusted(bras,kets, E_points, r_data);
 	 
 	 /*
          These 3 are meant to correct the pre factor .As it turns out, for small values of eta<0.1,
@@ -487,6 +502,8 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ve
       decRate   = filter_.parameters().decRate_,  
       SEC_SIZE  = parameters_.SECTION_SIZE_ ;
 
+  int M_dec = M / decRate,
+      Np_dec = Np / decRate;
 
   type tmp[SEC_SIZE], tmp_velOp[DIM],
        vec_f[DIM], p_vec_f[DIM], pp_vec_f[DIM];
@@ -518,11 +535,11 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ve
     device_.traceover(tmp, pp_vec, s, num_parts);
 
   //Filter boundary conditions
-  for(int i=0; i <= Np / decRate; i++){
-    plus_eq(poly_buffer[ i ], tmp, KB_window[ Np - i * decRate], SEC_SIZE );
+  for(int i = 0, i_dec = 0; i <= Np ; i += decRate, i_dec++ ){
+    plus_eq(poly_buffer[ i_dec ], tmp, KB_window[ Np - i ], SEC_SIZE );
 
-    if(cyclic)
-      plus_eq(poly_buffer[ M - 1 - i ], tmp,  KB_window[ Np + i * decRate ], SEC_SIZE );
+    if(cyclic && ( i  + 1 ) <= Np )
+      plus_eq(poly_buffer[ M/decRate - 1 - i_dec ], tmp,  KB_window[ Np + i + 1 ], SEC_SIZE );
   }
   
 
@@ -542,7 +559,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ve
 
   
   if( vel_op == 1 ){
-    device_.vel_op( tmp_velOp, pp_vec );
+    device_.vel_op( tmp_velOp, p_vec );
     device_.traceover(tmp, tmp_velOp, s, num_parts);
   }
   else  
@@ -551,12 +568,13 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ve
 
   
   //Filter boundary conditions
-  for(int i=0;i <= Np / decRate; i++){
-       plus_eq(poly_buffer[ i ], tmp, 2 * factor * KB_window[Np + 1 - i * decRate], SEC_SIZE );
+  for(int i=0, i_dec = 0; i <= Np; i += decRate, i_dec++){
+    plus_eq(poly_buffer[ i_dec ], tmp, 2 * factor * KB_window[Np + 1 - i ], SEC_SIZE );
 
-    if(cyclic)
-      plus_eq(poly_buffer[ M - 1 - i ], tmp, 2 * factor * KB_window[ Np + 1 + i * decRate ], SEC_SIZE );
+    if( cyclic && ( 1 + i + 1 ) <= Np )
+      plus_eq(poly_buffer[ M / decRate - 1 - i_dec ], tmp, 2 * factor * KB_window[ Np + 1 + i + 1 ], SEC_SIZE );
   }
+
 
 
 
@@ -567,7 +585,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ve
 
       device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
 
-      factor = std::polar(1.0,  M_PI * m * (  - 2 * k_dis + 0.5) / M_ext );
+      factor = 2 * std::polar(1.0,  M_PI * m * (  - 2 * k_dis + 0.5) / M_ext );
 
 
       //===================================Boundary conditions====================// 
@@ -579,34 +597,37 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ve
       else
 	  device_.traceover(tmp, vec, s, num_parts);
 
-	for(int i = 0; i <= Np / decRate; i++)
-          if( std::abs( m - i * decRate ) <= Np )
-	    plus_eq(poly_buffer[ i ], tmp, 2 * factor * KB_window[Np + m - i * decRate], SEC_SIZE );
 
-       	if(cyclic)
-	 for(int i=0; i <= Np / decRate; i++)
-	   if( std::abs( m + i * decRate ) <= Np)
-	    plus_eq(poly_buffer[ M - 1 - i ], tmp, 2 * factor * KB_window[ Np + m + i * decRate ], SEC_SIZE );
+	
+	for(int i = 0, i_dec = 0; i <= Np ; i += decRate, i_dec++ ){
+          if( std::abs( m - i  ) <= Np )
+	    plus_eq(poly_buffer[ i_dec ], tmp,  factor * KB_window[Np + m - i ], SEC_SIZE );
+
+	  if( cyclic && ( std::abs( m + i + 1 ) <= Np) ){
+	    plus_eq(poly_buffer[ M/decRate - 1 - i_dec ], tmp, factor * KB_window[ Np + m + i + 1 ], SEC_SIZE );
+	  }
+	}
       }
 
-
       
-      if( M - m < L ){
+      if( M - m - 1 < L ){
         if( vel_op == 1 ){
           device_.vel_op( tmp_velOp, vec );
 	  device_.traceover(tmp, tmp_velOp, s, num_parts);
 	}
 	else
 	  device_.traceover(tmp, vec, s, num_parts);
-	
-	for(int i=0; i <= Np / decRate; i++)
-          if( std::abs( M - 1 - m - ( Np - i * decRate ) ) <= Np)
-	    plus_eq(poly_buffer[ M - 1 - Np + i  ], tmp, 2 * factor * KB_window[ Np + ( M - 1 - m ) - ( Np - i * decRate ) ], SEC_SIZE );
 
-	if(cyclic)
-          for(int i=0; i < Np / decRate; i++)
-            if( (  M - 1 - m + i * decRate + 1 ) <= Np )
-	      plus_eq(poly_buffer[ i ],   tmp,  2 * factor * KB_window[ Np - ( M - 1 - m ) - i * decRate - 1  ], SEC_SIZE );
+
+	for(int i = 0, i_dec=0; i <= Np ; i += decRate, i_dec++){
+          if( std::abs( M - 1 - m - ( Np - i  ) ) <= Np )
+	    plus_eq(poly_buffer[ M / decRate - 1 - Np + i_dec  ], tmp,  factor * KB_window[ Np + ( M - 1 - m ) - ( Np - i ) ], SEC_SIZE );
+
+	  if( cyclic && (  ( M - 1 - m ) + i + 1 ) <= Np ){
+	    plus_eq(poly_buffer[ i_dec ], tmp,  factor * KB_window[ Np - ( ( M - 1 - m ) + i + 1 )  ], SEC_SIZE );
+	  }
+	}
+	
 
       }
       //==========================================================================//
@@ -617,15 +638,15 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ve
       //==========================Filtered recursion==============================//
       
       if( m < L + 1 )
-        plus_eq( pp_vec_f, vec, 2 * factor * KB_window[ Np + ( m - ( Np + 1 ) ) ], DIM);
+        plus_eq( pp_vec_f, vec,  factor * KB_window[ Np + ( m - ( Np + 1 ) ) ], DIM);
 
       if( m < L + 2  &&  m > 1)
-        plus_eq( p_vec_f,  vec, 2 * factor * KB_window[ Np + ( m - ( Np + 2 ) ) ], DIM);
+        plus_eq( p_vec_f,  vec,  factor * KB_window[ Np + ( m - ( Np + 2 ) ) ], DIM);
 
 
       //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
       //For testing purposes alone, when decRate==1
-      if( decRate == 1 && m==L+2){
+      if( decRate == 1 && m == L + 2){
 	  if( vel_op == 1 ){
             device_.vel_op( tmp_velOp, pp_vec_f );
             device_.traceover( poly_buffer[ ( Np + 1 ) / decRate ], tmp_velOp, s, num_parts );
@@ -634,7 +655,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ve
 	    device_.traceover( poly_buffer[ ( Np + 1 ) / decRate ], pp_vec_f, s, num_parts );
 	
 	
-	if(decRate==1 && m==L+2 ){
+	if( decRate == 1 && m == L + 2 ){
 	  if( vel_op == 1 ){
             device_.vel_op( tmp_velOp, p_vec_f );
             device_.traceover( poly_buffer[ ( Np + 2 ) / decRate ], tmp_velOp, s, num_parts );
@@ -645,7 +666,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ve
       }
       //For testing purposes alone, when decRate==2
       if( decRate == 2){
-	if(m == Np + 2 ){
+	if(m == L + 2 ){
 	  if( vel_op == 1 ){
             device_.vel_op( tmp_velOp, p_vec_f );
             device_.traceover( poly_buffer[ ( Np/2 + 1 ) / decRate ], tmp_velOp, s, num_parts );
@@ -672,7 +693,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ve
 	}
       }
       //==========================================================================//
-  }
+    }
 }
 
 
