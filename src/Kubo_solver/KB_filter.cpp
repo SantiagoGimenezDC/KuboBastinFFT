@@ -267,7 +267,7 @@ void KB_filter::post_process_filter(type**  polys, int subDim){
       }
     }
   
-  for(int m=0, i=0; i<M; m++, i+=decRate){
+  for(int m=0, i=0; i<=M-1; m++, i+=decRate){
 #pragma omp parallel for
      for(int l=0;l<subDim;l++)
        polys[m][l] = filtered_polys(l,i);
