@@ -10,7 +10,7 @@
 
 #include<eigen-3.4.0/Eigen/Core>
 
-#include "Kubo_solver.hpp" //For the input struct;
+#include "solver_vars.hpp"
 
 #include "SSD_buffer.hpp"
 /*

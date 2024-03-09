@@ -4,6 +4,14 @@
 #include<string>
 #include"../static_vars.hpp"
 
+
+
+enum formula{
+  KUBO_GREENWOOD = 0,
+  KUBO_BASTIN = 1
+};
+
+
 struct solver_vars{  
   r_type a_ ,b_, E_min_, eta_, E_start_, E_end_, edge_;//m_str, rsh_str, anderson_str;
   int M_, R_,  dis_real_, seed_, num_parts_, num_p_,SECTION_SIZE_;

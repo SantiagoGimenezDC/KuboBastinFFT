@@ -51,17 +51,20 @@ void Graphene::traceover(type* traced, type* full_vec, int s, int num_reps){
   int subDim = this->parameters().SUBDIM_,
       C   = this->parameters().C_,
       W   = this->parameters().W_,
-      buffer_length = subDim/num_reps;
+      sec_size = subDim/num_reps,
+      buffer_length = sec_size;
 	
-  if( s == num_reps )
-      buffer_length =  subDim % num_reps;
+  if( s == num_reps-1 )
+      buffer_length += subDim % num_reps;
 
       
 #pragma omp parallel for 
       for(int i=0;i<buffer_length;i++)
-        traced[i] = full_vec[s*buffer_length + i+C*W];
+        traced[i] = full_vec[s*sec_size + i+C*W];
 
   };
+
+
 
 void Graphene::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[]){
 

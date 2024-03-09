@@ -18,9 +18,12 @@ private:
 public:
   ~Graphene(){};
   Graphene(device_vars&);
-
+  virtual r_type Hamiltonian_size(){return 0;};
+  
   virtual void adimensionalize(r_type a, r_type b){ a_ = a, b_ = b; t_a_/=a;};
   virtual void build_Hamiltonian(){};
+
+  
   virtual void damp( r_type*){};
   virtual void update_dis(r_type*, r_type*){};   
 

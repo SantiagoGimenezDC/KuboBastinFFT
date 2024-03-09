@@ -10,13 +10,13 @@ BINARY = KuboBastinFFT.bin
 WARNING := -Wall -Wextra
 
 #-------------Debug build flags----------#
-Debug_LDFLAGS := -L/usr/local/lib -lfftw3 -lm 
+Debug_LDFLAGS := -L/usr/local/lib -lfftw3  
 Debug_CFLAGS := -I/usr/local/include -Isrc/Includes -g -std=c++17 $(WARNING)
 #-----------------------------------------------#
 
 
 #-------------Standard build flags----------#
-STD_LDFLAGS := -L/usr/local/lib -lfftw3 -lz -lm -std=c++17
+STD_LDFLAGS := -L/usr/local/lib -lfftw3 -lz  -std=c++17
 STD_CFLAGS  := -I/usr/local/include  -O3 -msse2  -std=c++17 $(WARNING)
 #-----------------------------------------------#
 
@@ -57,14 +57,14 @@ standard : $(NAME)
 
 
 $(NAME) : $(cppOBJECTS) 
-	$(CXX) $(cppOBJECTS) $(LDFLAGS) -o $@ -fopenmp
+	$(CXX) $(cppOBJECTS) $(LDFLAGS) -o $@ -fopenmp 
 
 
 -include $(cppDEPENDS)
 
 $(BUILDDIR)/%.o : %.cpp makefile
 	mkdir -p $(dir $@)
-	$(CXX) -I$(HEADERDIR) -I$(dir $<) $(CXXFLAGS) -MMD -MP  -c $< -o $@ -fopenmp
+	$(CXX) -I$(HEADERDIR) -I$(dir $<) $(CXXFLAGS) -MMD -MP  -c $< -o $@ -fopenmp -lm
 
 
 

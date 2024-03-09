@@ -17,6 +17,7 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
     k_dis = parameters_.k_dis_,
     nump = parameters_.nump_;
 
+  M_dec_ = M / decRate + ((M - 1) % decRate == 0) * ( !(decRate == 1) );
 
   
   if(M%decRate != 0 )

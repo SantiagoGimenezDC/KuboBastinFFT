@@ -20,6 +20,7 @@ private:
   filter_vars& parameters_;
   r_type beta_;
   Eigen::VectorXd E_points_, KB_window_;
+  int M_dec_;
   
 public:
   KB_filter(filter_vars&);
@@ -29,6 +30,7 @@ public:
   r_type* E_points(){return E_points_.data();};
   void post_process_filter(type**  , int );
 
+  int M_dec(){return M_dec_;};
   r_type* KB_window(){return KB_window_.data();};
 };
 #endif //KB_FILTER_HPP

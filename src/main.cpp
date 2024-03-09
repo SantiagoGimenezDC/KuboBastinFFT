@@ -6,9 +6,10 @@
 #include "Device/Device.hpp"
 #include "Device/Graphene.hpp"
 #include "Device/TBG/TBG.hpp"
-#include "Kubo_solver/Kubo_solver.hpp"
+#include "Kubo_solver/Kubo_solver_FFT/Kubo_solver_FFT.hpp"
 #include "Kubo_solver/Kubo_solver_SSD.hpp"
 #include "Kubo_solver/Kubo_solver_filtered.hpp"
+#include "Kubo_solver/Kubo_solver_traditional/Kubo_solver_traditional.hpp"
 
 int main(int , char **argv){
 
@@ -33,7 +34,7 @@ int main(int , char **argv){
 
   graphene_vars.theta_*= 2.0 * M_PI/360.0;
   graphene_vars.SUBDIM_ = graphene_vars.W_*graphene_vars.LE_;
-  graphene_vars.DIM_    = graphene_vars.SUBDIM_ + 2*graphene_vars.C_*graphene_vars.W_;
+  graphene_vars.DIM_    = graphene_vars.SUBDIM_ + 2 * graphene_vars.C_*graphene_vars.W_;
 
 
 
@@ -76,10 +77,18 @@ int main(int , char **argv){
     Kubo_solver_SSD solver( s_vars, RAM_size,  *device);
     solver.compute();
   }
+  
   if(sim_type == "normal"){
-    Kubo_solver solver( s_vars, *device);
+    Kubo_solver_FFT solver( s_vars, *device);
     solver.compute();
   }
+
+  if(sim_type == "traditional"){
+    Kubo_solver_traditional solver( s_vars, *device);
+    solver.compute();
+  }
+
+  
   if(sim_type == "filtered"){
     
     filter_vars f_vars;
@@ -92,7 +101,7 @@ int main(int , char **argv){
     Input>>f_vars.att_;
 
     if(!f_vars.post_filter_ && !f_vars.filter_)
-      f_vars.decRate_=1;
+      f_vars.decRate_ = 1;
 
     f_vars.M_ext_ =  f_vars.M_;
     f_vars.k_dis_ += f_vars.M_ext_/4;

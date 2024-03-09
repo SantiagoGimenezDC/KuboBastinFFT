@@ -46,7 +46,9 @@ public:
   void update_data ( r_type*,r_type*, r_type*, r_type*, r_type*, int ,  std::string, std::string );
   void plot_data   ( std::string, std::string );
   
-  void filtered_polynomial_cycle( type** , type*,  r_type* , r_type* , int , int );
+  void polynomial_cycle     ( type**, type*, type*, type*, r_type*, r_type* , int);
+  void polynomial_cycle_ket ( type**, type*, type*, type*, r_type*, r_type* , int);
+  void filtered_polynomial_cycle( type** , type*, type*, type*, r_type* , r_type* , int , int );
 
   
   //  void Bastin_FFTs__reVec_noEta     ( r_type*, r_type*, r_type*, r_type*);
@@ -55,9 +57,9 @@ public:
 
   //void Greenwood_FFTs__reVec_noEta ( r_type**, r_type**, r_type*, r_type*);  
   //void Greenwood_FFTs__reVec_eta   ( r_type*, r_type*, r_type*, r_type*);
-  void Greenwood_FFTs( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
-  void Bastin_FFTs   ( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
-  
+  void Greenwood_FFTs__imVec_noEta_adjusted ( std::complex<r_type>**, std::complex<r_type>**, r_type*, r_type*);
+  void Greenwood_FFTs__imVec_eta_adjusted ( std::complex<r_type>**, std::complex<r_type>**, r_type*, r_type*);
+
 };
 
 

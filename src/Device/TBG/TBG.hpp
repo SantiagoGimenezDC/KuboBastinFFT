@@ -58,6 +58,7 @@ class TBG: public Device{
     void top_layer_coordinates();
 
 
+    virtual r_type Hamiltonian_size(){ return ( H_.innerSize() + H_.nonZeros() + H_.outerSize() ) * sizeof(r_type); };
 
     virtual void build_Hamiltonian() {SlaterCoster_Hamiltonian(H_);  };
     virtual void adimensionalize(r_type, r_type);

@@ -229,15 +229,15 @@ void TBG::SlaterCoster_Hamiltonian(SpMatrixXp& H){
 
 
   std::cout<<std::endl<<
-  std::endl<<"      Number of Hamiltonian entries per atomic site: "<<H.nonZeros()/Dim<<std::endl;
-  std::cout<<"       Time to make the FAST TBG Hamiltonian:     ";
+  std::endl<<"   Number of Hamiltonian entries per atomic site: "<<H.nonZeros()/Dim<<std::endl;
+  std::cout<<"   Time to make the FAST TBG Hamiltonian:     ";
   int millisec=std::chrono::duration_cast<std::chrono::milliseconds>
 	         (end_RV - start_RV).count();
   int sec=millisec/1000;
   int min=sec/60;
   int reSec=sec%60;
   std::cout<<min<<" min, "<<reSec<<" secs;"<<" ("<< millisec<<"ms) "
-	   <<std::endl<<std::endl<<std::endl;
+	   <<std::endl<<std::endl<<std::endl<<std::endl;
 }
   
 
@@ -322,14 +322,14 @@ void TBG::intralayerNeighbours_SCH(std::vector<T> &tripletList){
 
   
 
-  std::cout<<"       Time to run through the intralayer elements:     ";
+  std::cout<<"   Time to run through the intralayer elements:     ";
   int millisec=std::chrono::duration_cast<std::chrono::milliseconds>
 	         (end_RV - start_RV).count();
   int sec=millisec/1000;
   int min=sec/60;
   int reSec=sec%60;
   std::cout<<min<<" min, "<<reSec<<" secs;"<<" ("<< millisec<<"ms) "
-	   <<std::endl<<std::endl<<std::endl;
+	   <<std::endl<<std::endl;
 
 }
 
@@ -425,14 +425,14 @@ void TBG::interlayerNeighbours_SCH(std::vector<T> &tripletList){
 
 
 
-  std::cout<<"       Time to run through the interlayer elements:     ";
+  std::cout<<"   Time to run through the interlayer elements:     ";
   int millisec=std::chrono::duration_cast<std::chrono::milliseconds>
 	         (end_RV - start_RV).count();
   int sec=millisec/1000;
   int min=sec/60;
   int reSec=sec%60;
   std::cout<<min<<" min, "<<reSec<<" secs;"<<" ("<< millisec<<"ms) "
-	   <<std::endl<<std::endl<<std::endl; 
+	   <<std::endl; 
 }
 
 
@@ -516,8 +516,8 @@ void TBG::traceover(type* traced, type* full_vec, int s, int num_reps){
       o_buffer_length = subDim/num_reps,
       buffer_length = o_buffer_length;
 	
-  if( s == num_reps )
-      buffer_length =  subDim % num_reps;
+  if( s == num_reps-1 )
+      buffer_length += subDim % num_reps;
   
 
     

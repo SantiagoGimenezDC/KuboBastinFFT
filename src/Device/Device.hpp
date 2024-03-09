@@ -28,8 +28,8 @@ public:
   r_type sysLength(){return sysLength_;};
   void set_sysSubLength(r_type sysSubLength){sysSubLength_=sysSubLength;};
   r_type sysSubLength(){return sysSubLength_;};
+  virtual r_type Hamiltonian_size() = 0;  
 
-  
   virtual void build_Hamiltonian() = 0;
   virtual void damp   ( r_type*) = 0;
   virtual void update_dis(r_type*,r_type*) = 0; 
