@@ -67,6 +67,9 @@ class TBG: public Device{
 
     virtual void rearrange_initial_vec(type*); //very hacky
     virtual void traceover(type*, type*, int, int) ;
+
+  
+    virtual void update_cheb_filtered ( type*, type*, type*, r_type*, r_type* , type);  
   
     virtual void H_ket ( type*, type*);
     virtual void H_ket ( type* vec, type* p_vec, r_type*, r_type*){this->H_ket(vec, p_vec);};  
@@ -86,12 +89,12 @@ class TBG: public Device{
     inline r_type SlaterCoster_intralayer_coefficient( r_type d_ij){
       return VppPI_  * exp( - ( d_ij - a0_) / delta_ );
     };
-  
+
     inline r_type SlaterCoster_coefficient(Eigen::Matrix<r_type,3,1> R_ij, r_type d_ij){
       return VppPI_  * exp(-(d_ij-a0_)/delta_) * (1.0-pow(R_ij.dot(Eigen::Matrix<r_type,3,1>(0.0,0.0,1.0))/d_ij,2.0))+
 	     VppSIG_ * exp(-(d_ij-d0_)/delta_) *      pow(R_ij.dot(Eigen::Matrix<r_type,3,1>(0.0,0.0,1.0))/d_ij,2.0);
     };
-  
+
 
 
   

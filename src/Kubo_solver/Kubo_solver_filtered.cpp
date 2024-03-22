@@ -201,6 +201,26 @@ void Kubo_solver_filtered::compute(){
   device_.damp(dmp_op);
   
 
+  r_type buffer_mem    = r_type( 2 * M_dec * SEC_SIZE * sizeof(type) ) / r_type( 1000000000 ),
+         recursion_mem = r_type( ( 5 * DIM + 1 * SUBDIM ) * sizeof(type) )/ r_type( 1000000000 ),
+         FFT_mem       = 0.0,
+         Ham_mem = device_.Hamiltonian_size()/ r_type( 1000000000 ),
+         Total = 0.0;
+
+  
+  FFT_mem = r_type( ( 1 + omp_get_num_threads() * ( 8 + 1 ) ) * nump * sizeof(type) ) / r_type( 1000000000 );
+  
+  Total = buffer_mem + Ham_mem + recursion_mem + FFT_mem;
+
+  
+  std::cout<<std::endl;
+  std::cout<<"Expected memory cost breakdown:"<<std::endl;
+  std::cout<<"   Chebyshev buffers:    "<< buffer_mem<<" GBs"<<std::endl;  
+  std::cout<<"   Hamiltonian size:     "<< Ham_mem<<" GBs"<<std::endl;  
+  std::cout<<"   Recursion vectors:    "<<  recursion_mem <<" GBs"<<std::endl;
+  std::cout<<"   FFT auxiliary lines:  "<<  FFT_mem <<" GBs"<<std::endl<<std::endl;   
+  std::cout<<"TOTAL:  "<<  Total<<" GBs"<<std::endl<<std::endl;
+
   
   auto end_BT = std::chrono::steady_clock::now();
   Station( std::chrono::duration_cast<std::chrono::microseconds>(end_BT - start_BT).count()/1000, "    Bloat time:            ");
@@ -409,7 +429,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ra
 
 
   
-  type disp_factor = std::polar(1.0,   M_PI * ( -2 * k_dis + 0.5 )  / M_ext );
+  type disp_factor = std::polar(1.0,   M_PI * ( -2 * k_dis + initial_disp_ )  / M_ext );
   
   r_type KB_window[L];
 
@@ -491,7 +511,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ra
   device_.H_ket ( p_vec, pp_vec, damp_op, dis_vec);
   
     
-  type factor = std::polar(1.0,  M_PI * 1 * (  - 2 * k_dis + 0.5 ) / M_ext );
+  type factor = std::polar(1.0,  M_PI * 1 * (  - 2 * k_dis + initial_disp_ ) / M_ext );
 
 
   //Building first filtered recursion vector
@@ -527,7 +547,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ra
 
       device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
 
-      factor = 2 * std::polar(1.0,  M_PI * m * (  - 2 * k_dis + 0.5) / M_ext );
+      factor = 2 * std::polar(1.0,  M_PI * m * (  - 2 * k_dis + initial_disp_) / M_ext );
 
 
       //===================================Filter Boundary conditions====================// 

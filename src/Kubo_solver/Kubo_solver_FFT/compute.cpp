@@ -38,14 +38,18 @@ void Kubo_solver_FFT::compute(){
     device_.minMax_EigenValues(300, Emax,Emin);
 
 
+    
     parameters_.a_ =  ( Emax - Emin ) / ( 2.0 - parameters_.edge_ );
     parameters_.b_ = -( Emax + Emin ) / 2.0;
+
   }
   
   device_.adimensionalize( parameters_.a_, parameters_.b_ );
+  
 
   hamiltonian_setup_time.stop("    Time to setup the Hamiltonian:            ");
   std::cout<<std::endl;
+
   //------------------------------------------------------//
   
 

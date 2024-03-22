@@ -29,7 +29,7 @@ private:
 
   
 //---------------Large vectors----------------//  
-  Eigen::Matrix<type, -1,-1, Eigen::ColMajor> mu_, bras_, kets_ ;
+  Eigen::Matrix<type, -1,-1, Eigen::ColMajor> mu_, mu_r_, bras_, kets_ ;
   
   //Recursion Vectors; 4 of these are actually not needed;
   type *vec_,

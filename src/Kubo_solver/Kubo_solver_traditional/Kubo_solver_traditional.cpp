@@ -89,15 +89,16 @@ void Kubo_solver_traditional::allocate_memory(){
       DIM      = device_.parameters().DIM_,
       SUBDIM   = device_.parameters().SUBDIM_,
       num_p    = parameters_.num_p_,
-    num_parts = parameters_.num_parts_,
-    SEC_M = M / num_parts,
-    buffer_size = SEC_M + M % num_parts;
+      num_parts = parameters_.num_parts_,
+      SEC_M = M / num_parts,
+      buffer_size = SEC_M + M % num_parts;
 
 
   
 /*------------Big memory allocation--------------*/
   //Moments matrix:
   mu_.resize(M,M);
+  mu_r_.resize(M,M);
 
   //Single Shot vectors
   bras_.resize(SUBDIM, buffer_size);
@@ -165,7 +166,7 @@ void Kubo_solver_traditional::allocate_memory(){
 
   r_type buffer_mem    = r_type( 2 * SEC_M * SUBDIM * sizeof(type) ) / r_type( 1000000000 ),
          recursion_mem = r_type( ( 7 * DIM + 1 * SUBDIM ) * sizeof(type) )/ r_type( 1000000000 ),
-         mu_mem        = M * M * sizeof(type) / r_type( 1000000000 ),
+         mu_mem        = 2 * M * M * sizeof(type) / r_type( 1000000000 ),
          Ham_mem       = device_.Hamiltonian_size()/ r_type( 1000000000 ),
          Total         = 0.0;
 
@@ -189,7 +190,8 @@ void Kubo_solver_traditional::reset_Chebyshev_buffers(){
   
   bras_.setZero();
   kets_.setZero();
-  
+
+  mu_r_.setZero();
   mu_.setZero();
 }
 

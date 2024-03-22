@@ -8,16 +8,22 @@
 #include"Graphene.hpp"
 
 
-Graphene::Graphene(device_vars& parameters) : Device(parameters){
+Graphene::Graphene(device_vars& parameters) : Device(parameters),   coordinates_(parameters.W_,parameters.LE_,parameters.C_){
     int Le     = this->parameters().LE_,
         C      = this->parameters().C_,
         fullLe = (2*C+Le);
 
+    fullLe_ = fullLe;
+    
   if(this->parameters().C_==0)
     CYCLIC_BCs_=true;
 
   this->set_sysLength( (fullLe-1) * (1.0+sin(M_PI/6)) ); 
-  this->set_sysSubLength( (Le-1)*(1.0+sin(M_PI/6)) );  
+  this->set_sysSubLength( (Le-1)*(1.0+sin(M_PI/6)) );
+
+
+  this->set_coordinates();
+  
 }
 
 
@@ -66,7 +72,7 @@ void Graphene::traceover(type* traced, type* full_vec, int s, int num_reps){
 
 
 
-void Graphene::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[]){
+void Graphene::update_cheb_otf ( type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type dis_vec[]){
 
   r_type t = 2.0 * t_a_,
        b_a = 2.0 * b_/a_;
@@ -211,7 +217,7 @@ void Graphene::vertical_BC(type vec[], type p_vec[], r_type damp_op[]){
 
     vec[n_up]     += damp_op[n_up]   * t * p_vec[n_down];      
     vec[n_down]   += damp_op[n_down] * t * p_vec[n_up];      
- } 
+  } 
 }
 
 
@@ -238,7 +244,6 @@ void Graphene::horizontal_BC(type vec[], type p_vec[], r_type damp_op[]){
       vec[n_front]   +=  damp_op[n_front] * ( (n_front+1)%2 ) * t * p_vec[n_back];
       vec[n_back]    +=  damp_op[n_back]  * ( (n_front+1)%2 ) * t * p_vec[n_front];
     }
-
 }
 
 
@@ -260,7 +265,7 @@ void Graphene::H_ket ( type vec[], type p_vec[]){
 
 
 #pragma omp parallel for 
- for(int j=0; j<fullLe; j++){
+  for(int j=0; j<fullLe; j++){
     for(int i=0; i<W; i++){
       int n = j * W + i;
 
@@ -276,17 +281,14 @@ void Graphene::H_ket ( type vec[], type p_vec[]){
 	vec[n] += t * p_vec[n+W];
       
       if( j != 0 && (j+i)%2==0 )
-	vec[n] += t * p_vec[n-W];
-
-      
+	vec[n] += t * p_vec[n-W];  
     }
- } 
- 
+  } 
 }
 
 
 
-void Graphene::H_ket ( type vec[], type p_vec[], r_type damp_op[], r_type dis[]){
+void Graphene::H_ket_otf ( type vec[], type p_vec[], r_type damp_op[], r_type dis[]){
 
   r_type t = t_a_,
        b_a = b_/a_;
@@ -330,7 +332,7 @@ void Graphene::H_ket ( type vec[], type p_vec[], r_type damp_op[], r_type dis[])
 
 
 
-void Graphene::vel_op (type vec[], type p_vec[] ){
+void Graphene::vel_op_otf (type vec[], type p_vec[] ){
   
   int W   = this->parameters().W_,
       LE  = this->parameters().LE_,
@@ -343,7 +345,7 @@ void Graphene::vel_op (type vec[], type p_vec[] ){
   
  
 #pragma omp parallel for 
- for(int j=0; j<LE; j++){
+  for(int j=0; j<LE; j++){
     for(int i=0; i<W; i++){
       int n = C * W + j * W + i;
       
@@ -362,9 +364,9 @@ void Graphene::vel_op (type vec[], type p_vec[] ){
 	vec[n] +=  tx1 * p_vec[n-W];
 
       		     
-    }
- } 
 
+    }
+  } 
 };
 
 

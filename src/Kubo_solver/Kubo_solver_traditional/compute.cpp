@@ -50,7 +50,8 @@ void Kubo_solver_traditional::compute(){
   
 
   
-  int W      = device_.parameters().W_,
+  int SUBDIM      = device_.parameters().SUBDIM_,
+      W      = device_.parameters().W_,
       C      = device_.parameters().C_,
       LE     = device_.parameters().LE_;
 
@@ -95,8 +96,7 @@ void Kubo_solver_traditional::compute(){
 
 
     
-    int tmp_time_csrmv = 0,
-        total_time_csrmv = 0,
+    int total_time_csrmv = 0,
         total_time_ZGEMM  = 0;
 
     device_.Anderson_disorder(dis_vec_);
@@ -130,11 +130,13 @@ void Kubo_solver_traditional::compute(){
 
       
       for(int s1 = 0; s1 < num_parts; s1++){
+        int section_time_csrmv  = 0,
+            section_time_ZGEMM  = 0;
+ 
 
-
-	std::cout<< "   -Section: "<<s1+1<<"/"<<num_parts<<std::endl;
+	std::cout<< "   -Section: "<< s1 + 1 <<"/"<<num_parts<<std::endl;
 	
-	int s1_length = (s1 == num_parts-1 ? SEC_M : SEC_M + M % num_parts ) ;
+	int s1_length = ( (s1 == num_parts-1 ) ?  SEC_M + M % num_parts : SEC_M) ;
 
 
 	
@@ -142,9 +144,8 @@ void Kubo_solver_traditional::compute(){
 
 	polynomial_cycle_ket(s1 * SEC_M, s1 * SEC_M + s1_length);
 	  
-	csrmv_time_kets.stop_add( &tmp_time_csrmv );
-        total_time_csrmv += tmp_time_csrmv;
-	
+	csrmv_time_kets.stop_add( &section_time_csrmv );
+        
 	
 
 	
@@ -152,7 +153,7 @@ void Kubo_solver_traditional::compute(){
 
 	for(int s2 = 0; s2 < num_parts; s2++){
 	    
-	  int s2_length = (s2 == num_parts - 1 ? SEC_M : SEC_M + M % num_parts ) ;
+	  int s2_length = ( (s2 == num_parts - 1 ) ? SEC_M + M % num_parts : SEC_M  ) ;
 
 
 	  
@@ -161,23 +162,36 @@ void Kubo_solver_traditional::compute(){
 
 	  polynomial_cycle_bra(s2 * SEC_M, s2 * SEC_M + s2_length);
 
-	  csrmv_time_bras.stop_add_add(tmp_time_csrmv,  &total_time_csrmv,  "           Section poly cycle time:      ");
-
+          csrmv_time_bras.stop_add( &section_time_csrmv );
 
 	  
 	  
 	  time_station ZGEMM_time;
-		
-	  update_cheb_moments(s1,s2, s1_length, s2_length);    
 
-	  ZGEMM_time.stop_add( &total_time_ZGEMM, "           ZGEMM operations time:        ");
+	  
+          Eigen::Matrix<type, -1, -1> tmp(s2_length, s1_length);
+          tmp = bras_.block(0,0,SUBDIM,s2_length).adjoint() * kets_.block(0,0,SUBDIM,s1_length);
+          mu_r_.block( s2 * SEC_M , s1 * SEC_M , s2_length, s1_length ) += tmp;
+
+
+	  //update_cheb_moments(s1,s2, s1_length, s2_length);    
+
+	  ZGEMM_time.stop_add( &section_time_ZGEMM);
 
 	}
+	
+	time_station section_csrmv( section_time_csrmv,  "           Section csrmv cycle time:        ");
+	time_station section_ZGEMM( section_time_ZGEMM,  "           Section ZGEMM operations time:   ");
+
+	total_time_csrmv += section_time_csrmv;
+	total_time_ZGEMM += section_time_ZGEMM;
       }
-      
+
+      time_station total_csrmv( total_time_csrmv,  "        Total csrmv cycle time:        ");
+      time_station total_ZGEMM( total_time_ZGEMM,  "        Total ZGEMM operations time:   ");
       
 
-
+      mu_ += mu_r_;
 
 
 
@@ -220,9 +234,8 @@ void Kubo_solver_traditional::update_cheb_moments(int s1,int s2, int s1_length, 
       size = SUBDIM;
 
   int Nthrds_backup = Eigen::nbThreads();
-
   Eigen::setNbThreads(1);
-  //  mu_ = bras_.adjoint() * kets_;
+
 
   //--------------------Here Parallel mat mult------------------------//
 #pragma omp parallel 
@@ -239,8 +252,8 @@ void Kubo_solver_traditional::update_cheb_moments(int s1,int s2, int s1_length, 
     
     int l_block_size = l_end-l_start;    
 
-    Eigen::Matrix<type, -1, -1> tmp(s1_length, s2_length);
-    tmp.setZero();
+    Eigen::Matrix<type, -1, -1> tmp(s2_length, s1_length);
+    
 
     tmp = bras_.block(l_start, 0, l_block_size, s2_length).adjoint() * kets_.block(l_start, 0, l_block_size, s1_length);
 
@@ -248,11 +261,13 @@ void Kubo_solver_traditional::update_cheb_moments(int s1,int s2, int s1_length, 
   //Here, matrix multiplication result is updated on the global variable:	      
 
 #pragma omp critical
-  {
+    {    
+      mu_r_.block( s2 * SEC_M , s1 * SEC_M , s2_length, s1_length ) += tmp;
+      /*
     for(int j = 0; j < s1_length; j++)
       for(int i = 0; i < s2_length; i++)               
-	mu_( s1 * SEC_M + i, s2 * SEC_M + j ) += tmp( i, j );
-  }
+      mu_r_( s2 * SEC_M + i, s1 * SEC_M + j ) += tmp( i, j );*/
+    }
   //------------------------------------------------------------------//
 
   }

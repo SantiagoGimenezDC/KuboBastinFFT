@@ -46,27 +46,26 @@ void TBG::bottom_layer_coordinates(){
       fullLe = fullLe_;
 
   MatrixXp coordinates(3, fullLe*W);
-  
+
   for(int j=0; j<fullLe; j++){
     for(int i=0; i<W; i++){
       int n=j*W+i;
-      
+
         coordinates(1,n)=-i*a0_*cos(M_PI/6.0);
 
-      
+
       if(i%2==1){
           coordinates(0, n)=a0_*(
 				    sin(M_PI/6.0) +
 	                            (j/2)*(1.0+2.0*sin(M_PI/6.0)) +
 				    ((j+1)/2)
-				  );	                          	                          
-      
+				  );
       }
       else{
           coordinates(0, n)=a0_*(
 	                           ((j+1)/2)*(1.0+2.0*sin(M_PI/6.0)) +
 	                           (j/2)
-                                  );	                       
+                                  );
 
       }
     }
@@ -185,6 +184,9 @@ void TBG::SlaterCoster_Hamiltonian(SpMatrixXp& H){
 
   tripletList.clear();
 
+  
+  bool print_CSR=false;
+  if(print_CSR){
     
   Eigen::SparseMatrix<type,Eigen::ColMajor> printH(H.cast<type>());
   printH.makeCompressed();
@@ -194,8 +196,6 @@ void TBG::SlaterCoster_Hamiltonian(SpMatrixXp& H){
   int * innerIndexPtr = printH.innerIndexPtr(),//(nnz)
       * outerIndexPtr = printH.outerIndexPtr();//(cols+1)
   
-  
-
   std::ofstream data2;
   data2.open("TBG.HAM.CSR");
 
@@ -218,7 +218,7 @@ void TBG::SlaterCoster_Hamiltonian(SpMatrixXp& H){
 
   
   data2.close();
-  
+  }
   
   
   auto end_RV = std::chrono::steady_clock::now();
@@ -653,6 +653,27 @@ void TBG::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_type damp_op[
   eig_pp_vec = eig_p_vec;
   eig_p_vec = eig_vec;
 }
+
+
+void TBG::update_cheb_filtered ( type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type* , type disp){
+
+  int Dim = this->parameters().DIM_;
+ 
+#pragma omp parallel for
+  for(int i=0;i<Dim;i++)
+    pp_vec[i] *= damp_op[i%(Dim/2)]*damp_op[i%(Dim/2)];
+  
+  Eigen::Map<VectorXdT> eig_vec(vec,Dim),
+    eig_p_vec(p_vec, Dim),
+    eig_pp_vec(pp_vec, Dim);
+
+  
+  eig_vec = 2.0*disp*H_*eig_p_vec - disp*disp*eig_pp_vec;
+
+  eig_pp_vec = eig_p_vec;
+  eig_p_vec = eig_vec;
+}
+
 
 
 void TBG::vel_op (type vec[], type p_vec[]){

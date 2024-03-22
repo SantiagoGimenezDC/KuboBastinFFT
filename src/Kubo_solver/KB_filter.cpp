@@ -19,7 +19,7 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
 
   M_dec_ = M / decRate + ((M - 1) % decRate == 0) * ( !(decRate == 1) );
 
-  
+
   if(M%decRate != 0 )
     std::cout<<"You should choose M divisible by decRate for best precision"<<std::endl;
 
@@ -40,7 +40,7 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
   for(int k = 0; k < nump/2; k++){
     E_points_(k) = cos(M_PI * ( 2 * ( k - k_dis ) + 0.5 ) / M_ext);
     E_points_(nump/2+k) = cos(M_PI * ( 2 * (  M_ext - nump/2  + k - k_dis ) + 0.5 ) / M_ext );
-  }
+    }
 
 
   /* 
@@ -89,7 +89,7 @@ void KB_filter::compute_filter(){
 
 
   if(Np == 0 )
-    KB_window_(0) = 1.0;
+    KB_window_(0) = 1.0;// for testing
 
 }
 

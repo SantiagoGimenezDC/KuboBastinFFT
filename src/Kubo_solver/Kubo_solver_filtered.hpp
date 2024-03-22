@@ -31,6 +31,7 @@ private:
   CAP*      cap_;
   Vec_Base* vec_base_;
 
+  const double initial_disp_ = 0.5;
   
 public:
   ~Kubo_solver_filtered(){delete kernel_, delete cap_, delete vec_base_;};

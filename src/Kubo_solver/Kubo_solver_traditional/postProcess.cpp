@@ -53,8 +53,13 @@ const std::complex<r_type> im(0,1);
   std::string run_dir  = parameters_.run_dir_,
               filename = parameters_.filename_;
 
+  int SUBDIM=device_.parameters().SUBDIM_;
   r_type a = parameters_.a_,
-         b = parameters_.b_;
+         b = parameters_.b_,
+         sysSubLength = device_.sysSubLength();
+
+  r_type omega = SUBDIM/( a * a * sysSubLength * sysSubLength );//Dimensional and normalizing constant
+
 
 
   
@@ -62,7 +67,7 @@ const std::complex<r_type> im(0,1);
   dataP.open(run_dir+"currentResult_"+filename);
 
   for(int e = 0; e < num_p; e++)  
-    dataP<< a * E_points_[e] - b<<"  "<< partial_result [e] <<std::endl;
+    dataP<< a * E_points_[e] - b<<"  "<< omega * partial_result [e] <<std::endl;
 
   dataP.close();
 
@@ -82,8 +87,7 @@ const std::complex<r_type> im(0,1);
   Eigen::Matrix<type, -1,-1, Eigen::RowMajor> greenR2(M,num_p),  partial_result(1,num_p);
   Eigen::Matrix<type, -1,-1, Eigen::ColMajor>  gamma_step(M,num_p), greenR(num_p,M), tmpMU(M,M), local_mu(M,M);
 
-  r_type integrand[num_p];
-
+  
   
   greenR  = fill_green(E_points_, M, num_p);
 
@@ -94,14 +98,20 @@ const std::complex<r_type> im(0,1);
 
   //num_p-e-1??? WATT??
   for(int e=0;e<num_p;e++)
-    partial_result(0,e) = - 2.0*M_PI*M_PI*greenR.col(e).dot(gamma_step.col(e));
+    partial_result(0,e) = - 2.0 * M_PI * M_PI * greenR.col(e).dot(gamma_step.col(e));
   
 
     std::string run_dir  = parameters_.run_dir_,
               filename = parameters_.filename_;
 
+
+  int SUBDIM = device_.parameters().SUBDIM_;
+    
   r_type a = parameters_.a_,
-         b = parameters_.b_;
+         b = parameters_.b_,
+         sysSubLength = device_.sysSubLength();
+
+  r_type omega = SUBDIM/( a * a * sysSubLength * sysSubLength );//Dimensional and normalizing constant
 
 
   
@@ -109,7 +119,7 @@ const std::complex<r_type> im(0,1);
   dataP.open(run_dir+"currentResult_"+filename);
 
   for(int e = 0; e < num_p; e++)  
-    dataP<< a * E_points_[e] - b<<"  "<< partial_result(0,e).real() <<std::endl;
+    dataP<< a * E_points_[e] - b<<"  "<< omega * partial_result(0,e).real() <<std::endl;
 
   dataP.close();
 

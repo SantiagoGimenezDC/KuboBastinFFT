@@ -25,7 +25,14 @@ void Device::minMax_EigenValues( int maxIter, r_type& eEmax, r_type& eEmin){ //P
 
   Eigen::Matrix<type, -1, 1> y = Eigen::Matrix<type, -1, 1>::Constant(DIM,1, 1.0/sqrt(DIM) ),
             y_Ant=y;
- 
+
+  r_type filler_vec_2[DIM], filler_vec[DIM];
+
+  
+  for(int k=0; k<DIM; k++){
+    filler_vec[k] = 0;
+    filler_vec_2[k] = 1.0;
+  }
 
   r_type y_norm = 0;
   r_type Emax, Emin;
@@ -36,7 +43,7 @@ void Device::minMax_EigenValues( int maxIter, r_type& eEmax, r_type& eEmin){ //P
   
   for( int i=0; i<maxIter; i++){
     
-    this->H_ket(y.data(),y_Ant.data());
+    this->H_ket(y.data(),y_Ant.data(), filler_vec_2, filler_vec);
     y_norm=y.norm();
     y=y/y_norm;
     y_Ant=y;
@@ -55,7 +62,7 @@ void Device::minMax_EigenValues( int maxIter, r_type& eEmax, r_type& eEmin){ //P
   this->adimensionalize(1.0,-Emax);
   
   for( int i=0; i<maxIter; i++){
-    this->H_ket(y.data(),y_Ant.data());
+    this->H_ket(y.data(),y_Ant.data(), filler_vec_2, filler_vec);
     y_norm=y.norm();
 
     y=y/y_norm;

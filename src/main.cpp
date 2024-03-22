@@ -15,17 +15,17 @@ int main(int , char **argv){
 
   solver_vars s_vars;
   device_vars graphene_vars;
-  
+
   std::ifstream Input;
   Input.open(argv[1]);
-  
+
   Input>>s_vars.run_dir_;
 
 
   int device_choice=0;
   double   RAM_size=0; //in GB
   std::string sim_type;
-  
+
   Input>>device_choice;
   //Reading device variables
   Input>>graphene_vars.W_,  Input>>graphene_vars.LE_,  Input>>graphene_vars.C_, Input>>graphene_vars.theta_, Input>>graphene_vars.d_min_;
@@ -52,8 +52,6 @@ int main(int , char **argv){
   Input>>RAM_size;
 
   s_vars.SECTION_SIZE_ = graphene_vars.SUBDIM_/s_vars.num_parts_;
-
-  
 
 
   s_vars.a_ = 1.0;
@@ -88,9 +86,9 @@ int main(int , char **argv){
     solver.compute();
   }
 
-  
+
   if(sim_type == "filtered"){
-    
+
     filter_vars f_vars;
 
     f_vars.M_ = s_vars.M_;
@@ -109,7 +107,7 @@ int main(int , char **argv){
 
     s_vars.num_p_ = f_vars.nump_;
 
-    
+
     //f_vars.k_dis_ = f_vars.M_/4;
     //f_vars.f_cutoff_ = f_vars.M_/ 30; 
     //f_vars.att_ = 96;
@@ -119,7 +117,8 @@ int main(int , char **argv){
     Kubo_solver_filtered solver( s_vars, *device, filter);
     solver.compute();
   }
-  
+
+
   return 0;
 }
 

@@ -50,7 +50,7 @@ Kubo_solver_FFT::Kubo_solver_FFT(solver_vars& parameters, Device& device) : para
   
   parameters_.SECTION_SIZE_ = device_.parameters().SUBDIM_ / parameters_.num_parts_ + device_.parameters().SUBDIM_ % parameters_.num_parts_;
   
-  sym_formula_ = KUBO_BASTIN;
+  sym_formula_ = KUBO_GREENWOOD;
 }
 
 
@@ -161,17 +161,17 @@ void Kubo_solver_FFT::allocate_memory(){
 
 
 
-  r_type buffer_mem    = r_type( 2 * M * SEC_SIZE * sizeof(type) ) / r_type( 1000000000 ),
-         recursion_mem = r_type( ( 5 * DIM + 1 * SUBDIM ) * sizeof(type) )/ r_type( 1000000000 ),
+  r_type buffer_mem    = r_type( 2 * M * SEC_SIZE * sizeof(type) ) / r_type( 1E9 ),
+         recursion_mem = r_type( ( 5 * DIM + 1 * SUBDIM ) * sizeof(type) )/ r_type( 1E9 ),
          FFT_mem       = 0.0,
-         Ham_mem = device_.Hamiltonian_size()/ r_type( 1000000000 ),
+         Ham_mem = 2*device_.Hamiltonian_size()/ r_type( 1E9 ), //the 2 is because of the vel operator
          Total = 0.0;
 
   
   if(sym_formula_ == KUBO_GREENWOOD)
-    FFT_mem = r_type( ( 1 + omp_get_num_threads() * ( 8 + 1 ) ) * num_p * sizeof(type) ) / r_type( 1000000000 );
+    FFT_mem = r_type( ( 1 + omp_get_num_threads() * ( 8 + 1 ) ) * num_p * sizeof(type) ) / r_type( 1E9 );
   if(sym_formula_ == KUBO_BASTIN)
-    FFT_mem = r_type( ( 1 + omp_get_num_threads() * ( 16 + 1 ) ) * num_p * sizeof(type) ) / r_type( 1000000000 );
+    FFT_mem = r_type( ( 1 + omp_get_num_threads() * ( 16 + 1 ) ) * num_p * sizeof(type) ) / r_type( 1E9 );
 
   Total = buffer_mem + Ham_mem + recursion_mem + FFT_mem;
 
