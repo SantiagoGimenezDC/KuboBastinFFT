@@ -608,7 +608,7 @@ void TBG::update_dis ( r_type dis_vec[], r_type damp_op[]){
 
   #pragma omp parallel for
   for(int i=0; i<Le*W;i++){
-     H_.coeffRef(C*W + i, C*W +i) = b_/a_;
+     H_.coeffRef(C*W + i, C*W +i) = damp_op[ C*W + i%(Dim/2) ] * b_/a_;
      H_.coeffRef(singleLayerDim_ + C*W + i, singleLayerDim_ + C*W +i) = damp_op[ C*W + i%(Dim/2) ] * b_/a_;
   }
   

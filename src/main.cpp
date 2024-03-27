@@ -26,6 +26,7 @@ int main(int , char **argv){
   double   RAM_size=0; //in GB
   std::string sim_type;
 
+
   Input>>device_choice;
   //Reading device variables
   Input>>graphene_vars.W_,  Input>>graphene_vars.LE_,  Input>>graphene_vars.C_, Input>>graphene_vars.theta_, Input>>graphene_vars.d_min_;
@@ -70,12 +71,12 @@ int main(int , char **argv){
   if(device_choice==1)
     device = new TBG(graphene_vars);
 
-  
+
   if(sim_type == "SSD"){
     Kubo_solver_SSD solver( s_vars, RAM_size,  *device);
     solver.compute();
   }
-  
+
   if(sim_type == "normal"){
     Kubo_solver_FFT solver( s_vars, *device);
     solver.compute();
@@ -109,11 +110,11 @@ int main(int , char **argv){
 
 
     //f_vars.k_dis_ = f_vars.M_/4;
-    //f_vars.f_cutoff_ = f_vars.M_/ 30; 
+    //f_vars.f_cutoff_ = f_vars.M_/ 30;
     //f_vars.att_ = 96;
 
-    
-    KB_filter filter(f_vars); 
+
+    KB_filter filter(f_vars);
     Kubo_solver_filtered solver( s_vars, *device, filter);
     solver.compute();
   }

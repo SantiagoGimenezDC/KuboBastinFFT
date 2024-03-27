@@ -1,3 +1,5 @@
 .vscode*
 *.o 
 .projectile
+ToDo.txt
+/tests/*
