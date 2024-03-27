@@ -1,0 +1,13 @@
+*.pyc
+
+/.classpath
+/.project
+
+/.gradle/
+/.settings/
+/target/
+
+/.vscode/ltex.*.txt
+/.vscode/settings.json
+
+/src/main/resources/completionList.*.txt

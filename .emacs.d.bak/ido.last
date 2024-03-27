@@ -1,0 +1,253 @@
+;;; -*- coding: utf-8 -*-
+
+;; ----- ido-last-directory-list -----
+(
+ ("/home/santiago/Documents/ICN2/Codes/" . "linqt-2.0.0_beta/")
+ ("/" . "home/")
+ ("/home/santiago/Documents/Codes/kite_all/kite_benchmark/Src/" . "Tools/")
+ ("/home/santiago/Documents/Codes/kite_all/kite_benchmark/" . "Src/")
+ ("/home/santiago/Documents/Codes/kite_all/" . "kite_benchmark/")
+ ("/home/santiago/" . ".emacs.d/")
+ ("/home/santiago/Documents/Codes/KuboBastinFFT/src/" . "Kubo_solver/")
+ ("/home/santiago/Documents/Codes/singleShot_legacy/" . "src/")
+ ("/home/santiago/Documents/Codes/kite_mod/tools/Src/" . "CondDC/")
+ ("/home/santiago/Documents/Codes/kite_mod/tools/" . "Src/")
+ ("/home/santiago/Documents/Codes/kite_mod/" . "tools/")
+ ("/home/santiago/Documents/Codes/KuboBastin/tests/" . "first/")
+ ("/home/santiago/Documents/Codes/KuboBastin/" . "tests/")
+ ("/home/santiago/Documents/Codes/KuboBastinFFT/" . "src/")
+ ("/home/santiago/Documents/Codes/quasar1.35/src/Chebyshev/Conductance/" . "Kubo/")
+ ("/home/santiago/Documents/Codes/quasar1.35/src/Chebyshev/" . "Conductance/")
+ ("/home/santiago/Documents/Codes/singleShot/" . "src/")
+ ("/home/santiago/Documents/Codes/staticFFT/" . "src/")
+ ("/home/santiago/Documents/Codes/quasar1.35/src/Sample/" . "ArmchairGraphene/")
+ ("/home/santiago/Documents/Codes/quasar1.35/src/" . "Chebyshev/")
+ ("/home/santiago/Documents/Codes/quasar1.35/" . "src/")
+ ("/home/santiago/Documents/Codes/" . "quasar1.35/")
+ ("/home/santiago/Documents/PR.B/Figs/" . "3a_TBG_Cond/")
+)
+
+;; ----- ido-work-directory-list -----
+(
+ "/home/santiago/"
+ "/home/santiago/Documents/Codes/kite_all/kite_FFT/Src/Tools/"
+ "/home/santiago/Documents/ICN2/Codes/linqt-2.0.0_beta/"
+ "/home/santiago/Documents/Codes/KuboBastinFFT/src/Kubo_solver/"
+ "/home/santiago/Documents/Tese/Latex/"
+ "/home/santiago/Documents/Codes/KuboBastinFFT_2/tests_6/TBG_i26_150x150/"
+ "/home/santiago/Documents/Codes/kite_all/kite_FFT/tools/Src/CondDC/"
+ "/home/santiago/Documents/Codes/kite_all/kite_FFT/Src/Simulation/"
+ "/home/santiago/Documents/Codes/KuboBastinFFT_2/tests/graph_4/"
+ "/home/santiago/Documents/Codes/kite_all/kite_benchmark/Src/Tools/"
+ "/home/santiago/Documents/Codes/kite_all/kite_benchmark/benchmark_FFT/M8000/"
+ "/home/santiago/Documents/Codes/quasar1.35/src/Chebyshev/Conductance/Kubo/"
+ "/home/santiago/Documents/Codes/KuboBastin_filteredFFT/src/Kubo_solver/"
+ "/home/santiago/Documents/Codes/kite_all/kite_TBG/Src/Tools/"
+ "/home/santiago/Documents/Codes/KuboBastinFFT/src/Device/"
+ "/home/santiago/BibTex/"
+ "/home/santiago/Documents/Codes/kite_mod/tools/Src/CondDC/"
+ "/home/santiago/Documents/Codes/kite_mod/Src/Tools/"
+ "/home/santiago/Documents/Codes/quasar1.35/src/Sample/"
+ "/home/santiago/Documents/Codes/quasar1.35/src/Sample/ArmchairGraphene/"
+ "/home/santiago/Documents/Codes/singleShot_legacy/src/"
+ "/home/santiago/Documents/Codes/quasar1.35/src/Chebyshev/fft/"
+ "/home/santiago/Documents/Codes/KuboBastinFFT/src/"
+ "/home/santiago/Documents/Codes/KuboBastin/src/"
+ "/home/santiago/Documents/Codes/KuboBastin/tests/first/"
+ "/home/santiago/Documents/Codes/singleShot/src/"
+ "/home/santiago/Documents/Codes/quasar1.35/src/Includes/"
+ "/home/santiago/Documents/Codes/quasar1.35/"
+ "/home/santiago/Documents/Codes/quasar1.35/src/Chebyshev/"
+ "/home/santiago/Documents/Codes/staticFFT/src/"
+ "/home/santiago/Documents/Codes/CPGF_6/"
+ "/home/santiago/Documents/Codes/CPGF_static_v4/"
+ "/home/santiago/Documents/Codes/quasar1.35/src/Sample/CAP/"
+ "/home/santiago/Documents/Codes/quasar1.34/src/Chebyshev/conductivity/Kubo/"
+ "/home/santiago/Documents/PR.B/Figs/3a_TBG_Cond/"
+)
+
+;; ----- ido-work-file-list -----
+(
+ ".emacs"
+ "Gamma2D_FFT.cpp"
+ "toolchain-icc+mkl.cmake"
+ "toolchain-icc.cmake"
+ "Bastin_FFTs.cpp"
+ "Kubo_solver.cpp"
+ "Kubo_solver.hpp"
+ "Greenwood_FFTs__imVec_noEta.cpp"
+ "Greenwood_FFTs__imVec_eta.cpp"
+ "Tese.tex"
+)
+
+;; ----- ido-dir-file-cache -----
+(
+ ("/home/santiago/" (26098 44816 296165 850000) "Declaração de Rendimentos.pdf" "./" ".python_history" ".lesshst" ".jupyter/" ".spacemacs.env.bak" ".local/" ".sudo_as_admin_successful" "miniconda3/" "Pictures/" ".ssh/" ".gitconfig" "snap/" ".~emacs~" "BibTex/" ".subversion/" ".cache/" ".zoom/" "British Airways - Confirmation.pdf" ".bashrc" ".emacs.d.spcmcs.bak/" ".apport-ignore.xml" "../" ".config/" "Templates/" "Documents/" ".texlive2021/" "modulefiles/" ".emacs.d/" ".java/" "Music/" "Desktop/" ".ipython/" ".viafirma/" ".bash_history" ".profile" ".gphoto/" ".certificates/" ".conda/" "Public/" ".hdfview2.11" ".wget-hsts" "2023_1º - Relatório de acompanhamento de atividade discente bolsista (RAD).pdf" ".emacs" ".spacemacs.bak" ".psensor/" "Downloads/" ".pki/" ".condarc" ".thunderbird/" "Videos/" ".gnupg/" ".saves/" ".mozilla/" ".gnuplot_history" ".bash_logout")
+
+ ("/home/santiago/Documents/Codes/quasar1.35/" (26072 43987 627888 361000) "./" "build/" "makefile" "../" "fold" "TBG.HAM.CSR" "src/" "tests/" ".projectile" "RandBaseData" "quasar")
+
+ ("/home/santiago/Documents/Codes/KuboBastinFFT/src/" (26097 34552 688597 500000) "./" "CAP.cpp" "complex_op.hpp" "kernel.hpp" "../" "Kubo_solver/" "Random.hpp" "Device/" "vec_base.hpp" "main.cpp" "CAP.hpp" "static_vars.hpp" "vec_base.cpp")
+
+ ("/home/santiago/Documents/Codes/quasar1.35/src/Sample/ArmchairGraphene/" (26072 43946 251138 999000) "./" "ArmchairGraphene-impl.cpp" "../" "ACG_update_OTF.cpp" "ArmchairGraphene.hpp" "ArmchairGraphene.cpp")
+
+ ("/home/santiago/Documents/Codes/KuboBastinFFT/src/Device/" (26097 55524 883529 192000) "TBG/" "./" "Coordinates.cpp" "Graphene.cpp" "Graphene.hpp" "Device.cpp" "graphene_csc.cpp" "../" "Coordinates.hpp" "Device.hpp")
+
+ ("/home/santiago/Documents/Codes/quasar1.35/src/Chebyshev/Conductance/Kubo/" (26072 31733 420291 365000) "Kubo_signalKPM.hpp" "Kubo.cpp" "./" "Kubo_FS.hpp" "Kubo_FFTFS.hpp" "Kubo.hpp" "Kubo_FS_HiMem.hpp" "Kubo_signalKPM.cpp" "Kubo_FS.cpp" "Kubo_FS_HiMem.cpp" "../" "Kubo_FFTFS_general.hpp" "Kubo_SS_general.cpp" "Kubo_SS_general.hpp" "Kubo_FFTFS_general.cpp" "Kubo_FFTFS.cpp")
+
+ ("/home/santiago/Documents/Codes/KuboBastinFFT/src/Kubo_solver/" (26094 61346 452688 247000) "KB_filter.hpp" "Kubo_solver_traditional/" "./" "Kubo_solver_SSD.cpp" "fftw_wrapper.hpp" "Kubo_solver_filtered_post.cpp.bak" "Kubo_solver_SSD.hpp" "time_station.hpp" "Kubo_solver_filtered.cpp" "Greenwood_FFTs.cpp" "../" "Kubo_solver_FFT/" "Kubo_solver_filtered.hpp" "Greenwood_FFTs__imVec_noEta_SSD.cpp" "Kubo_solver_filtered_post.hpp.bak" "solver_vars.hpp" "Station.cpp" "SSD_buffer.cpp.bak" "SSD_buffer.hpp" "KB_filter.cpp")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_FFT/Src/Tools/" (26090 58954 895967 137000) "instantiate.hpp" "./" "recursive_kpm.cpp" "ComplexTraits.cpp" "queue.cpp" "myHDF5.hpp" "Gamma2D.cpp" "complex_op.hpp" "queue.hpp" "myHDF5.cpp" "Gamma2D_FFT.cpp" "Bastin_FFTs.cpp" "Greenwood_FFTs.cpp" "../" "Random.hpp" "ComplexTraits.hpp" "Gamma2D_mod.cpp" "messages.hpp" "Gamma1D.cpp" "Gamma3D.cpp" "Random.cpp")
+
+ ("/home/santiago/.emacs.d/" (26098 43871 955183 795000) "spacemacs/" "#ido.last#" "elpa/" "session.10cb85dea83c8c91a9168098803151175900000018750077" "session.10967ddff33804f175168489400667469000000018900077" "session.10ce74d26dfc1504e1166911192936433300000019940077" "./" "session.10faefc15e36d22ed916633386031671400000020190077" "session.1064842a518620aba5166643693751596100000020350079" "session.10d1464705bcd20a6170544445799064400000019780080" "session.10c79bde6c2863cab5170842134632121700000026130083" "session.1038a9372f1edcf8e167476067175355700000018980078" "session.106364a9fb146865e2166575868147542600000020270077" "session.10b77c7cbdd0e2e255167086378627792700000020170081" "session.10a7420055cfa778e9168055246224443200000018960077" ".cache/" "session.1018b5e08c181ef166166316176527052700000019670077" "session.107abf556119743610166548001411912400000020480077" "projectile-bookmarks.eld" "session.107f422400fc447310166283574096222300000019990079" "session.108263bec294343ca7168519870631975500000018910077" "session.1044e0fe08197e0545167127685930772300000018850078" "session.1085e53f4d60ddfc91168538209959056000000018550077" "session.103136d9df2e16f83316857198794071100000018610077" "session.1015c0a13e9d98a35d16643179624166400000020710077" "session.108972404cb4036bdc16734362418811800000019060077" "../" "session.108972404cb4036bdc167343635798312700000019060078" "session.106c1cc8ddcaaac799166454457180343800000019960077" "session.10832cbb271ff6a27f166998014915915500000021870077" "session.1032b678bed50ea08d170568998722909400000019900079" "session.10eb2bafc533552e41167467412225030200000019160077" "projectile.cache" "session.105fd6806e61d84eff168290646332984300000018520077" "session.10b4782c39b20bb44167962544442430200000019940077" "auto-save-list/" "session.10f412eb867854a686168670555158160300000018610077" "session.109867950633252cf0168359454149528900000018660078" "session.10eb2bafc533552e41167467525884637500000019160078" "session.10cee9e1e8a58469bc168523710816767000000018500077" "ido.last" "session.10b2a3d7b652ccee8f166928942335308700000020060077" "session.10b186f63555227bef168675373735626600000018600077" "session.101e30d6c3f632c1ce168011310372719000000018850078" "session.10ee9d5645ffab1fba168410061299612800000021030078" "session.1073df8e2bb629cef5167174225387784200000018900079")
+
+ ("/home/santiago/Documents/" (26036 10347 3510 578000) "./" "VikingBackup/" "Codes/" "Notes/" "Doutorado.tar.xz" "Tese_Doutorado_Jesuel___Modelo_IFSC-10-1.pdf" "Documetos/" "../" "books/" "York/" "Doutorado/" "Mackenzie/" "CVs/" "ICN2/" "Backups/" "Cygnus/")
+
+ ("/home/santiago/Documents/ICN2/" (26097 49332 486891 583000) "./" "Hetero_mem_course/" "Graphene_2024/" "Codes/" "notas_IDE.txt" "Documentacion/" "../" "Presentation/" "Non_orthogonal_basis/" "Woman Talent Programme/")
+
+ ("/home/santiago/Documents/ICN2/Codes/" (26080 44503 39877 749000) "QuickBench.ods" "./" "../" "notes.txt" "linqt-2.0.0_beta/")
+
+ ("/home/santiago/Documents/ICN2/Codes/linqt-2.0.0_beta/" (26068 35675 723219 794000) "CMakeLists.txt" "./" "build/" "include/" "install.py" "LICENCE" "toolchain-icc+mkl.cmake" "toolchain-icc.cmake" "test/" "../" ".vscode/" "README" "src/" "utilities/" "docs/" ".gitignore" ".projectile" "examples/")
+
+ ("/home/santiago/Documents/ICN2/Codes/linqt-2.0.0_beta/src/" (26098 43858 523102 155000) "inline_compute-kpm-Kubo-FFT.cpp" "chebyshev_vectors.cpp" "sparse_matrix.cpp" "kuboBastinSeaFromChebmom.cpp" "CMakeLists.txt" "./" "chebyshev_moments.cpp" "mkl_linear_algebra.cpp" "quantum_states.cpp" "kuboGreenwoodChebmomConvergence.cpp" "kuboBastinSurfFromChebmom.cpp" "spectralFunctionFromChebmom.cpp" "chebyshev_moments1D.cpp" "chebyshev_moments2D.cpp" "inline_compute-kpm-CorrOp.cpp" "inline_compute-kpm-nonEqOp.cpp" "../" "kuboBastinIFromChebmom.cpp" "mkl_sparse_matrix.cpp" "chebyshev_coefficients.cpp" "chebyshev_kubo.cpp" "kuboGreenwoodFromChebmom.cpp" "CMakeLists.txt.save" "chebyshev_momentsTD.cpp" "inline_compute-kpm-spectralOp.cpp" "kuboBastinFromChebmom.cpp" "kpm-nonEqOpatenergy.cpp" "special_functions.cpp" "check_kpm-nonEq_momconv.cpp" "kuboBastinIIFromChebmom.cpp" "chebyshev_solver.cpp" "timeCorrelationsFromChebmom.cpp")
+
+ ("/home/santiago/Documents/Codes/KuboBastin/tests/first/" (25727 17811 941565 312000) "integrand_second.txt" "CAP_corrected_mod.txt.png" "KuboGreenwood.png" "currentResult_second.txt" "conv_R_CAP_corrected.txt" "quickM.txt.png" "conv_R_CAP_full.txt" "CPGF_fixed.txt.png" "./" "currentResult_eta_test_green_corr.txt" "CPGF_alt.txt.png" "currentResult_quickM.txt" "currentResult_eta_test_green_reg.txt" "CAP.txt" "conv_R_eta_test_green_reg.txt" "integrand_eta_test_kite.txt" "conv_R_CPGF_full.txt" "currentResult_quick2M.txt" "eta_test_green_corr.txt.png" "conv_R_CPGF_alt.txt" "eta_test_bastin_corr.txt.png" "eta_test_bastin_uncorr.txt.png" "KuboGreenwood.txt" "currentResult_CPGF_alt.txt" "currentResult_eta_test_bastin_uncorr.txt" "currentResult_CAP_cpgf3.txt" "conv_R_quick.txt" "randvec_first2.txt" "conv_R_eta_test_green_corr.txt" "currentResult_eta_test_bastin_corr_2.txt" "integrand_CPGF_var.txt" "quick2M.txt.png" "CPGF_3_const.txt" "conv_R_second.txt" "integrand_eta_test_bastin_corr.txt" "integrand_CAP_full.txt" "integrand_CPGF_proper_fixed.txt" "currentResult_first.txt" "conv_R_eta_test_bastin_corr.txt" "currentResult_CPGF_full.txt" "first.txt.png" "CPGF_proper.txt.png" "currentResult_eta_test_kite.txt" "conv_R_eta_test_bastin_reg.txt" "integrand_eta_test_green_corr.txt" "conv_R_CPGF_proper_fixed.txt" "CAP_cpgf3.txt.png" "integrand_CPGF_full.txt" "conv_R_eta_test_bastin_corr_2.txt" "integrand_eta_test_bastin_corr_2.txt" "integrand_CPGF_alt.txt" "CPGF_full.txt.png" "currentResult_second_ps2.txt" "conv_R_CPGF_fixed.txt" "KuboBastin.txt" "conv_R_CAP_cpgf3.txt" "CPGF_wrong.txt.png" "../" "CPGF_var.txt.png" "KuboBastin2.png" "conv_R_first.txt" "currentResult_CAP_corrected_mod.txt" "eta_test_bastin_corr_2.txt.png" "currentResult_CPGF_proper.txt" "randvec_first.txt" "integrand_quickM.txt" "conv_R_CPGF_proper.txt" "CPGF_const.txt" "integrand_quick2M.txt" "BastinVSgreenwood.pdf" "CPGF.txt" "CPGF_proper_fixed.txt.png" "integrand_first.txt" "currentResult_CAP_cpgf2_mod.txt" "conv_R_eta_test_bastin_uncorr.txt" "eta_test_bastin_reg.txt.png" "CAP_full.txt.png" "integrand_CPGF_fixed.txt" "conv_R_CAP_cpgf2_mod.txt" "conv_R_CPGF_wrong.txt" "integrand_eta_test_green_reg.txt" "KuboBastin.png" "conv_R_eta_test_kite.txt" "integrand_CAP_cpgf2_mod.txt" "quick.txt.png" "integrand_quick.txt" "currentResult_CAP_full.txt" "conv_R_quick2M.txt" "SimData.dat" "CAP_2.txt" "integrand_CAP_cpgf3.txt" "currentResult_CPGF_proper_fixed.txt" "currentResult_CPGF_var.txt" "integrand_eta_test_bastin_reg.txt" "conv_R_CAP_corrected_mod.txt" "second.txt.png" "integrand_eta_test_bastin_uncorr.txt" "currentResult_CAP_corrected.txt" "currentResult_quick.txt" "eta_test_green_reg.txt.png" "reference3.png" "CAP_3.txt" "integrand_CAP_corrected_mod.txt" "integrand_CAP_corrected.txt" "conv_R_quickM.txt" "currentResult_CPGF_fixed.txt" "currentResult_eta_test_bastin_reg.txt" "CAP_corrected.txt.png" "conv_R_CPGF_var.txt" "CAP_cpgf2_mod.txt.png" "integrand_CPGF_wrong.txt" "currentResult_CPGF_wrong.txt" "integrand_CPGF_proper.txt" "eta_test_kite.txt.png" "currentResult_eta_test_bastin_corr.txt")
+
+ ("/home/santiago/Documents/Codes/KuboBastin/src/" (25727 42445 820957 688000) "./" "CAP.cpp" "complex_op.hpp" "Graphene.cpp" "kernel.hpp" "KuboBastin_solver.cpp" "KuboBastin_solver.hpp" "Graphene.hpp" "../" "vec_base.hpp" "main.cpp" "CAP.hpp" "static_vars.hpp" "vec_base.cpp")
+
+ ("/home/santiago/Documents/Codes/KuboBastin_filteredFFT/src/Kubo_solver/" (26030 52733 483021 913000) "KB_filter.hpp" "./" "Bastin_FFTs__imVec_noEta.cpp" "Greenwood_FFTs__reVec_eta.cpp" "Bastin_FFTs__reVec_noEta.cpp" "../" "Greenwood_FFTs__imVec_noEta.cpp" "Greenwood_FFTs__reVec_noEta.cpp" "Kubo_solver.hpp" "Kubo_solver.cpp" "Bastin_FFTs__imVec_eta.cpp" "KB_filter.cpp" "Greenwood_FFTs__imVec_eta.cpp")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_FFT/tools/Src/CondDC/" (25793 15183 669662 171000) "./" "conductivity_dc_FFT.cpp" "conductivity_dc_FFT.hpp" "conductivity_dc_mod.cpp" "../" "conductivity_dc.cpp" "conductivity_dc.hpp" "fill.cpp" "fill_mod.cpp" "conductivity_dc_mod.hpp")
+
+ ("/home/santiago/Documents/Tese/Latex/" (25720 57723 312371 929000) "compile.sh" "./" "Tese.pdf" "auto/" "../" "ToDo.txt" "notes.txt" "Figs/" "BibMaterials.bib" "Tese.tex")
+
+ ("/home/" (25327 45393 221555 693000) "./" "santiago/" "../" "lost+found/")
+
+ ("/home/santiago/Documents/Tese/" (25720 52713 520869 929000) "./" "dep/" "../" "Presentation/" "Latex/" "scripts_Figs/")
+
+ ("/home/santiago/Documents/Codes/KuboBastinFFT_2/tests_6/TBG_i26_150x150/" (25680 4140 214177 633000) "currentResult_TBG_i26_150x150_pt1.txt" "time_start" "./" "conv_R_TBG_i26_150x150_pt2.txt" "integrand_TBG_i26_150x150_pt2.txt" "launch_pt2.sh" "launch_pt1.sh" "TBG_150x150_pt1__23115096.log" "SimData_pt3.dat" "../" "SimData_pt2.dat" "vecs/" "TBG_150x150_pt3__23115098.log" "launch_pt3.sh" "currentResult_TBG_i26_150x150_pt2.txt" "SimData_pt1.dat" "TBG_150x150_pt2__23115097.log" "integrand_TBG_i26_150x150_pt1.txt" "conv_R_TBG_i26_150x150_pt1.txt")
+
+ ("/home/santiago/Documents/Codes/KuboBastinFFT/tests/paperTest/" (25678 62455 754750 894000) "./" "conv_R_quick.txt" "../" "vecs/" "quick.txt.png" "integrand_quick.txt" "SimData.dat" "currentResult_quick.txt")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_FFT/Src/Simulation/" (25615 25556 185213 0) "SimulationDOS.cpp" "./" "SimulationCondDC_FFT.cpp" "SimulationSingleShot.cpp" "Simulation.hpp" "SimulationLMU.cpp" "SimulationCondOpt2.cpp" "Global.cpp" "SimulationCondDC.cpp" "../" "SimulationCondOpt.cpp" "SimulationARPES.cpp" "GlobalSimulation.cpp" "Global.hpp" "SimulationGlobal.hpp" "SimulationGaussianWavePacket.cpp" "SimulationCondDC_mod.cpp" "Simulation.cpp")
+
+ ("/home/santiago/Documents/Codes/KuboBastinFFT_2/tests/graph_4/" (25651 10545 203736 135000) "mack_launch_FFT.sh" "./" "conv_R_graph_4.txt" "KuboBastinFFT__3222.log" "../" "integrand_graph_4.txt" "vecs/" "currentResult_graph_4.txt" "SimData.dat" "SimData.dat~" "mack_launch_FFT.sh~")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_FFT/" (25621 7763 748156 364000) ".gitlab-ci.yml" "Src/" "CMakeLists.txt" "./" ".DS_Store" "examples_santiago/" "kite.py" "Dockerfile.full" "README.md" "Dockerfile.buildenv" "link.txt" ".git/" "../" "tests/" "mkdocs.yml" "docs/" ".dockerignore" ".gitignore" ".projectile" "tools/" "VERSION.md" "LICENSE.md" "compile_script.sh" "examples/")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_FFT/Src/" (25581 5714 116433 0) "Simulation/" "CMakeLists.txt" "./" "Lattice/" "../" "Tools/" "main.cpp" "Vector/" "Generic.hpp" "Hamiltonian/")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_benchmark/Src/Tools/" (25646 65293 355077 114000) "instantiate.hpp" "./" "recursive_kpm.cpp" "ComplexTraits.cpp" "queue.cpp" "myHDF5.hpp" "Gamma2D.cpp" "complex_op.hpp" "queue.hpp" "myHDF5.cpp" "Gamma2D_FFT.cpp" "Bastin_FFTs.cpp" "Greenwood_FFTs.cpp" "../" "Random.hpp" "ComplexTraits.hpp" "Gamma2D_mod.cpp" "messages.hpp" "Gamma1D.cpp" "Gamma3D.cpp" "Random.cpp" "Gamma2D_mod.cpp.bak")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_benchmark/Src/" (25581 5714 116433 0) "Simulation/" "CMakeLists.txt" "./" "Lattice/" "../" "Tools/" "main.cpp" "Vector/" "Generic.hpp" "Hamiltonian/")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_benchmark/" (25643 24746 249799 873000) ".github/" ".gitlab-ci.yml" "Src/" "CMakeLists.txt" "./" ".DS_Store" "examples_santiago/" "kite.py" "build/" "Dockerfile.full" "README.md" "Dockerfile.buildenv" ".git/" "../" "tests/" "mkdocs.yml" "docs/" ".dockerignore" ".gitignore" ".projectile" "tools/" "VERSION.md" "LICENSE.md" "compile_script.sh" "benchmark_FFT/" "examples/")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_buffer/" (25633 42792 752231 385000) ".github/" ".gitlab-ci.yml" "Src/" "CMakeLists.txt" "./" ".DS_Store" "examples_santiago/" "kite.py" "build/" "kets.txt" "bras.txt" "Dockerfile.full" "README.md" "Dockerfile.buildenv" "buffer_bench/" ".git/" "../" "tests/" "mkdocs.yml" "docs/" ".dockerignore" ".gitignore" ".projectile" "tools/" "VERSION.md" "LICENSE.md" "benchmark_FFT_1/" "compile_script.sh" "Gamma2D_mod.cpp.bak" "examples/")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_buffer/Src/" (25581 5714 116433 0) "Simulation/" "CMakeLists.txt" "./" "Lattice/" "../" "Tools/" "main.cpp" "Vector/" "Generic.hpp" "Hamiltonian/")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_buffer/Src/Tools/" (25623 10226 550385 0) "instantiate.hpp" "./" "recursive_kpm.cpp" "ComplexTraits.cpp" "queue.cpp" "myHDF5.hpp" "Gamma2D.cpp" "complex_op.hpp" "queue.hpp" "myHDF5.cpp" "Gamma2D_FFT.cpp" "Bastin_FFTs.cpp" "../" "Random.hpp" "ComplexTraits.hpp" "Gamma2D_mod.cpp" "messages.hpp" "Gamma1D.cpp" "Gamma3D.cpp" "Random.cpp")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_benchmark/benchmark_FFT/M8000/" (25643 19888 82313 426000) "mack_launch_FFT.sh" "./" "kite.py" "M8000_FFT.py" "launch_mod.sh" "../" "mack_launch_mod.sh" "__pycache__/" "M8000_mod.h5" "launch_FFT.sh" "M8000_FFT.h5" "M8000_mod.py")
+
+ ("/home/santiago/Documents/Codes/KuboBastin_filteredFFT/" (25645 43181 379084 708000) "./" "build/" "makefile" "README.md" "../" "lattice_data.txt" "src/" "tests/" ".projectile" "KuboBastin_filteredFFT")
+
+ ("/home/santiago/Documents/Codes/KuboBastin_filteredFFT/src/" (25645 34591 233212 457000) "./" "CAP.cpp" "complex_op.hpp" "kernel.hpp" "../" "Kubo_solver/" "Random.hpp" "Device/" "vec_base.hpp" "main.cpp" "CAP.hpp" "static_vars.hpp" "vec_base.cpp")
+
+ ("/home/santiago/Documents/Codes/" (25641 48328 522377 504000) "first/" "./" "RGF_Dario/" "KuboBastinFFT/" "kite_all/" "dep/" "kite_mod_bak.tar.xz" "../" "Benchmark.ods" "CPGF_static_v5.tar.xz" "HACER_CONTACTO_EFECTIVO.txt" "singleShot/" "KuboBastin_filteredFFT/" "quasar1.35/" "SimList.ods" "all_CPGF/" "KuboBastin/" "CAP_CPGF_v1.tar.xz")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_TBG/Src/Tools/" (25635 4251 266167 912000) "instantiate.hpp" "./" "recursive_kpm.cpp" "ComplexTraits.cpp" "queue.cpp" "myHDF5.hpp" "Gamma2D.cpp" "complex_op.hpp" "queue.hpp" "myHDF5.cpp" "Gamma2D_FFT.cpp" "Bastin_FFTs.cpp" "../" "Random.hpp" "ComplexTraits.hpp" "Gamma2D_mod.cpp" "messages.hpp" "Gamma1D.cpp" "Gamma3D.cpp" "Random.cpp")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_TBG/Src/" (25634 3429 977470 506000) "Simulation/" "CMakeLists.txt" "./" "Lattice/" "../" "Tools/" "main.cpp" "Vector/" "Generic.hpp" "Hamiltonian/")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_TBG/" (25635 4414 982968 283000) ".github/" ".gitlab-ci.yml" "Src/" "CMakeLists.txt" "./" ".DS_Store" "examples_santiago/" "kite.py" "build/" "kets.txt" "bras.txt" "Dockerfile.full" "README.md" "Dockerfile.buildenv" ".git/" "../" "TBG_cases/" "tests/" "mkdocs.yml" "docs/" ".dockerignore" ".gitignore" ".projectile" "tools/" "VERSION.md" "LICENSE.md" "compile_script.sh" "Gamma2D_mod.cpp.bak" "examples/")
+
+ ("/home/santiago/Documents/Codes/KuboBastinFFT/" (25637 63164 639627 11000) "./" "build/" "KuboBastinFFT" "makefile" "README.md" ".git/" "../" "lattice_data.txt" "src/" "tests/" ".projectile")
+
+ ("/home/santiago/Documents/Codes/singleShot/src/" (25593 6182 73521 730000) "./" "CAP.cpp" "complex_op.hpp" "Graphene.cpp" "kernel.hpp" "Graphene.hpp" "../" "Kubo_solver/" "Random.hpp" "vec_base.hpp" "main.cpp" "CAP.hpp" "static_vars.hpp" "vec_base.cpp")
+
+ ("/home/santiago/BibTex/" (25628 42210 593787 473000) "./" "../" "BibMaterials.bib")
+
+ ("/home/santiago/Documents/Codes/kite_all/" (25635 8686 315849 767000) "./" "kite/" "kite_buffer/" "kite_FFT/" "kite_mod/" "kite_benchmark/" "../" "kite_TBG_2/" "kite_TBG/")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_TBG_2/" (25635 24031 92359 75000) ".github/" ".gitlab-ci.yml" "Src/" "CMakeLists.txt" "./" ".DS_Store" "examples_santiago/" "kite.py" "build/" "kets.txt" "bras.txt" "Dockerfile.full" "README.md" "Dockerfile.buildenv" ".git/" "../" "TBG_cases/" "tests/" "mkdocs.yml" "docs/" ".dockerignore" ".gitignore" ".projectile" "tools/" "VERSION.md" "LICENSE.md" "compile_script.sh" "Gamma2D_mod.cpp.bak" "examples/")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_TBG_2/Src/" (25635 8686 435850 354000) "Simulation/" "CMakeLists.txt" "./" "Lattice/" "../" "Tools/" "main.cpp" "Vector/" "Generic.hpp" "Hamiltonian/")
+
+ ("/home/santiago/Documents/Codes/kite_all/kite_TBG_2/Src/Tools/" (25636 19773 627437 265000) "instantiate.hpp" "./" "recursive_kpm.cpp" "ComplexTraits.cpp" "queue.cpp" "myHDF5.hpp" "Gamma2D.cpp" "complex_op.hpp" "queue.hpp" "myHDF5.cpp" "Gamma2D_FFT.cpp" "Bastin_FFTs.cpp" "../" "Random.hpp" "ComplexTraits.hpp" "Gamma2D_mod.cpp" "messages.hpp" "Gamma1D.cpp" "Gamma3D.cpp" "Random.cpp")
+
+ ("/home/santiago/Documents/Mackenzie_altair/" (25627 4418 701214 168000) "./" "Firma.png" "Tese/" "../" "ToDo_list.txt" "Relatorio_PRINT/" "APO/")
+
+ ("/home/santiago/Documents/Mackenzie_altair/Relatorio_PRINT/" (25628 41760 23200 998000) "Relatorio.out" "./" "Relatorio.tex" "Relatorio.pdf" "Relatorio.log" "../" "Relatorio.aux")
+
+ ("/home/santiago/Documents/Codes/kite_mod/" (25616 29770 395476 459000) ".github/" ".gitlab-ci.yml" "Src/" "CMakeLists.txt" "./" ".DS_Store" "examples_santiago/" "kite.py" "build/" "Dockerfile.full" "README.md" "Dockerfile.buildenv" ".git/" "../" "tests/" "mkdocs.yml" "docs/" ".dockerignore" ".gitignore" ".projectile" "tools/" "VERSION.md" "LICENSE.md" "compile_script.sh" "benchmark_FFT/" "examples/")
+
+ ("/home/santiago/Documents/Codes/kite_mod/Src/Tools/" (25618 23353 336004 566000) "instantiate.hpp" "./" "recursive_kpm.cpp" "ComplexTraits.cpp" "queue.cpp" "myHDF5.hpp" "Gamma2D.cpp" "complex_op.hpp" "queue.hpp" "myHDF5.cpp" "Gamma2D_FFT.cpp" "Bastin_FFTs.cpp" "../" "Random.hpp" "ComplexTraits.hpp" "Gamma2D_mod.cpp" "messages.hpp" "Gamma1D.cpp" "Gamma3D.cpp" "Random.cpp")
+
+ ("/home/santiago/Documents/Codes/kite_mod/tools/Src/CondDC/" (25611 43140 972218 165000) "./" "conductivity_dc_FFT.cpp" "conductivity_dc_FFT.hpp" "../" "conductivity_dc.cpp" "#fill.cpp#" "conductivity_dc.hpp" "fill.cpp")
+
+ ("/home/santiago/Documents/Codes/kite_mod/Src/" (25581 5714 116433 728000) "Simulation/" "CMakeLists.txt" "./" "Lattice/" "../" "Tools/" "main.cpp" "Vector/" "Generic.hpp" "Hamiltonian/")
+
+ ("/home/santiago/Documents/Codes/singleShot_legacy/src/" (25571 3437 355056 692000) "./" "CAP.cpp" "complex_op.hpp" "Graphene.cpp" "KuboGreenwood_singleShot.cpp" "kernel.hpp" "KuboGreenwood_singleShot.hpp" "Graphene.hpp" "../" "vec_base.hpp" "main.cpp" "CAP.hpp" "static_vars.hpp" "vec_base.cpp")
+
+ ("/home/santiago/Documents/Codes/singleShot_legacy/" (25571 3439 78813 191000) "./" "build/" "makefile" "README.md" "../" "src/" "tests/" ".projectile" "singleShot")
+
+ ("/home/santiago/Documents/Codes/singleShot/" (25591 47543 294828 969000) "./" "build/" "makefile" "README.md" "../" "src/" "tests/" ".projectile")
+
+ ("/home/santiago/Documents/Codes/singleShot/src/Kubo_solver/" (25591 48112 453913 73000) "./" "Kubo_singleShot_solver.cpp" "../" "Kubo_singleShot_solver.hpp")
+
+ ("/home/santiago/Documents/Codes/quasar1.35/src/Chebyshev/fft/" (25426 54599 579962 915000) "./" "fft.cpp" "../" "fft.hpp")
+
+ ("/home/santiago/Documents/Codes/KuboBastin/" (25583 51681 130902 466000) "./" "build/" "makefile" "README.md" "../" "src/" "tests/" ".projectile" "KuboBastin")
+
+ ("/home/santiago/Documents/Codes/kite_mod/tools/Src/" (25560 21302 313983 0) "./" "CondDC/" "compiletime_info.h.in" "macros.hpp" "../" "Tools/" "Spectral/" "main.cpp" "OptCond_2order/" "OptCond_1order/")
+
+ ("/home/santiago/Documents/Codes/kite_mod/tools/" (25582 62457 130509 966000) "Src/" "CMakeLists.txt" "./" "build/" "process_new.py" "README.md" "../" "process_arpes.py" "process_single_shot.py" "tests/")
+
+ ("/home/santiago/Documents/Codes/kite/" (25563 54055 178112 605000) ".github/" ".gitlab-ci.yml" "Src/" "CMakeLists.txt" "./" ".DS_Store" "kite.py" "build/" "Dockerfile.full" "README.md" "Dockerfile.buildenv" ".git/" "../" "tests/" "mkdocs.yml" "docs/" ".dockerignore" ".gitignore" "tools/" "VERSION.md" "LICENSE.md" "compile_script.sh" "examples/")
+
+ ("/home/santiago/Documents/Codes/KuboBastin/tests/" (25558 63504 57333 0) "first/" "./" "../")
+
+ ("/home/santiago/Documents/Codes/quasar1.35/src/Includes/" (25532 10079 65039 298000) "CudaWrapperIncludes.hpp" "UsefulDefines.hpp" "./" "EigenIncludes.hpp" "ComplexOperations.hpp" "../" "CudaIncludes.hpp" "StandardIncludes.hpp")
+
+ ("/home/santiago/Documents/Codes/quasar1.35/src/Chebyshev/Conductance/" (25337 28783 142542 142000) "./" "Landauer/" "../" "Porto/" "Kubo/")
+
+ ("/home/santiago/Documents/Codes/staticFFT/" (25537 27820 467610 269000) "./" "build/" "makefile" "../" "src/" "tests/" ".projectile" "quasar")
+
+ ("/home/santiago/Documents/Codes/KuboBastinFFT_nonStatic/" (25566 41248 452186 319000) "./" "build/" "KuboBastinFFT" "makefile" "README.md" ".git/" "../" "src/" "tests/")
+
+ ("/home/santiago/Documents/Codes/KuboBastinFFT_nonStatic/src/" (25566 41245 867852 699000) "./" "CAP.cpp" "complex_op.hpp" "Graphene.cpp" "kernel.hpp" "KuboBastin_solver.cpp" "KuboBastin_solver.hpp" "Graphene.hpp" "../" "vec_base.hpp" "main.cpp" "CAP.hpp" "static_vars.hpp" "vec_base.cpp")
+
+ ("/home/santiago/Documents/Codes/quasar1.35/src/Chebyshev/" (25557 37698 825294 851000) "DOS/" "./" "Conductance/" "Rand_Vec_Base.hpp" "conductivity/" "Rand_Vec_Base.cpp" "../" "Current/" "Kernel.hpp" "Output.hpp" "Output.cpp" "fft/" "CPU_base.cpp" "CPU_base.hpp" "Sim_parameters.hpp")
+
+ ("/home/santiago/Documents/Codes/quasar1.35/src/" (25491 6078 956382 433000) "testRashba.cpp" "./" "updateTest.hpp" "Conectivity_table/" "PlaceholderFuncs.cpp" "Sample/" "../" "Includes/" "main.cpp" "cudaMain.hpp" "testRandVecs.hpp" "updateTest.cpp" "PlaceholderFuncs.hpp" "testRashba.hpp" "CudaWrapper/" "Chebyshev/" "Hamiltonian/")
+
+ ("/home/santiago/Documents/Codes/quasar1.35/src/Sample/CAP/" (25499 40158 59279 825000) "./" "CAP.cpp" "../" "CAP.hpp")
+
+ ("/home/santiago/Documents/Codes/CPGF_static_v4/" (25510 15295 356563 814000) "._aux_backup.f" "._aux_cond_honcomb_huge_omp_print.f" "._aux_gen_ham_honcomb_hh_huge_omp.f" "._aux_gen_rand_vec_huge_omp.f" "._aux_input.f" "compile_huge_omp_print_static.sh" "./" "._aux_siteconv_huge.f" "aux_backup.f" "aux_initrand90.f" "._aux_cheb1_huge_omp.f" "singleShot.exe" "out_hamilt_srvec_check.dat" "aux_input.f" "aux_update_psi_huge_omp.f" "aux_gen_ham_honcomb_hh_huge_omp.f" "compile_gfortran.sh" "._aux_update_psi_huge_omp.f" "main_chbsh_cond_slg_huge_omp_print_re.f" "aux_siteconv_huge.f" "._compile_huge_omp_print_static.sh" "._compile_gfortran.sh" "aux_CAP.f" "aux_cheb_huge_boost_omp.f" "../" "._input.dat" "aux_cond_honcomb_huge_omp_print.f" "aux_cheb1_huge_omp.f" "out_check_input.dat" "out_cond.dat" "aux_gen_rand_vec_huge_omp.f" "launch.sh" "._launch.sh" "aux_coordconv_huge.f" "input.dat" "aux_gen_rand_svec_aux_honcomb_huge_omp.f" "aux_gen_alpha_table.f" "aux_chebypol.f" ".projectile" "._aux_gen_rand_svec_aux_honcomb_huge_omp.f" "._aux_initrand90.f" "._main_chbsh_cond_slg_huge_omp_print_re.f" "._aux_gen_alpha_table.f" "._aux_cheb_huge_boost_omp.f" "out_cond_allR.dat" "._aux_coordconv_huge.f" "._aux_chebypol.f")
+
+ ("/home/santiago/Documents/Codes/staticFFT/src/" (25537 29475 287137 521000) "./" "complex_op.hpp" "test_hamiltonian.hpp" "kernel.hpp" "pre_factor.hpp" "../" "vec_base.hpp" "polynomial_cycle.hpp" "main.cpp" "fft.hpp" "CAP.hpp" "update_cheb.hpp" "static_vars.hpp")
+
+ ("/home/santiago/Documents/Codes/CPGF_6/" (25495 26328 853179 431000) "compile_huge_omp_print_static.sh" "./" "aux_backup.f" "aux_initrand90.f" "singleShot.exe" "out_hamilt_srvec_check.dat" "aux_input.f" "aux_update_psi_huge_omp.f" "aux_gen_ham_honcomb_hh_huge_omp.f" "compile_gfortran.sh" "main_chbsh_cond_slg_huge_omp_print_re.f" "aux_siteconv_huge.f" "aux_CAP.f" "aux_cheb_huge_boost_omp.f" "../" "aux_cond_honcomb_huge_omp_print.f" "aux_cheb1_huge_omp.f" "out_check_input.dat" "out_cond.dat" "aux_gen_rand_vec_huge_omp.f" "launch.sh" "aux_coordconv_huge.f" "input.dat" "aux_gen_rand_svec_aux_honcomb_huge_omp.f" "aux_gen_alpha_table.f" "aux_chebypol.f" "out_cond_allR.dat")
+
+ ("/home/santiago/Documents/PR.B/Figs/3a_TBG_Cond/" (25393 46828 921645 492000) "./" "cond_compare_pure_standalone.sh" "Cond_compare_standalone.log" "../" "data/" "Cond_compare_standalone.pdf" "Cond_compare_standalone.tex" "Cond_compare_standalone.aux")
+
+ ("/home/santiago/Documents/Codes/CPGF_static_v5/" (25495 5065 966547 819000) "._aux_backup.f" "._aux_cond_honcomb_huge_omp_print.f" "._aux_gen_ham_honcomb_hh_huge_omp.f" "._aux_gen_rand_vec_huge_omp.f" "._aux_input.f" "compile_huge_omp_print_static.sh" "./" "._aux_siteconv_huge.f" "aux_backup.f" "aux_initrand90.f" "._aux_cheb1_huge_omp.f" "aux_input.f" "aux_update_psi_huge_omp.f" "aux_gen_ham_honcomb_hh_huge_omp.f" "compile_gfortran.sh" "._aux_update_psi_huge_omp.f" "main_chbsh_cond_slg_huge_omp_print_re.f" "aux_siteconv_huge.f" "._compile_huge_omp_print_static.sh" "._compile_gfortran.sh" "aux_cheb_huge_boost_omp.f" "../" "._input.dat" "aux_cond_honcomb_huge_omp_print.f" "aux_cheb1_huge_omp.f" "aux_gen_rand_vec_huge_omp.f" "launch.sh" "._launch.sh" "aux_coordconv_huge.f" "input.dat" "aux_gen_rand_svec_aux_honcomb_huge_omp.f" "aux_gen_alpha_table.f" "aux_chebypol.f" ".projectile" "._aux_gen_rand_svec_aux_honcomb_huge_omp.f" "._aux_initrand90.f" "._main_chbsh_cond_slg_huge_omp_print_re.f" "._aux_gen_alpha_table.f" "._aux_cheb_huge_boost_omp.f" "._aux_coordconv_huge.f" "._aux_chebypol.f")
+
+ ("/home/santiago/Documents/Codes/quasar1.35/src/Sample/" (25470 15729 922472 125000) "TBG/" "./" "Sample.cpp" "Square/" "ZigzagGraphene/" "Nanowire/" "../" "CAP/" "ArmchairGraphene/" "TBG_barrier/" "Sample.hpp")
+
+ ("/home/santiago/Documents/Codes/quasar1.34/src/Chebyshev/conductivity/Kubo/" (25462 22653 146497 810000) "./" "../" "Kubo_Bastin_FFTFS.cpp" "Kubo_Bastin_FFTFS.hpp")
+
+ ("/home/santiago/Documents/Codes/quasar1.34/src/" (25450 15350 6869 606000) "testRashba.cpp" "./" "updateTest.hpp" "Conectivity_table/" "PlaceholderFuncs.cpp" "Sample/" "../" "Includes/" "main.cpp" "cudaMain.hpp" "testRandVecs.hpp" "updateTest.cpp" "PlaceholderFuncs.hpp" "testRashba.hpp" "CudaWrapper/" "Chebyshev/" "Hamiltonian/")
+
+ ("/home/santiago/Documents/Codes/quasar1.34/src/Chebyshev/Conductance/Kubo/" (25406 56010 422331 779000) "Kubo_signalKPM.hpp" "Kubo.cpp" "./" "Kubo_FS.hpp" "Kubo_FFTFS.hpp" "Kubo.hpp" "Kubo_FS_HiMem.hpp" "Kubo_signalKPM.cpp" "Kubo_FS.cpp" "Kubo_FS_HiMem.cpp" "../" "Kubo_FFTFS_general.hpp" ".#Kubo_FS_HiMem.cpp" "Kubo_FFTFS_general.cpp" "Kubo_FFTFS.cpp")
+
+ ("/home/santiago/Documents/Codes/quasar1.34/src/Sample/ArmchairGraphene/" (25395 5700 308626 605000) "./" "ArmchairGraphene-impl.cpp" "../" "ACG_update_OTF.cpp" "ArmchairGraphene.hpp" "ArmchairGraphene.cpp")
+
+ ("/home/santiago/Documents/PR.B/Figs/" (25366 6067 801884 630000) "./" "referenceScript.sh" "1_varCAP/" "2_CAPvsNoCAP/" "3c_TBG_Cond_grow/" "notUsed/" "3b_TBG_DOS/" "4_disorderFigures/" "General/" "../" "DOStrack/" "3a_TBG_Cond/")
+
+ ("/home/santiago/Documents/PR.B/Figs/3c_TBG_Cond_grow/" (25367 15234 371952 604000) "Cond_grow_standalone.aux" "./" "cond_1.24deg_150nm.txt" "Cond_grow_standalone.tex" "Cond_grow_standalone.log" "cond_1.24deg_100nm.txt" "cond_1.24deg_50nm.txt" "../" "cond_grow_standalone.sh" "Cond_grow_standalone.pdf")
+)
+
+;; ----- ido-unc-hosts-cache -----
+t
