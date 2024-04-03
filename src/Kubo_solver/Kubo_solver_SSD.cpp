@@ -28,7 +28,7 @@
 
 
 #include <string>
-#include <zlib.h>
+
 
 #include "SSD_buffer.hpp"
 
@@ -156,8 +156,8 @@ void Kubo_solver_SSD::compute(){
 
 
   //Single Shot vectors
-  type *bras = new type [ int(RAM_buffer_size_  * 0.5 / double(sizeof(type)) ) ],
-       *kets = new type [ int(RAM_buffer_size_  * 0.5 / double(sizeof(type)) ) ];
+  type *bras = new type [ int(RAM_buffer_size_   / double(sizeof(type)) ) ],
+       *kets = new type [ int(RAM_buffer_size_   / double(sizeof(type)) ) ];
 
   
   //Recursion Vectors

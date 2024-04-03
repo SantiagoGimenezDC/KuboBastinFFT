@@ -34,10 +34,12 @@ public:
   
   SSD_buffer(int COLS, int ROWS, double RAM_size, std::string filename ) : COLS_(COLS), ROWS_(ROWS), RAM_size_(RAM_size), filename_(filename){
 
-    SSD_size_ = 2 * COLS_ * ROWS_ * sizeof(type);
+    SSD_size_ = 2 * double(COLS_) * double(ROWS_) * sizeof(type);
     
-    num_buffers_ = int(std::ceil( SSD_size_ / RAM_size_)  );
+    num_buffers_ = int(std::ceil( SSD_size_ / (RAM_size_))  );
 
+    unsigned long long int SSD_size_int = static_cast<long int>(SSD_size_),
+    RAM_size_int = static_cast<long int>(RAM_size_);
     if(num_buffers_==0){
      num_buffers_ = 1;
      ROWS_stride_ = ROWS_  / num_buffers_ ;
@@ -45,15 +47,16 @@ public:
      ROWS_rest_   = 0;
      COLS_rest_   = 0;
    }
-    else if( int (SSD_size_) % int(RAM_size_) == 0){
+    else if( SSD_size_int % RAM_size_int == 0){
      ROWS_stride_ = ROWS_  / num_buffers_ ;
      COLS_stride_ = COLS_  / num_buffers_ ;
      ROWS_rest_   = 0;
      COLS_rest_   = 0;
    }
-   else if( int (SSD_size_) % int(RAM_size_)  > ROWS_ ){ //This will assum ROWS_>COLS_ always;
+   else if( SSD_size_int % RAM_size_int  > ROWS_ ){ //This will assume ROWS_>COLS_ always;
      while( (COLS_  % num_buffers_ ) > (COLS_ / num_buffers_) )
        num_buffers_++;
+
      ROWS_stride_ = ROWS_  / ( num_buffers_  ) ;
      COLS_stride_ = COLS_  / ( num_buffers_  ) ;
      ROWS_rest_   = ROWS_  % ( num_buffers_  ) ;
@@ -61,8 +64,9 @@ public:
      rest_buffer_ = true;
    }
    else{
+
      std::cout<<"I'm taking the liberty of increasing RAM buffer juust a little bit cmooon."<<std::endl;
-     RAM_size_+=int (SSD_size_) % int(RAM_size_);
+     RAM_size_+=static_cast<double>(SSD_size_int % RAM_size_int);
 
      ROWS_stride_ = ROWS_  / num_buffers_ ;
      COLS_stride_ = COLS_  / num_buffers_ ;
@@ -70,7 +74,7 @@ public:
      COLS_rest_ =0;
    }
    
-   std::cout<<"Ratio between SSD/RAM:  "<<num_buffers_<<"  SSD buffer size: "<< 2 * COLS_ * ROWS_ * sizeof(type)/1000000<<"MB"<<std::endl;
+   std::cout<<"Ratio between SSD/RAM:  "<<num_buffers_<<"  SSD buffer size: "<< SSD_size_/1000000<<"MB"<<std::endl;
 
 
 

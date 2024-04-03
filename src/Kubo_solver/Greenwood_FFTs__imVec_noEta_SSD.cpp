@@ -154,7 +154,7 @@ void Kubo_solver_SSD::Greenwood_FFTs__imVec_noEta_SSD(std::complex<r_type> bras[
       # pragma omp critical
       {
         for(int k=0;k<num_p;k++)
-	  r_data[k] += 2.0 * thread_data[num_p-k-1] / pre_factor[k] ;
+	  r_data[k] += 2.0 * thread_data[k] / pre_factor[k] ;
 
       
         fftw_free(input);
@@ -175,6 +175,6 @@ void Kubo_solver_SSD::Greenwood_FFTs__imVec_noEta_SSD(std::complex<r_type> bras[
   int SEC_SIZE     = parameters_.SECTION_SIZE_;
   
   std::cout<<"              Time spent reading SSD buffer:    "<<total_read/1000<<"ms "<<std::endl;
-  std::cout<<"              Average SSD download bandwidth:   "<<   double( 2 * SEC_SIZE * M * sizeof(type) )/ (double(total_read) *1000)<<" GB/s" <<std::endl;
+  std::cout<<"              Average SSD download bandwidth:   "<<   double( 2 * double(SEC_SIZE) * double(M) * sizeof(type) )/ (double(total_read) *1000)<<" GB/s" <<std::endl;
 }
 
