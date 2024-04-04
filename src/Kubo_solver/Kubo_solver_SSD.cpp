@@ -13,7 +13,6 @@
 
 #include<fftw3.h>
 
-
 #include "../static_vars.hpp"
 
 #include "../vec_base.hpp"
@@ -151,14 +150,17 @@ void Kubo_solver_SSD::compute(){
   
 /*------------Big memory allocation--------------*/
 
-  SSD_buffer bras_SSD(M, SEC_SIZE, RAM_buffer_size_, parameters_.run_dir_+"buffer/bras.bin"),
-             kets_SSD(M, SEC_SIZE, RAM_buffer_size_, parameters_.run_dir_+"buffer/kets.bin");
+  //SSD_buffer creator may change RAM_buffer_size_ to smaller value
+  SSD_buffer bras_SSD(M, SEC_SIZE, RAM_buffer_size_ * 0.5 , parameters_.run_dir_+"buffer/bras.bin"), 
+             kets_SSD(M, SEC_SIZE, RAM_buffer_size_ * 0.5 , parameters_.run_dir_+"buffer/kets.bin");
 
+
+  std::size_t num_elements = static_cast<size_t>(RAM_buffer_size_ * 0.5 / double(sizeof(type)) );
 
   //Single Shot vectors
-  type *bras = new type [ int(RAM_buffer_size_   / double(sizeof(type)) ) ],
-       *kets = new type [ int(RAM_buffer_size_   / double(sizeof(type)) ) ];
-
+  type *bras = new type [ num_elements ],
+       *kets = new type [ num_elements ];
+  
   
   //Recursion Vectors
   type *vec      = new type [ DIM ],
@@ -190,10 +192,9 @@ void Kubo_solver_SSD::compute(){
 
 /*----------------Initializations----------------*/
 #pragma omp parallel for  
-  for(int m=0;m<kets_SSD.COLS_stride();m++)
-    for(int n=0;n<SEC_SIZE;n++){    
-      bras [ m * SEC_SIZE + n ] = 0.0;
-      kets [ m * SEC_SIZE + n ] = 0.0;
+  for(std::size_t m = 0; m < num_elements; m++){
+      bras [m] = 0.0;
+      kets [m] = 0.0;
     }
 
 #pragma omp parallel for  
@@ -202,7 +203,8 @@ void Kubo_solver_SSD::compute(){
     p_vec    [k] = 0.0;
     pp_vec   [k] = 0.0;
     rand_vec [k] = 0.0;
-    dmp_op   [k] = 1.0;
+    
+    dmp_op   [k] = 1.0;//Watch out this one is different
   }
 
 #pragma omp parallel for
@@ -226,11 +228,11 @@ void Kubo_solver_SSD::compute(){
 
   
   auto end_BT = std::chrono::steady_clock::now();
-  Station( std::chrono::duration_cast<std::chrono::microseconds>(end_BT - start_BT).count()/1000, "    Bloat time:            ");
+  Station( std::chrono::duration_cast<std::chrono::microseconds>(end_BT - start_BT).count()/1000, "    Allocation time:            ");
 
 
   
-  for(int d=1; d<=D;d++){
+  for(int d = 1; d <= D;d++){
 
     int total_csrmv = 0,
       total_FFTs    = 0;
@@ -238,6 +240,7 @@ void Kubo_solver_SSD::compute(){
     
     device_.Anderson_disorder(dis_vec);
     device_.update_dis(dis_vec, dmp_op);
+
     
     for(int r=1; r<=R;r++){
        
@@ -256,28 +259,32 @@ void Kubo_solver_SSD::compute(){
          integrand [k] = 0;
        }
 
-       for(int s=0;s<=num_parts;s++){
+       
+       
+       for(int s = 0; s <= num_parts; s++){
 
 	 if( s==num_parts && SUBDIM % num_parts==0  )
 	   break;
 
-	 if(SUBDIM % num_parts==0)
+	 if( SUBDIM % num_parts == 0 )
            std::cout<< "    -Part: "<<s+1<<"/"<<num_parts<<std::endl;
          else
 	   std::cout<< "    -Part: "<<s+1<<"/"<<num_parts+1<<std::endl;
+
+	 
 	 
          auto csrmv_start = std::chrono::steady_clock::now();
+	 
 	 for(int k=0;k<DIM;k++){
            vec     [k] = 0.0;
            pp_vec  [k] = rand_vec[k];
            p_vec   [k] = 0.0;
          }    
 
-	 bras_SSD.reset_buffer();
-	 kets_SSD.reset_buffer();
+	 //bras_SSD.reset_buffer();
+	 //kets_SSD.reset_buffer();
 	 
          polynomial_cycle_ket( kets, kets_SSD, vec, p_vec, pp_vec, dmp_op, dis_vec, s);
-
     
          auto csrmv_end = std::chrono::steady_clock::now();
          Station( std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end - csrmv_start).count()/1000, "           Kets cycle time:            ");
@@ -423,7 +430,7 @@ void Kubo_solver_SSD::polynomial_cycle(type polys[], SSD_buffer& bras_SSD, type 
       SEC_SIZE  = parameters_.SECTION_SIZE_,
       interval = bras_SSD.COLS_stride();
     
-  int upload_time = 0;
+  std::size_t upload_time = 0;
   
 //=================================KPM Step 0======================================//
 
@@ -443,7 +450,7 @@ void Kubo_solver_SSD::polynomial_cycle(type polys[], SSD_buffer& bras_SSD, type 
 
 //=================================KPM Steps 2 and on===============================//
 
-  bras_SSD.begin_upload();
+  //bras_SSD.begin_upload();
   
   int buffer_num=0, index = 2;  
   for( int m=2; m<M; m++ ){
@@ -456,7 +463,7 @@ void Kubo_solver_SSD::polynomial_cycle(type polys[], SSD_buffer& bras_SSD, type 
     if( (m+1) % interval == 0 || (m == (M-1)) ){
       auto up_start = std::chrono::steady_clock::now();   
 
-      bras_SSD.upload_col_buffer_to_SSD(buffer_num, polys);
+      //bras_SSD.upload_col_buffer_to_SSD(buffer_num, polys);
 
       auto up_end = std::chrono::steady_clock::now();   
       upload_time += std::chrono::duration_cast<std::chrono::microseconds>(up_end - up_start).count();
@@ -467,10 +474,10 @@ void Kubo_solver_SSD::polynomial_cycle(type polys[], SSD_buffer& bras_SSD, type 
     }  
   }
   
-  bras_SSD.end_upload();
+  //bras_SSD.end_upload();
 
   Station( upload_time/1000, "               SSD upload time:                 ");
-  std::cout<<                 "               Average SSD upload bandwidth:    "<<   double(SEC_SIZE * M * sizeof(type))/ (double(upload_time) * 1000)<<" GB/s" <<std::endl;
+  std::cout<<                 "               Average SSD upload bandwidth:    "<<   double(SEC_SIZE) * double(M) * sizeof(type)/ (double(upload_time) * 1000)<<" GB/s" <<std::endl;
 }
 
 
@@ -483,7 +490,7 @@ void Kubo_solver_SSD::polynomial_cycle_ket(type polys[], SSD_buffer& kets_SSD, t
     interval = kets_SSD.COLS_stride();
 
 
-  int upload_time = 0;
+  std::size_t upload_time = 0;
 
   
   type *tmp = new type [DIM];
@@ -508,7 +515,7 @@ void Kubo_solver_SSD::polynomial_cycle_ket(type polys[], SSD_buffer& kets_SSD, t
 //=================================KPM Steps 2 and on===============================//
 
   int buffer_num = 0, index = 2;
-  kets_SSD.begin_upload();
+  //kets_SSD.begin_upload();
   
   for( int m=2; m<M; m++ ){
     device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
@@ -519,7 +526,7 @@ void Kubo_solver_SSD::polynomial_cycle_ket(type polys[], SSD_buffer& kets_SSD, t
     if( (m+1) % interval == 0 || (m == (M-1)) ){
       auto up_start = std::chrono::steady_clock::now();   
 
-      kets_SSD.upload_col_buffer_to_SSD(buffer_num, polys);
+      //kets_SSD.upload_col_buffer_to_SSD(buffer_num, polys);
 
       auto up_end = std::chrono::steady_clock::now();   
       upload_time += std::chrono::duration_cast<std::chrono::microseconds>(up_end - up_start).count();
@@ -530,10 +537,10 @@ void Kubo_solver_SSD::polynomial_cycle_ket(type polys[], SSD_buffer& kets_SSD, t
     }  
   }
 
-  kets_SSD.end_upload();
+  //kets_SSD.end_upload();
   
   Station( upload_time/1000, "               SSD upload time:            ");
-  std::cout<<                 "               Average SSD upload bandwidth:    "<<   double(SEC_SIZE * M * sizeof(type))/ ( double(upload_time)  * 1000)<<" GB/s" <<std::endl;
+  std::cout<<                 "               Average SSD upload bandwidth:    "<<   double(SEC_SIZE) * double (M) * sizeof(type)/ ( double(upload_time)  * 1000)<<" GB/s" <<std::endl;
 
   
   delete []tmp;

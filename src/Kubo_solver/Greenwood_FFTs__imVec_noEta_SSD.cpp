@@ -54,23 +54,31 @@ void Kubo_solver_SSD::Greenwood_FFTs__imVec_noEta_SSD(std::complex<r_type> bras[
   int  total_read=0;
   int size = 0;
   
-  for(int buffer = 0; buffer <= bras_SSD.num_buffers(); buffer++ ){
+  for(int buffer_num = 0; buffer_num <= bras_SSD.num_buffers(); buffer_num++ ){
   
  
   auto read_start = std::chrono::steady_clock::now();
     
-  size = bras_SSD.retrieve_row_buffer_from_SSD(buffer, bras);
-  size = kets_SSD.retrieve_row_buffer_from_SSD(buffer, kets);
-
+  bras_SSD.retrieve_row_buffer_from_SSD(buffer_num, bras);
+  size = kets_SSD.retrieve_row_buffer_from_SSD(buffer_num, kets);
+  
   auto read_end = std::chrono::steady_clock::now();  
 
 
   total_read += std::chrono::duration_cast<std::chrono::microseconds>(read_end - read_start).count();
 
+    
+  if( size == 0 ) break;
+
+    
+      
+  int Nthrds_bak  = omp_get_num_threads();
+  if( size < Nthrds_bak )
+    omp_set_num_threads(1);
   
   #pragma omp parallel 
     {
-      int id,  Nthrds, l_start, l_end;
+      int id, l_start, Nthrds, l_end;
       id      = omp_get_thread_num();
       Nthrds  = omp_get_num_threads();
       l_start = id * size / Nthrds;
@@ -78,6 +86,8 @@ void Kubo_solver_SSD::Greenwood_FFTs__imVec_noEta_SSD(std::complex<r_type> bras[
     
       if (id == Nthrds-1) l_end = size;
 
+      
+  
 
     
       r_type thread_data [num_p];
@@ -170,6 +180,10 @@ void Kubo_solver_SSD::Greenwood_FFTs__imVec_noEta_SSD(std::complex<r_type> bras[
         fftw_free(ket_im);
       }
     }
+    
+    if( size < Nthrds_bak )
+      omp_set_num_threads(Nthrds_bak);
+  
   }
 
   int SEC_SIZE     = parameters_.SECTION_SIZE_;
