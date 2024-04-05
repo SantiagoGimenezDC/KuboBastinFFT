@@ -150,7 +150,7 @@ void Kubo_solver_SSD::compute(){
   
 /*------------Big memory allocation--------------*/
 
-  //SSD_buffer creator may change RAM_buffer_size_ to smaller value
+
   SSD_buffer bras_SSD(M, SEC_SIZE, RAM_buffer_size_ * 0.5 , parameters_.run_dir_+"buffer/bras.bin"), 
              kets_SSD(M, SEC_SIZE, RAM_buffer_size_ * 0.5 , parameters_.run_dir_+"buffer/kets.bin");
 
@@ -463,7 +463,7 @@ void Kubo_solver_SSD::polynomial_cycle(type polys[], SSD_buffer& bras_SSD, type 
     if( (m+1) % interval == 0 || (m == (M-1)) ){
       auto up_start = std::chrono::steady_clock::now();   
 
-      //bras_SSD.upload_col_buffer_to_SSD(buffer_num, polys);
+      bras_SSD.upload_col_buffer_to_SSD(buffer_num, polys);
 
       auto up_end = std::chrono::steady_clock::now();   
       upload_time += std::chrono::duration_cast<std::chrono::microseconds>(up_end - up_start).count();
@@ -526,7 +526,7 @@ void Kubo_solver_SSD::polynomial_cycle_ket(type polys[], SSD_buffer& kets_SSD, t
     if( (m+1) % interval == 0 || (m == (M-1)) ){
       auto up_start = std::chrono::steady_clock::now();   
 
-      //kets_SSD.upload_col_buffer_to_SSD(buffer_num, polys);
+      kets_SSD.upload_col_buffer_to_SSD(buffer_num, polys);
 
       auto up_end = std::chrono::steady_clock::now();   
       upload_time += std::chrono::duration_cast<std::chrono::microseconds>(up_end - up_start).count();

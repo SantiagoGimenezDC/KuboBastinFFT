@@ -1,4 +1,5 @@
 #include<iostream>
+#include<fstream>
 #include<complex>
 #include<random>
 #include<chrono>
@@ -148,6 +149,56 @@ void Graphene::setup_velOp(){
   vx_.setFromTriplets(tripletList.begin(), tripletList.end(),[] (const r_type &,const r_type &b) { return b; });  
 
 
+    
+
+  if(print_CSR){
+  auto start_wr = std::chrono::steady_clock::now();    
+
+  Eigen::SparseMatrix<type,Eigen::ColMajor> printVX(vx_.cast<type>());
+  vx_.makeCompressed();
+  
+  int nnz = printVX.nonZeros(), cols = printVX.cols(), rows = printVX.rows();
+  type * valuePtr = printVX.valuePtr();//(nnz)
+  int * innerIndexPtr = printVX.innerIndexPtr(),//(nnz)
+      * outerIndexPtr = printVX.outerIndexPtr();//(cols+1)
+  
+  std::ofstream data2;
+  data2.open("ARM.VX.CSR");
+
+  data2.setf(std::ios::fixed,std::ios::floatfield);
+  data2.precision(3);
+
+  data2<<cols<<" "<<nnz<<std::endl;
+
+  for (int i=0;i<nnz;i++)
+    data2<<real(valuePtr[i])<<" "<<imag(valuePtr[i])<<" ";
+
+  data2<<std::endl;
+  for (int i=0;i<nnz;i++)
+    data2<<innerIndexPtr[i]<<" ";
+
+  
+  data2<<std::endl;
+  for (int i=0;i<cols;i++)
+    data2<<outerIndexPtr[i]<<" ";
+
+  
+  data2.close();
+  auto end_wr = std::chrono::steady_clock::now();
+
+
+  std::cout<<"   Time to write vel. OP on disk:     ";
+  int millisec=std::chrono::duration_cast<std::chrono::milliseconds>
+    (end_wr - start_wr).count();
+  int sec=millisec/1000;
+  int min=sec/60;
+  int reSec=sec%60;
+  std::cout<<min<<" min, "<<reSec<<" secs;"<<" ("<< millisec<<"ms) "
+           <<std::endl<<std::endl;
+
+  }
+
+
 }
 
 
@@ -288,7 +339,6 @@ void Graphene::SlaterCoster_Hamiltonian(){
   H_.setFromTriplets(tripletList.begin(), tripletList.end());
 
 
-
   auto end_RV = std::chrono::steady_clock::now();
 
 
@@ -300,6 +350,58 @@ void Graphene::SlaterCoster_Hamiltonian(){
   int reSec=sec%60;
   std::cout<<min<<" min, "<<reSec<<" secs;"<<" ("<< millisec<<"ms) "
            <<std::endl<<std::endl;
+
+
+
+  
+
+  if(print_CSR){
+  auto start_wr = std::chrono::steady_clock::now();    
+
+  Eigen::SparseMatrix<type,Eigen::ColMajor> printH(H_.cast<type>());
+  printH.makeCompressed();
+  
+  int nnz = printH.nonZeros(), cols = printH.cols(), rows = printH.rows();
+  type * valuePtr = printH.valuePtr();//(nnz)
+  int * innerIndexPtr = printH.innerIndexPtr(),//(nnz)
+      * outerIndexPtr = printH.outerIndexPtr();//(cols+1)
+  
+  std::ofstream data2;
+  data2.open("ARM.HAM.CSR");
+
+  data2.setf(std::ios::fixed,std::ios::floatfield);
+  data2.precision(3);
+
+  data2<<cols<<" "<<nnz<<std::endl;
+
+  for (int i=0;i<nnz;i++)
+    data2<<real(valuePtr[i])<<" "<<imag(valuePtr[i])<<" ";
+
+  data2<<std::endl;
+  for (int i=0;i<nnz;i++)
+    data2<<innerIndexPtr[i]<<" ";
+
+  
+  data2<<std::endl;
+  for (int i=0;i<cols;i++)
+    data2<<outerIndexPtr[i]<<" ";
+
+  
+  data2.close();
+  auto end_wr = std::chrono::steady_clock::now();
+
+
+  std::cout<<"   Time to write hamiltonian on disk:     ";
+  int millisec=std::chrono::duration_cast<std::chrono::milliseconds>
+    (end_wr - start_wr).count();
+  int sec=millisec/1000;
+  int min=sec/60;
+  int reSec=sec%60;
+  std::cout<<min<<" min, "<<reSec<<" secs;"<<" ("<< millisec<<"ms) "
+           <<std::endl<<std::endl;
+
+  }
+  
 
 }
 

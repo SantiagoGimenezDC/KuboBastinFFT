@@ -1,5 +1,6 @@
 .vscode*
-*.o 
+*.o
+/build/*
+KuboBastinFFT
 .projectile
-ToDo.txt
 /tests/*

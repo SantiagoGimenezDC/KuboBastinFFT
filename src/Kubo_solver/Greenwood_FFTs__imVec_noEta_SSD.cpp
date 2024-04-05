@@ -52,33 +52,35 @@ void Kubo_solver_SSD::Greenwood_FFTs__imVec_noEta_SSD(std::complex<r_type> bras[
   
     
   int  total_read=0;
-  int size = 0;
+
   
-  for(int buffer_num = 0; buffer_num <= bras_SSD.num_buffers(); buffer_num++ ){
+  for(int buffer_num = 0; buffer_num <= bras_SSD.num_buffers(); buffer_num++ ){//IF there is a rest buffer, there are buffer_num+1 buffers to be retrieved.
   
  
-  auto read_start = std::chrono::steady_clock::now();
+    auto read_start = std::chrono::steady_clock::now();
+
+    //std::size_t size = parameters_.SECTION_SIZE_;
+    std::size_t size =bras_SSD.retrieve_row_buffer_from_SSD(buffer_num, bras);
+    kets_SSD.retrieve_row_buffer_from_SSD(buffer_num, kets);
+	
+    auto read_end = std::chrono::steady_clock::now();  
+
+
+    total_read += std::chrono::duration_cast<std::chrono::microseconds>(read_end - read_start).count();
+
     
-  bras_SSD.retrieve_row_buffer_from_SSD(buffer_num, bras);
-  size = kets_SSD.retrieve_row_buffer_from_SSD(buffer_num, kets);
+    if( size == 0 ) break;
+    
+
+    int Nthrds_bak  = omp_get_num_threads();
+    if( size < Nthrds_bak )
+      omp_set_num_threads(1);
   
-  auto read_end = std::chrono::steady_clock::now();  
-
-
-  total_read += std::chrono::duration_cast<std::chrono::microseconds>(read_end - read_start).count();
-
-    
-  if( size == 0 ) break;
-
-    
-      
-  int Nthrds_bak  = omp_get_num_threads();
-  if( size < Nthrds_bak )
-    omp_set_num_threads(1);
-  
-  #pragma omp parallel 
+    #pragma omp parallel 
     {
-      int id, l_start, Nthrds, l_end;
+      int id, Nthrds;
+      std::size_t l_start, l_end;
+      
       id      = omp_get_thread_num();
       Nthrds  = omp_get_num_threads();
       l_start = id * size / Nthrds;
@@ -111,7 +113,7 @@ void Kubo_solver_SSD::Greenwood_FFTs__imVec_noEta_SSD(std::complex<r_type> bras[
 
 
 
-  # pragma omp critical
+      #pragma omp critical
       {      
         plan1 = fftw_plan_r2r_1d(num_p, input, bra_re, FFTW_REDFT01, FFTW_ESTIMATE);
         plan2 = fftw_plan_r2r_1d(num_p, input, bra_im, FFTW_REDFT01, FFTW_ESTIMATE);
@@ -122,7 +124,7 @@ void Kubo_solver_SSD::Greenwood_FFTs__imVec_noEta_SSD(std::complex<r_type> bras[
 
 
 
-        for(int l=l_start; l<l_end;l++){
+      for(std::size_t l=l_start; l<l_end;l++){
 
  
 
@@ -186,9 +188,9 @@ void Kubo_solver_SSD::Greenwood_FFTs__imVec_noEta_SSD(std::complex<r_type> bras[
   
   }
 
-  int SEC_SIZE     = parameters_.SECTION_SIZE_;
+  std::size_t SEC_SIZE     = parameters_.SECTION_SIZE_;
   
   std::cout<<"              Time spent reading SSD buffer:    "<<total_read/1000<<"ms "<<std::endl;
-  std::cout<<"              Average SSD download bandwidth:   "<<   double( 2 * double(SEC_SIZE) * double(M) * sizeof(type) )/ (double(total_read) *1000)<<" GB/s" <<std::endl;
+  std::cout<<"              Average SSD download bandwidth:   "<<   double( 2 * double(SEC_SIZE) * double(M) * sizeof(type) )/ (double(total_read) * 1000)<<" GB/s" <<std::endl;
 }
 
