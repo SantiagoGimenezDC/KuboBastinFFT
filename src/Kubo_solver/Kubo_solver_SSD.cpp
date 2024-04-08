@@ -281,8 +281,8 @@ void Kubo_solver_SSD::compute(){
            p_vec   [k] = 0.0;
          }    
 
-	 //bras_SSD.reset_buffer();
-	 //kets_SSD.reset_buffer();
+	 bras_SSD.reset_buffer();
+	 kets_SSD.reset_buffer();
 	 
          polynomial_cycle_ket( kets, kets_SSD, vec, p_vec, pp_vec, dmp_op, dis_vec, s);
     

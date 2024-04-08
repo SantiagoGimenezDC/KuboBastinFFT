@@ -10,6 +10,7 @@
 #include<eigen-3.4.0/Eigen/Core>
 #include<fcntl.h>
 #include<unistd.h>
+#include <cstdio>
 
 class SSD_buffer{
 private:
@@ -64,13 +65,15 @@ public:
 
   };
 
+
+  void reset_buffer(){std::remove(filename_.c_str());};
   
   void upload_col_buffer_to_SSD(int buffer_num, type* RAM_buffer){
     
     std::size_t buffer_size = ( buffer_num == num_write_buffers_ ? COLS_rest_ : COLS_stride_);
 
     if(buffer_size == 0)
-      return ;
+      return;
     
     buffer_size *= ROWS_;
 
