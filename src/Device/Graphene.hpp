@@ -20,8 +20,8 @@ private:
   const r_type t_standard_ = -2.7;
   bool CYCLIC_BCs_ = false;
 
-  bool print_CSR=true;
-  bool csc_mode = true;
+  bool print_CSR=false;
+  bool csc_mode = false;
   SpMatrixXp H_, vx_; 
   Coordinates coordinates_;
 

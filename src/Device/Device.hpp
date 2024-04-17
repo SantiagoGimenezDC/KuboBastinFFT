@@ -5,9 +5,12 @@
 #include "../CAP.hpp"
 #include "../Random.hpp"
 
+
 struct device_vars{
   int W_, LE_, C_, DIM_, SUBDIM_,  dis_seed_;
   r_type dis_str_, theta_, d_min_;
+
+  std::string run_dir_, filename_;
 };
 
 
@@ -28,6 +31,7 @@ public:
   r_type sysLength(){return sysLength_;};
   void set_sysSubLength(r_type sysSubLength){sysSubLength_=sysSubLength;};
   r_type sysSubLength(){return sysSubLength_;};
+
   virtual r_type Hamiltonian_size() = 0;  
 
   virtual void build_Hamiltonian() = 0;
@@ -35,8 +39,8 @@ public:
   virtual void update_dis(r_type*,r_type*) = 0; 
   virtual void adimensionalize ( r_type,  r_type ) = 0;
   
-  virtual void rearrange_initial_vec(type*) = 0; //very hacky
-  virtual void traceover(type*, type*, int, int) = 0;
+  virtual void rearrange_initial_vec(type*) ; //very hacky
+  virtual void traceover(type*, type*, int, int) ;
   
   Random& rng(){return rng_;};
   //  CAP& cap(){return cap_;};
@@ -61,4 +65,9 @@ public:
 };
 
 
-#endif //Device_HPP
+
+
+
+
+
+#endif //DEVICE_HPP

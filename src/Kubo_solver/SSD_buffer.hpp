@@ -12,6 +12,18 @@
 #include<unistd.h>
 #include <cstdio>
 
+
+#include <fixed_allocator.h>
+#include <sys/mman.h>
+#include <memkind.h>
+
+static void print_err_message(int err)
+{
+    char error_message[MEMKIND_ERROR_MESSAGE_SIZE];
+    memkind_error_message(err, error_message, MEMKIND_ERROR_MESSAGE_SIZE);
+    fprintf(stderr, "%s\n", error_message);
+}
+
 class SSD_buffer{
 private:
   int COLS_, ROWS_, ROWS_stride_, COLS_stride_, ROWS_rest_, COLS_rest_, num_write_buffers_, num_read_buffers_;
@@ -19,13 +31,25 @@ private:
   std::string filename_;
   bool rest_buffer_=false;
 
-  FILE* file_;
+  struct memkind *pmem_kind_unlimited_ = NULL;  
+  //void* addr_;
+  type *SSD_buffer_;
 
+  
+  FILE* file_;
   FILE* out_, *in_;
+  
 public:
   ~SSD_buffer(){
-    //    file_ = fopen( filename_.c_str(), "wb"); //hack to overwrite filename_ file with empty file;
-    //fclose(file_);
+    memkind_free(pmem_kind_unlimited_, SSD_buffer_);
+
+    int err = memkind_destroy_kind(pmem_kind_unlimited_);
+    if (err) {
+        print_err_message(err);
+        return;
+    }
+    
+    //munmap(addr_, std::size_t(SSD_size_));
   };
   
   int COLS_stride(){return COLS_stride_;};
@@ -53,20 +77,44 @@ public:
     COLS_rest_   = COLS_  %  num_write_buffers_ ;
 
 
-    std::cout<<COLS_stride_<<" "<<COLS_rest_<<"      "<<ROWS_stride_<<" "<<ROWS_rest_<<std::endl;
-    //    while( (COLS_ % num_buffers_ ) > (COLS_ / num_buffers_) || (ROWS_ % num_buffers_ ) > (ROWS_ / num_buffers_) )
-    //  num_buffers_++;
-      
-      //if( ROWS_>COLS_ && SSD_size_int % RAM_size_int  > ROWS_ );
+    std::cout<<COLS_stride_<<" "<<COLS_rest_<<"      "<<ROWS_stride_<<" "<<ROWS_rest_<<"    "<< SSD_size_int <<std::endl;
 
-      
+
+
+    std::string path = "/tmp/";
+    int status = memkind_check_dax_path(path.c_str());
+    if (!status) {
+        fprintf(stdout, "PMEM kind %s is on DAX-enabled file system.\n", path);
+    } else {
+        fprintf(stdout, "PMEM kind %s is not on DAX-enabled file system.\n",
+                path);
+    }
+
+
+    
+    //addr_ = mmap(NULL, SSD_size_int, PROT_READ | PROT_WRITE,
+    //                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+
+    
+    int err = memkind_create_pmem(path.c_str(), 0, &pmem_kind_unlimited_);
+    //int err = memkind_create_fixed(addr_, 2 * SSD_size_int * std::size_t(sizeof(type)), &pmem_kind_unlimited_);
+
+    if (err) {
+        print_err_message(err);
+        return;
+    }
+    
+    SSD_buffer_ = (type *) memkind_malloc(pmem_kind_unlimited_, SSD_size_int * std::size_t(sizeof(type)) );
+    
     std::cout<<"RAM buffer size:  "<<RAM_size_/1E9 <<"GBs   SSD buffer size: "<< SSD_size_/1E9<<"GBs"<<std::endl;
-    std::cout<<"Number of SSD writes:  "<<num_write_buffers_ <<";  Number of SSD reads: "<< num_read_buffers_<<std::endl;
+    std::cout<<"Number of SSD writes:  "<<num_write_buffers_ <<";  Number of SSD reads: "<< num_read_buffers_<<std::endl<<std::endl;
 
   };
 
 
-  void reset_buffer(){std::remove(filename_.c_str());};
+  void reset_buffer(){};
+
+
   
   void upload_col_buffer_to_SSD(int buffer_num, type* RAM_buffer){
     
@@ -77,20 +125,14 @@ public:
     
     buffer_size *= ROWS_;
 
-    if(buffer_num>num_write_buffers_){
+    if(buffer_num > num_write_buffers_){
       std::cout<<"invalid buffer num:  "<<buffer_num<<"/"<<num_write_buffers_<<std::endl;
       return;
     }
-      /*
-    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-    int fileDesc = open(filename_.c_str(), O_CREAT | O_WRONLY | O_DIRECT | O_APPEND | O_NONBLOCK, mode);
-    std::cout<<write(fileDesc, (void*)RAM_buffer, buffer_size*sizeof(type))<<std::endl;
-    */
-    FILE* out = fopen( filename_.c_str(), "a+");
+  
     
-    fwrite( RAM_buffer, 1, buffer_size * sizeof(type), out );
-      
-    fclose(out);
+    for(std::size_t i = 0; i < buffer_size ; i ++ )
+      SSD_buffer_[buffer_num * COLS_stride_ * ROWS_ + i ] = RAM_buffer[i];
     
   }
   
@@ -104,21 +146,12 @@ public:
     if(buffer_size == 0)
       return 0;
 
-    
-    //    int in_f = open(filename_.c_str(), O_DIRECT | O_RDONLY);
-    FILE* in = fopen(filename_.c_str(), "rb");
-
-
       
-    for(int j = 0; j < COLS_; j++){
+    for(int j = 0; j < COLS_; j++)
+      for(std::size_t i = 0; i < buffer_size; i++)
+	RAM_buffer[buffer_num * buffer_size + i] = SSD_buffer_[ buffer_num * ROWS_stride_ + i ];
       
-      fseek(in, (  j * ROWS_ + buffer_num * ROWS_stride_ ) * sizeof(type) , SEEK_SET);
-      fread( &RAM_buffer[ j * buffer_size], 1, buffer_size  * sizeof(type), in );
 
-    }
-      fclose(in);    
-
-    //fread( RAM_buffer, 1, COLS_ * buffer_size  * sizeof(type), in );
     
  
     return buffer_size;

@@ -2,9 +2,12 @@
 #include<fstream>
 #include<string>
 
+
 #include "static_vars.hpp"
 #include "Device/Device.hpp"
 #include "Device/Graphene.hpp"
+#include "Device/Read_Hamiltonian.hpp"
+
 #include "Device/TBG/TBG.hpp"
 #include "Kubo_solver/Kubo_solver_FFT/Kubo_solver_FFT.hpp"
 #include "Kubo_solver/Kubo_solver_SSD.hpp"
@@ -70,6 +73,9 @@ int main(int , char **argv){
     device = new Graphene(graphene_vars);
   if(device_choice==1)
     device = new TBG(graphene_vars);
+  if(device_choice==2)
+    device = new Read_Hamiltonian(graphene_vars);
+
 
 
   if(sim_type == "SSD"){

@@ -22,6 +22,10 @@ public:
    origin_entries_ = Eigen::Vector2i(0,0);
   };
   
+  Coordinates():W_(0), LE_(0),C_(0),fullLe_(0){
+   origin_entries_ = Eigen::Vector2i(0,0);
+  };
+  
   Coordinates(int W, int LE, int C, MatrixXp& coordinates):W_(W), LE_(LE),C_(C),fullLe_(LE+2*C), coordinates_(coordinates){
    origin_entries_ = Eigen::Vector2i(0,0);
   };

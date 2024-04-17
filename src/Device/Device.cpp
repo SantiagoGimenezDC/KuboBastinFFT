@@ -19,6 +19,49 @@ void Device::Anderson_disorder(r_type disorder_vec[]){
   
 }
 
+void Device::rearrange_initial_vec(type r_vec[]){ //supe duper hacky; Standard for 2-terminal devices.
+  int Dim = this->parameters().DIM_,
+    subDim = this->parameters().SUBDIM_;
+
+  int C   = this->parameters().C_,
+      Le  = this->parameters().LE_,
+      W   = this->parameters().W_;
+
+  type tmp[subDim];
+
+#pragma omp parallel for
+    for(int n=0;n<subDim;n++)
+      tmp[n]=r_vec[n];
+
+#pragma omp parallel for
+    for(int n=0;n<Dim;n++)
+      r_vec[n] = 0;
+        
+
+#pragma omp parallel for
+    for(int n=0;n<Le*W;n++)
+      r_vec[C*W + n ]=tmp[ n];
+
+}
+
+void Device::traceover(type* traced, type* full_vec, int s, int num_reps){ //standard for 2-terminal devices.
+  int subDim = this->parameters().SUBDIM_,
+      C   = this->parameters().C_,
+      W   = this->parameters().W_,
+      sec_size = subDim/num_reps,
+      buffer_length = sec_size;
+	
+  if( s == num_reps-1 )
+      buffer_length += subDim % num_reps;
+
+      
+#pragma omp parallel for 
+      for(int i=0;i<buffer_length;i++)
+        traced[i] = full_vec[s*sec_size + i+C*W];
+
+  };
+
+
 
 void Device::minMax_EigenValues( int maxIter, r_type& eEmax, r_type& eEmin){ //Power Method; valid if eigenvalues are real
   int DIM = device_vars_.DIM_;
