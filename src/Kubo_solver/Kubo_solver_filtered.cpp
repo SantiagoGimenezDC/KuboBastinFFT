@@ -746,6 +746,8 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer
   
   //=================================KPM Step 0======================================//
 
+  type factor = kernel_->term(0,M) ;// * std::polar(1.0,  M_PI * 0 * (  - 2 * k_dis + initial_disp_ ) / M_ext );
+  
   if( vel_op == 1 ){
     device_.vel_op( tmp_velOp, pp_vec );
     device_.traceover(tmp, tmp_velOp, s, num_parts);
@@ -757,11 +759,11 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer
   
   //Filter boundary conditions
   for(int  i_dec = 0; i_dec <= Np_dec ; i_dec++ ){
-    plus_eq( poly_buffer[ i_dec ], tmp, KB_window[ Np - i_dec * decRate ], SEC_SIZE );
+    plus_eq( poly_buffer[ i_dec ], tmp, factor * KB_window[ Np - i_dec * decRate ], SEC_SIZE );
 
     int dist_cyclic = ( i_dec * decRate  + ( M - 1 ) % decRate + 1 );
     if(cyclic && dist_cyclic <= Np )
-      plus_eq( poly_buffer[  M_dec - 1 - i_dec ], tmp,  KB_window[ Np + dist_cyclic ], SEC_SIZE );
+      plus_eq( poly_buffer[  M_dec - 1 - i_dec ], tmp,  factor * KB_window[ Np + dist_cyclic ], SEC_SIZE );
   }
   
 
@@ -774,7 +776,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer
   device_.H_ket ( p_vec, pp_vec, damp_op, dis_vec);
   
     
-  type factor = std::polar(1.0,  M_PI * 1 * (  - 2 * k_dis + initial_disp_ ) / M_ext );
+  factor = kernel_->term(1,M) * std::polar(1.0,  M_PI * 1 * (  - 2 * k_dis + initial_disp_ ) / M_ext );
 
   if( vel_op == 1 ){
     device_.vel_op( tmp_velOp, p_vec );
@@ -784,12 +786,12 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer
     device_.traceover(tmp, p_vec, s, num_parts);
 
 
-  /*  
+    
   if( ( Np + 1 ) % decRate == 0){
     int i = Np + 1;  
     int i_dec = i/decRate;  
     plus_eq( poly_buffer[ i_dec ], tmp,  factor * KB_window[ Np + Np  ], SEC_SIZE );
-    }*/
+  }
 
   
   //Filter boundary conditions
@@ -813,7 +815,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer
 
       device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
 
-      factor = 2 * std::polar(1.0,  M_PI * m * (  - 2 * k_dis + initial_disp_) / M_ext );
+      factor = 2 * kernel_->term(m,M) * std::polar(1.0,  M_PI * m * (  - 2 * k_dis + initial_disp_) / M_ext );
 
       if( vel_op == 1 ){
         device_.vel_op( tmp_velOp, vec );
