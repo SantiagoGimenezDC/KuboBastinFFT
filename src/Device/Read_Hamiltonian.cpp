@@ -4,21 +4,23 @@
 #include "Read_Hamiltonian.hpp"
 #include<fstream>
 
+
+Read_Hamiltonian::Read_Hamiltonian(device_vars& device_vars):Device(device_vars){};
+
+
 void Read_Hamiltonian::build_Hamiltonian(){
   std::ifstream inFile;
   std::string run_dir  = parameters().run_dir_,
     filename = parameters().filename_;
 
-  inFile.open(run_dir+"Operators/"+filename+".txt");
+  inFile.open(run_dir+"operators/"+filename+".CSR");
 
-  std::size_t count = std::count(std::istreambuf_iterator<char>(inFile), 
-                       std::istreambuf_iterator<char>(), '\n');
-
-  std::size_t DIM = sqrt(count);
-  double double_DIM = sqrt(double(count));
-
-  if( double_DIM != double(DIM) )
-    std::cout<<"Hamiltonian is not squared";
+  std::cout<<"  Imaginary part of the Hamiltonian is being dumped on read;"<<std::endl<<std::endl;
+    
+    
+  std::size_t DIM, NNZ;
+  inFile>>DIM;
+  inFile>>NNZ;
   
   
   parameters().DIM_    = DIM;
@@ -28,27 +30,33 @@ void Read_Hamiltonian::build_Hamiltonian(){
   parameters().LE_     = DIM;
 
 
-  
-  typedef Eigen::Triplet<r_type> T;
+  int outerIndexPtr[DIM+1];
+  int innerIndices[NNZ];
+  r_type values[NNZ];
 
-  std::vector<T> tripletList;
-  tripletList.reserve( 5 * DIM);
 
-  for(std::size_t i=0; i<DIM; i++)
-    for(std::size_t j=0; j<DIM; j++){
-      double hopping;
-      inFile>>hopping;
-      tripletList.push_back( T( i, j, hopping ));
-    }
-      
-  H_.resize(DIM, DIM);
+  for(std::size_t j=0; j<NNZ; j++){
+    double re_part , im_part;
+    inFile>>re_part, inFile>>im_part;
+    values[j] = re_part;// + std::complex<r_type>(0,1) * type( im_part );
+  }
+
+  for(std::size_t j=0; j<NNZ; j++)  
+    inFile>>innerIndices[j];
+
+  for(std::size_t j=0; j<DIM+1; j++)  
+    inFile>>outerIndexPtr[j];    
+
   
+  Eigen::Map<Eigen::SparseMatrix<r_type> > sm1(DIM,DIM,NNZ,outerIndexPtr, // read-write
+                               innerIndices,values);
+
   
-  H_.setFromTriplets(tripletList.begin(), tripletList.end());
-  H_.prune(1E-8);
-  H_.makeCompressed();
-  
+  H_=sm1;
+
+
 };
+
 
 
 void Read_Hamiltonian::vel_op (type vec[], type p_vec[]){
@@ -184,39 +192,39 @@ void Read_Hamiltonian::setup_velOp(){
     
 
   if(print_CSR){
-  auto start_wr = std::chrono::steady_clock::now();    
+    auto start_wr = std::chrono::steady_clock::now();    
 
-  Eigen::SparseMatrix<type,Eigen::ColMajor> printVX(vx_.cast<type>());
-  vx_.makeCompressed();
+    Eigen::SparseMatrix<type,Eigen::ColMajor> printVX(vx_.cast<type>());
+    vx_.makeCompressed();
   
-  int nnz = printVX.nonZeros(), cols = printVX.cols();
-  type * valuePtr = printVX.valuePtr();//(nnz)
-  int * innerIndexPtr = printVX.innerIndexPtr(),//(nnz)
+    int nnz = printVX.nonZeros(), cols = printVX.cols();
+    type * valuePtr = printVX.valuePtr();//(nnz)
+    int * innerIndexPtr = printVX.innerIndexPtr(),//(nnz)
       * outerIndexPtr = printVX.outerIndexPtr();//(cols+1)
   
-  std::ofstream data2;
-  data2.open("ARM.VX.CSR");
+    std::ofstream data2;
+    data2.open("ARM.VX.CSR");
 
-  data2.setf(std::ios::fixed,std::ios::floatfield);
-  data2.precision(3);
+    data2.setf(std::ios::fixed,std::ios::floatfield);
+    data2.precision(3);
 
-  data2<<cols<<" "<<nnz<<std::endl;
+    data2<<cols<<" "<<nnz<<std::endl;
 
-  for (int i=0;i<nnz;i++)
-    data2<<real(valuePtr[i])<<" "<<imag(valuePtr[i])<<" ";
+    for (int i=0;i<nnz;i++)
+      data2<<real(valuePtr[i])<<" "<<imag(valuePtr[i])<<" ";
 
-  data2<<std::endl;
-  for (int i=0;i<nnz;i++)
-    data2<<innerIndexPtr[i]<<" ";
-
-  
-  data2<<std::endl;
-  for (int i=0;i<cols;i++)
-    data2<<outerIndexPtr[i]<<" ";
+    data2<<std::endl;
+    for (int i=0;i<nnz;i++)
+      data2<<innerIndexPtr[i]<<" ";
 
   
-  data2.close();
-  auto end_wr = std::chrono::steady_clock::now();
+    data2<<std::endl;
+    for (int i=0;i<cols;i++)
+      data2<<outerIndexPtr[i]<<" ";
+
+  
+    data2.close();
+    auto end_wr = std::chrono::steady_clock::now();
 
 
   std::cout<<"   Time to write vel. OP on disk:     ";

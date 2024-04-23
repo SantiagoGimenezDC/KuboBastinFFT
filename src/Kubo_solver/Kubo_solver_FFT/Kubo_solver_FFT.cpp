@@ -34,8 +34,10 @@ Kubo_solver_FFT::Kubo_solver_FFT(solver_vars& parameters, Device& device) : para
   
   if(parameters_.base_choice_ == 0)
     vec_base_ = new Direct(device_.parameters(), parameters_.seed_);
-  else if(parameters_.base_choice_==1)
+  else if(parameters_.base_choice_ == 1 )
     vec_base_ = new Complex_Phase(device_.parameters(), parameters_.seed_);
+  else if(parameters_.base_choice_ == 2 )
+    vec_base_ = new Complex_Phase_real(device_.parameters(), parameters_.seed_);
   else
     vec_base_ = new Direct(device_.parameters(), parameters_.seed_);
 
@@ -52,6 +54,7 @@ Kubo_solver_FFT::Kubo_solver_FFT(solver_vars& parameters, Device& device) : para
   
   sym_formula_ = KUBO_GREENWOOD;
 }
+
 
 
 Kubo_solver_FFT::~Kubo_solver_FFT(){
@@ -164,7 +167,7 @@ void Kubo_solver_FFT::allocate_memory(){
   r_type buffer_mem    = r_type( 2 * M * SEC_SIZE * sizeof(type) ) / r_type( 1E9 ),
          recursion_mem = r_type( ( 5 * DIM + 1 * SUBDIM ) * sizeof(type) )/ r_type( 1E9 ),
          FFT_mem       = 0.0,
-         Ham_mem = 2*device_.Hamiltonian_size()/ r_type( 1E9 ), //the 2 is because of the vel operator
+         Ham_mem = 2 * device_.Hamiltonian_size() / r_type( 1E9 ), //the 2 is because of the vel operator
          Total = 0.0;
 
   

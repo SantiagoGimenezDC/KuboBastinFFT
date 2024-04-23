@@ -66,8 +66,4 @@ public:
 
 
 
-
-
-
-
 #endif //DEVICE_HPP

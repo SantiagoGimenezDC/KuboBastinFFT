@@ -10,7 +10,7 @@
 
 struct filter_vars{
   bool post_filter_, filter_;
-  int M_, M_ext_, L_, k_dis_, decRate_, nump_;
+  int M_, M_ext_, L_, L_eff_, k_dis_, decRate_, nump_;
   r_type f_cutoff_, att_;
 };
 

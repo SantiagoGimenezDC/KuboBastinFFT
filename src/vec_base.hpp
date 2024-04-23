@@ -38,6 +38,14 @@ public:
 
 
 
+class Complex_Phase_real: public Vec_Base{
+public:
+  virtual ~Complex_Phase_real(){};
+  Complex_Phase_real(device_vars& parameters, int seed) : Vec_Base(parameters, seed){};
+  virtual void generate_vec_re ( r_type*, int );
+  virtual void generate_vec_im ( std::complex<r_type>*, int );  
+};
+
 
 
 class Direct: public Vec_Base{

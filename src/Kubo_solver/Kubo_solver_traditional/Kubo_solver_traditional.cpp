@@ -36,6 +36,8 @@ Kubo_solver_traditional::Kubo_solver_traditional(solver_vars& parameters, Device
     vec_base_ = new Direct(device_.parameters(), parameters_.seed_);
   else if(parameters_.base_choice_==1)
     vec_base_ = new Complex_Phase(device_.parameters(), parameters_.seed_);
+  else if(parameters_.base_choice_==2)
+    vec_base_ = new Complex_Phase_real(device_.parameters(), parameters_.seed_);
   else
     vec_base_ = new Direct(device_.parameters(), parameters_.seed_);
 

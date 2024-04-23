@@ -4,6 +4,7 @@
 #include"vec_base.hpp"
 
 #include<fstream>
+#include<iostream>
 
 void generate_vec(int C, int W, int LE, type rand_vec[], int seed, int r){
 
@@ -45,18 +46,42 @@ void generate_vec_im(int C, int W, int LE, std::complex<r_type> rand_vec[], int 
 
 
 
+void Complex_Phase_real::generate_vec_im( std::complex<r_type> rand_vec[], int ){
+
+  int SUBDIM = this->parameters().SUBDIM_;
+
+
+  for( int j = 0; j <  SUBDIM; j++ )
+    rand_vec [j] = (2.0*this->rng().get() - 1.)*sqrt(3.0)/ sqrt(double(SUBDIM));   
+  
+}
+
+
+void Complex_Phase_real::generate_vec_re( r_type rand_vec[], int ){
+
+  int SUBDIM = this->parameters().SUBDIM_;
+
+
+  for( int j = 0; j <  SUBDIM; j++ )
+    rand_vec [j] = (2.0*this->rng().get() - 1.)*sqrt(3.0)/ sqrt(double(SUBDIM));   
+  
+}
+
+
+
+
+
 void Complex_Phase::generate_vec_im( std::complex<r_type> rand_vec[], int ){
 
   int SUBDIM = this->parameters().SUBDIM_;
 
-  
+
   for( int j = 0; j <  SUBDIM; j++ ){
     double phase = 2.0 * M_PI * this->rng().get() ;
     rand_vec [j] = std::polar( 1.0, phase ) / sqrt(double(SUBDIM));
   }
   
 }
-
 
 void Complex_Phase::generate_vec_re( r_type rand_vec[], int ){
 
@@ -67,6 +92,12 @@ void Complex_Phase::generate_vec_re( r_type rand_vec[], int ){
     rand_vec [j] = (2.0*this->rng().get() - 1.)*sqrt(3.0)/ sqrt(double(SUBDIM));   
   
 }
+
+
+
+
+
+
 
 
 void Direct::generate_vec_im( std::complex<r_type> rand_vec[], int ){

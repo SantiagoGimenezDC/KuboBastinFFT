@@ -40,10 +40,12 @@ Kubo_solver_filtered::Kubo_solver_filtered(solver_vars& parameters, Device& devi
 
 
   
-  if(parameters_.base_choice_==0)
+  if(parameters_.base_choice_ == 0 )
     vec_base_ = new Direct(device_.parameters(), parameters_.seed_);
-  else if(parameters_.base_choice_==1)
+  else if(parameters_.base_choice_ == 1 )
     vec_base_ = new Complex_Phase(device_.parameters(), parameters_.seed_);
+  else if(parameters_.base_choice_ == 2 )
+    vec_base_ = new Complex_Phase_real(device_.parameters(), parameters_.seed_);
   else
     vec_base_ = new Direct(device_.parameters(), parameters_.seed_);
 
@@ -756,16 +758,19 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer
     device_.traceover(tmp, pp_vec, s, num_parts);
 
 
-  
-  //Filter boundary conditions
-  for(int  i_dec = 0; i_dec <= Np_dec ; i_dec++ ){
-    plus_eq( poly_buffer[ i_dec ], tmp, factor * KB_window[ Np - i_dec * decRate ], SEC_SIZE );
 
-    int dist_cyclic = ( i_dec * decRate  + ( M - 1 ) % decRate + 1 );
-    if(cyclic && dist_cyclic <= Np )
-      plus_eq( poly_buffer[  M_dec - 1 - i_dec ], tmp,  factor * KB_window[ Np + dist_cyclic ], SEC_SIZE );
+  for(int dist = -Np; dist <= Np;  dist++){
+    int i = ( 0 + dist );  
+
+    if( i >= 0 && i < M - 1 && i % decRate == 0 ){
+      int i_dec = i / decRate;  
+      plus_eq( poly_buffer[ i_dec ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
+    }
+
+	
+    if( cyclic && i < 0 && ( M - 1 + ( i + 1 )  ) % decRate == 0 )
+      plus_eq( poly_buffer[ ( M - 1 + ( i + 1 ) ) / decRate ], tmp,  factor * KB_window[ Np + dist ], SEC_SIZE );
   }
-  
 
 
   
@@ -786,7 +791,22 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer
     device_.traceover(tmp, p_vec, s, num_parts);
 
 
-    
+
+  for(int dist = -Np; dist <= Np;  dist++){
+    int i = ( 1 + dist );  
+
+    if( i >= 0 && i < M - 1 && i % decRate == 0 ){
+      int i_dec = i / decRate;  
+      plus_eq( poly_buffer[ i_dec ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
+    }
+
+	
+    if( cyclic && i < 0 && ( M - 1 + ( i + 1 )  ) % decRate == 0 )
+      plus_eq( poly_buffer[ ( M - 1 + ( i + 1 ) ) / decRate ], tmp,  factor * KB_window[ Np + dist ], SEC_SIZE );
+  }
+
+
+  /*
   if( ( Np + 1 ) % decRate == 0){
     int i = Np + 1;  
     int i_dec = i/decRate;  
@@ -803,7 +823,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer
     if( cyclic && dist_cyclic < Np )
       plus_eq( poly_buffer[ M_dec - 1 - i_dec ], tmp, 2 * factor * KB_window[ Np + dist_cyclic ], SEC_SIZE );
   }
-
+  */
 
 
   

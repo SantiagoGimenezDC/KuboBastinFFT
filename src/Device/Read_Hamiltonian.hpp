@@ -23,7 +23,7 @@ private:
   
 public:
   ~Read_Hamiltonian(){};
-  Read_Hamiltonian(device_vars& device_vars):Device(device_vars){};
+  Read_Hamiltonian(device_vars& );
 
   
   virtual r_type Hamiltonian_size(){return H_.rows();};  

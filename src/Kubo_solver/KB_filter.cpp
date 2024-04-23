@@ -17,7 +17,7 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
     k_dis = parameters_.k_dis_,
     nump = parameters_.nump_;
 
-  M_dec_ = M / decRate + ((M - 1) % decRate == 0) * ( !(decRate == 1) );
+  M_dec_ = M / decRate + ((M - 1) % decRate == 0) * ( (decRate != 1) );
 
 
   if(M%decRate != 0 )
@@ -88,6 +88,19 @@ void KB_filter::compute_filter(){
   }
 
 
+  
+
+
+  double thresh = 1E-4;
+  for(int i=3; i<Np;i++){
+    if(abs(KB_window_(Np+i)) / KB_window_(Np)<thresh && abs(KB_window_(Np+i-1)) /KB_window_(Np)<thresh && abs(KB_window_(Np+i-2))/KB_window_(Np)<thresh && abs(KB_window_(Np+i-3))/KB_window_(Np)<thresh ){
+      parameters_.L_eff_=i;
+      break;
+    }
+  }
+  
+  std::cout<<" Effective filter length: "<<parameters_.L_eff_<<std::endl;
+  
   if(Np == 0 )
     KB_window_(0) = 1.0;// for testing
 
