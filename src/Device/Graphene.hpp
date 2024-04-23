@@ -43,7 +43,7 @@ public:
   virtual r_type Hamiltonian_size(){ return ( H_.innerSize() + H_.nonZeros() + H_.outerSize() ) * sizeof(r_type); };
   
   virtual void adimensionalize(r_type a, r_type b){
-    a_ = a, b_ = b; t_a_/=a;
+    a_ = a, b_ = b; t_a_=t_standard_/a;
 
     if(csc_mode){
 
