@@ -13,6 +13,10 @@ void Read_Hamiltonian::build_Hamiltonian(){
   std::string run_dir  = parameters().run_dir_,
     filename = parameters().filename_;
 
+  set_sysLength(1.0);  
+  set_sysSubLength(1.0);
+  
+
   inFile.precision(14);
   inFile.open(run_dir+"operators/"+filename+".HAM.CSR");
 
@@ -55,7 +59,7 @@ void Read_Hamiltonian::build_Hamiltonian(){
   
   H_=sm1;
 
-  std::cout << ( H_.innerSize() + H_.nonZeros() + H_.outerSize() ) * sizeof(r_type)<<std::endl;
+
 };
 
 
@@ -66,6 +70,7 @@ void Read_Hamiltonian::vel_op (type vec[], type p_vec[]){
   Eigen::Map<VectorXdT> eig_vec(vec,Dim),
     eig_p_vec(p_vec, Dim);
 
+
   eig_vec = vx_ * eig_p_vec;
   
 };
@@ -73,11 +78,12 @@ void Read_Hamiltonian::vel_op (type vec[], type p_vec[]){
 
 void Read_Hamiltonian::H_ket ( type* vec, type* p_vec, r_type* dmp_op, r_type* dis_vec) {
   int Dim = this->parameters().DIM_,
+      subDim = this->parameters().SUBDIM_,
       W = this->parameters().W_,
       C = this->parameters().C_,
       Le = this->parameters().LE_;
   
-  
+
 #pragma omp parallel for
   for(int i = 0; i < Dim; i++)
     p_vec[ i ] *= dmp_op[ i ];
@@ -92,7 +98,7 @@ void Read_Hamiltonian::H_ket ( type* vec, type* p_vec, r_type* dmp_op, r_type* d
 
     
 #pragma omp parallel for
-  for(int i = 0; i < Le*W; i++) 
+  for(int i = 0; i < subDim; i++) 
     vec[ i + C * W ]    +=  dis_vec[ i ] * p_vec[ i + C * W ]/a_;
   
 }
@@ -101,22 +107,23 @@ void Read_Hamiltonian::H_ket ( type* vec, type* p_vec, r_type* dmp_op, r_type* d
 void Read_Hamiltonian::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type*){
 
   int Dim = this->parameters().DIM_;
- 
+
 #pragma omp parallel for
   for(int i = 0; i < Dim; i++)
     pp_vec[ i ] *= damp_op[ i ] * damp_op[ i ];
 
-    
+
   
   Eigen::Map<VectorXdT> eig_vec(vec,Dim),
     eig_p_vec(p_vec, Dim),
     eig_pp_vec(pp_vec, Dim);
+  Eigen::Map<Eigen::Vector<double,-1>>   dmpt_op(damp_op,Dim);
   
 
   
   eig_vec = 2.0 * H_ * eig_p_vec - eig_pp_vec;
 
-    
+
   eig_pp_vec = eig_p_vec;
   eig_p_vec = eig_vec;
 }
@@ -147,7 +154,7 @@ void Read_Hamiltonian::setup_velOp(){
 
   inFile.open(run_dir+"operators/"+filename+".VX.CSR");
 
-  std::cout<<"  Imaginary part of the Hamiltonian is being dumped on read;"<<std::endl<<std::endl;
+  std::cout<<"  real part of the Velocity is being dumped on read;"<<std::endl<<std::endl;
     
     
   std::size_t DIM, NNZ;
@@ -163,7 +170,7 @@ void Read_Hamiltonian::setup_velOp(){
   for(std::size_t j=0; j<NNZ; j++){
     double re_part , im_part;
     inFile>>re_part, inFile>>im_part;
-    values[j] = re_part;// + std::complex<r_type>(0,1) * type( im_part );
+    values[j] = im_part;// + std::complex<r_type>(0,1) * type( im_part );
   }
 
   for(std::size_t j=0; j<NNZ; j++)  
@@ -179,8 +186,27 @@ void Read_Hamiltonian::setup_velOp(){
   
   vx_=sm1;
 
-
 };
+
+
+void Read_Hamiltonian::update_dis ( r_type dis_vec[], r_type damp_op[]){
+  int subDim = this->parameters().SUBDIM_;
+  int C   = this->parameters().C_,
+      W   = this->parameters().W_;
+
+
+  #pragma omp parallel for
+  for(int i=0; i<subDim;i++)
+     H_.coeffRef(C*W + i, C*W +i) = damp_op[i] * b_/a_;
+    
+  #pragma omp parallel for
+  for(int i=0; i<subDim;i++)
+     H_.coeffRef(C*W + i, C*W +i) += damp_op[i] * dis_vec[i]/a_;
+  
+
+}
+
+
 
 /*
 void Read_Hamiltonian::setup_velOp(){

@@ -98,7 +98,7 @@ void Kubo_solver_FFT::allocate_memory(){
       num_p    = parameters_.num_p_,
       SEC_SIZE = SUBDIM / parameters_.num_parts_;
 
-
+  parameters_.SECTION_SIZE_=SEC_SIZE;
   
 /*------------Big memory allocation--------------*/
   //Single Shot vectors
@@ -164,7 +164,7 @@ void Kubo_solver_FFT::allocate_memory(){
 
 
 
-  r_type buffer_mem    = r_type( 2 * M * SEC_SIZE * sizeof(type) ) / r_type( 1E9 ),
+  r_type buffer_mem    = r_type( 2 * r_type(M) * r_type(SEC_SIZE) * sizeof(type) ) / r_type( 1E9 ),
          recursion_mem = r_type( ( 5 * DIM + 1 * SUBDIM ) * sizeof(type) )/ r_type( 1E9 ),
          FFT_mem       = 0.0,
          Ham_mem = 2 * device_.Hamiltonian_size() / r_type( 1E9 ), //the 2 is because of the vel operator

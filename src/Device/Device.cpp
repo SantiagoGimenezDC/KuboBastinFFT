@@ -93,7 +93,7 @@ void Device::minMax_EigenValues( int maxIter, r_type& eEmax, r_type& eEmin){ //P
   }
 
   
-  this->H_ket(y.data(),y_Ant.data());
+  this->H_ket(y.data(),y_Ant.data(), filler_vec_2, filler_vec);
 
   Emax = std::real(y_Ant.dot(y)/y_Ant.squaredNorm());
 
@@ -113,7 +113,7 @@ void Device::minMax_EigenValues( int maxIter, r_type& eEmax, r_type& eEmin){ //P
   }
 
 
-  this->H_ket(y.data(),y_Ant.data());
+  this->H_ket(y.data(),y_Ant.data(), filler_vec_2, filler_vec);
   
   Emin  = std::real(((y_Ant.dot(y))/y_Ant.squaredNorm()));
   Emin += Emax;
