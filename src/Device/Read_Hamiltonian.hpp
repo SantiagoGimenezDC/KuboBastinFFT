@@ -52,7 +52,7 @@ public:
 
   
   //Unused for now  
-  virtual void update_dis(r_type*,r_type*) ;//Disorder will not be supported for now; Tis` trivial to support it though
+  virtual void update_dis(r_type*,r_type*) {};//Disorder will not be supported for now; Tis` trivial to support it though
   
   virtual void update_cheb ( type*, type*, type*, r_type*, r_type , r_type )  {};
   virtual void update_cheb_filtered ( type*, type*, type*, r_type*, r_type* , type) {};  
