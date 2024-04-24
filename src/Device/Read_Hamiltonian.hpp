@@ -30,7 +30,9 @@ public:
 
   virtual void build_Hamiltonian();
   virtual void setup_velOp() ;
-  virtual void adimensionalize ( r_type a,  r_type b){    
+  virtual void adimensionalize ( r_type a,  r_type b){
+
+      a_=a, b_=b;
       int Dim = this->parameters().DIM_;
       SpMatrixXp Id(Dim,Dim);
       Id.setIdentity();
@@ -52,7 +54,7 @@ public:
 
   
   //Unused for now  
-  virtual void update_dis(r_type*,r_type*) {};//Disorder will not be supported for now; Tis` trivial to support it though
+  virtual void update_dis(r_type*,r_type*);//Disorder will not be supported for now; Tis` trivial to support it though
   
   virtual void update_cheb ( type*, type*, type*, r_type*, r_type , r_type )  {};
   virtual void update_cheb_filtered ( type*, type*, type*, r_type*, r_type* , type) {};  

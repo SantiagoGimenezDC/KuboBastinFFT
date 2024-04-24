@@ -198,7 +198,8 @@ void Read_Hamiltonian::update_dis ( r_type dis_vec[], r_type damp_op[]){
   #pragma omp parallel for
   for(int i=0; i<subDim;i++)
      H_.coeffRef(C*W + i, C*W +i) = damp_op[i] * b_/a_;
-    
+     
+  
   #pragma omp parallel for
   for(int i=0; i<subDim;i++)
      H_.coeffRef(C*W + i, C*W +i) += damp_op[i] * dis_vec[i]/a_;
