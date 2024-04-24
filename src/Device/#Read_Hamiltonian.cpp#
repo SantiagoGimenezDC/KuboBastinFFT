@@ -55,7 +55,7 @@ void Read_Hamiltonian::build_Hamiltonian(){
   
   H_=sm1;
 
-  std::cout << ( H_.innerSize() + H_.nonZeros() + H_.outerSize() ) * sizeof(r_type)<<std::endl;
+
 };
 
 

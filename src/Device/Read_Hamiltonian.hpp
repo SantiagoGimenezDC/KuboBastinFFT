@@ -26,7 +26,7 @@ public:
   Read_Hamiltonian(device_vars& );
 
   
-  virtual r_type Hamiltonian_size(){return H_.rows();};  
+  virtual r_type Hamiltonian_size(){return ( H_.innerSize() + H_.nonZeros() + H_.outerSize() ) * sizeof(r_type);};  
 
   virtual void build_Hamiltonian();
   virtual void setup_velOp() ;

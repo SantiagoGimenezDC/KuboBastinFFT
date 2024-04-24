@@ -96,7 +96,7 @@ void Kubo_solver_FFT::allocate_memory(){
       DIM      = device_.parameters().DIM_,
       SUBDIM   = device_.parameters().SUBDIM_,
       num_p    = parameters_.num_p_,
-      SEC_SIZE = parameters_.SECTION_SIZE_;
+      SEC_SIZE = SUBDIM / parameters_.num_parts_;
 
 
   
@@ -182,7 +182,7 @@ void Kubo_solver_FFT::allocate_memory(){
   std::cout<<std::endl;
   std::cout<<"Expected memory cost breakdown:"<<std::endl;
   std::cout<<"   Chebyshev buffers:    "<< buffer_mem<<" GBs"<<std::endl;  
-  std::cout<<"   Hamiltonian size:     "<< Ham_mem<<" GBs"<<std::endl;  
+  std::cout<<"   Operators size:     "<< Ham_mem<<" GBs"<<std::endl;  
   std::cout<<"   Recursion vectors:    "<<  recursion_mem <<" GBs"<<std::endl;
   std::cout<<"   FFT auxiliary lines:  "<<  FFT_mem <<" GBs"<<std::endl<<std::endl;   
   std::cout<<"TOTAL:  "<<  Total<<" GBs"<<std::endl<<std::endl;
