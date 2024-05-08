@@ -2,6 +2,7 @@ build/src/main.o: src/main.cpp src/static_vars.hpp src/Device/Device.hpp \
  src/Device/../static_vars.hpp src/Device/../CAP.hpp \
  src/Device/../static_vars.hpp src/Device/../Random.hpp \
  src/Device/Graphene.hpp src/Device/Device.hpp src/Device/Coordinates.hpp \
+ src/Device/Read_Hamiltonian.hpp src/Device/Read_ConTable.hpp \
  src/Device/Read_Hamiltonian.hpp src/Device/TBG/TBG.hpp \
  src/Device/TBG/../../static_vars.hpp src/Device/TBG/../Coordinates.hpp \
  src/Device/TBG/../Device.hpp \
@@ -38,6 +39,8 @@ src/Device/../Random.hpp:
 src/Device/Graphene.hpp:
 src/Device/Device.hpp:
 src/Device/Coordinates.hpp:
+src/Device/Read_Hamiltonian.hpp:
+src/Device/Read_ConTable.hpp:
 src/Device/Read_Hamiltonian.hpp:
 src/Device/TBG/TBG.hpp:
 src/Device/TBG/../../static_vars.hpp:

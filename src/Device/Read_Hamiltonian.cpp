@@ -170,7 +170,7 @@ void Read_Hamiltonian::setup_velOp(){
   for(std::size_t j=0; j<NNZ; j++){
     double re_part , im_part;
     inFile>>re_part, inFile>>im_part;
-    values[j] = im_part;// + std::complex<r_type>(0,1) * type( im_part );
+    values[j] = re_part;// + std::complex<r_type>(0,1) * type( im_part );
   }
 
   for(std::size_t j=0; j<NNZ; j++)  

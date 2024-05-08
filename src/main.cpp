@@ -7,6 +7,7 @@
 #include "Device/Device.hpp"
 #include "Device/Graphene.hpp"
 #include "Device/Read_Hamiltonian.hpp"
+#include "Device/Read_ConTable.hpp"
 
 #include "Device/TBG/TBG.hpp"
 #include "Kubo_solver/Kubo_solver_FFT/Kubo_solver_FFT.hpp"
@@ -78,6 +79,8 @@ int main(int , char **argv){
     device = new TBG(graphene_vars);
   if(device_choice==2)
     device = new Read_Hamiltonian(graphene_vars);
+  if(device_choice==3)
+    device = new Read_ConTable(graphene_vars);
 
 
 

@@ -25,6 +25,11 @@ public:
   ~Read_Hamiltonian(){};
   Read_Hamiltonian(device_vars& );
 
+  Coordinates& coordinates(){return coordinates_;};
+  void set_coordinates(Coordinates new_coordinates){coordinates_ = new_coordinates;};
+  void set_H(Eigen::Map<Eigen::SparseMatrix<r_type, Eigen::RowMajor> > & new_H){ H_ = new_H; };
+  SpMatrixXp& H(){return H_;};
+
   
   virtual r_type Hamiltonian_size(){return ( H_.innerSize() + H_.nonZeros() + H_.outerSize() ) * sizeof(r_type);};  
 
