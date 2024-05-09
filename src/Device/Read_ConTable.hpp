@@ -37,7 +37,7 @@ public:
   ~Read_ConTable(){};
   Read_ConTable(device_vars& );
   
-  void generate_Hamiltonian();
+   virtual void build_Hamiltonian();
     
 
 };

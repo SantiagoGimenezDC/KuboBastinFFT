@@ -20,7 +20,7 @@ void Read_Hamiltonian::build_Hamiltonian(){
   inFile.precision(14);
   inFile.open(run_dir+"operators/"+filename+".HAM.CSR");
 
-  std::cout<<"  Imaginary part of the Hamiltonian is being dumped on read;"<<std::endl<<std::endl;
+  std::cout<<"  Imaginary part of the Hamiltonian is being dumped on read; "<<run_dir+"operators/"+filename+".HAM.CSR"  <<std::endl<<std::endl;
     
 
   std::size_t DIM, NNZ;

@@ -3,7 +3,7 @@
 #include<chrono>
 #include "Read_ConTable.hpp"
 #include<fstream>
-
+#include"../Kubo_solver/time_station.hpp"
 
 
 Read_ConTable::Read_ConTable(device_vars& device_vars):Read_Hamiltonian(device_vars){
@@ -80,20 +80,26 @@ Read_ConTable::Read_ConTable(device_vars& device_vars):Read_Hamiltonian(device_v
   std::cout<<"  Finished Reading the connectivity table and xyz files;"<<std::endl<<std::endl;
 
 
-  generate_Hamiltonian();
 
-  std::cout<<"  Finished building the Hamiltonian;"<<std::endl<<std::endl;
+
+
 };
 
 
-void Read_ConTable::generate_Hamiltonian(){
+
+void Read_ConTable::build_Hamiltonian(){
 
 
     std::size_t max_NN = connTable_.cols();
     std::size_t DIM = parameters().DIM_;
 
+    typedef Eigen::Triplet<r_type> T;
+    std::vector<T> tripletList;
+    tripletList.reserve(35*DIM);
+
+    
     Coordinates coords = coordinates();
-    Eigen::MatrixXd X(DIM, max_NN), Y(DIM, max_NN),Z(DIM, max_NN);
+    //Eigen::MatrixXd X(DIM, max_NN), Y(DIM, max_NN),Z(DIM, max_NN);
 
     //Eigen::Vector2d K(0,0);
     
@@ -108,73 +114,82 @@ void Read_ConTable::generate_Hamiltonian(){
     double lambdac_ = 0.265;//A
 
 
-    vals_.resize( DIM * max_NN );
-    rows_.resize( DIM * max_NN );
-    cols_.resize( DIM * max_NN );
 
-    //    #pragma omp parallel for
     for (std::size_t i = 0; i < DIM; i++) {
-      std::cout<<i<<"/"<<DIM<<std::endl;
+
+
       for (std::size_t j = 0; j < max_NN; j++) {
-	  Eigen::Vector3d tmp_dist = Eigen::Vector3d::Zero();
-	  
-	  
-	  tmp_dist(0) = ( coords.data()(connTable_(i,j), 0) - coords.data()(i,0) );
-	  tmp_dist(1) = ( coords.data()(connTable_(i,j), 1) - coords.data()(i,1) );
-	  Z(i,j) = ( coords.data()(connTable_(i,j), 2) - coords.data()(i,2) );
+	
 
-          double atmp = ( tmp_dist(0) * U_(1,1) - tmp_dist(1) * U_(1,0) ) / ( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1) ),
-	         btmp = ( tmp_dist(0) * U_(0,1) - tmp_dist(1) * U_(0,0) ) / ( U_(1,0) * U_(0,1) - U_(0,0) * U_(1,1) );          
-
+	std::size_t j_ele = connTable_(i,j);
+	if( j_ele >= DIM ) break;
+	
+	Eigen::Vector3d dist = Eigen::Vector3d::Zero(),
+	  pos_i = coords.data().row(i),
+	  pos_j = coords.data().row(j_ele);	  
 	  
-	  if( atmp > 0.5){
-	    X(i,j) = tmp_dist(0) - U_(0,0);
-	    Y(i,j) = tmp_dist(1) - U_(0,1);
-	  }
-	  if( atmp < -0.5){
-	    X(i,j) = tmp_dist(0) + U_(0,0);
-	    Y(i,j) = tmp_dist(1) + U_(0,1);
-	  }
+	dist(0) = ( pos_j(0) - pos_i(0) );
+	dist(1) = ( pos_j(1) - pos_i(1) );
+	dist(2) = ( pos_j(2) - pos_i(2) );
+
+          double atmp = ( dist(0) * U_(1,1) - dist(1) * U_(1,0) ) / ( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1) ),
+	         btmp = ( dist(0) * U_(0,1) - dist(1) * U_(0,0) ) / ( U_(1,0) * U_(0,1) - U_(0,0) * U_(1,1) );          
+
+	    if( atmp > 0.5){
+	      dist(0) -= U_(0,0);
+	      dist(1) -= U_(0,1);
+	    }
+	    if( atmp < -0.5){
+	      dist(0) += U_(0,0);
+	      dist(1) += U_(0,1);
+	    }
 	    
-	  if( btmp > 0.5){
-	    X(i,j) = tmp_dist(0) - U_(1,0);
-	    Y(i,j) = tmp_dist(1) - U_(1,1);
-	  }
+	    if( btmp > 0.5){
+	      dist(0) -= U_(1,0);
+	      dist(1) -= U_(1,1);
+	    }
 
-	  if( btmp < -0.5){
-	    X(i,j) = tmp_dist(0) + U_(1,0);
-	    Y(i,j) = tmp_dist(1) + U_(1,1);
-	  }
-
-
-	  X(i,j) = a0_ * ( X(i,j) - coords.data()(i,0) );
-	  Y(i,j) = a0_ * ( Y(i,j) - coords.data()(i,1) );
-	  Z(i,j) = a0_ * ( Z(i,j) - coords.data()(i,2) );
-
+	    if( btmp < -0.5){
+	      dist(0) += U_(1,0);
+	      dist(1) += U_(1,1);
+	    }
 	  
-	  double normi = sqrt ( X(i,j) * X(i,j) + Y(i,j) * Y(i,j) + Z(i,j) * Z(i,j) );
+
+
+	  dist *= a0_;
+	  
+	  double normi = sqrt ( dist(0) * dist(0) + dist(1) * dist(1) + dist(2) * dist(2) );
 	  double Vpi = V0pi_ * exp ( qpibya0_ * a0_ * ( 1.0 - normi / a0_) ) / ( 1.0 + exp( ( normi - r0_ ) / lambdac_ ) );
 	  double Vsigma = V0sigma_ * exp ( qsigmabyb0_ * d0_ * ( 1.0 - normi / d0_) ) / ( 1.0 + exp( ( normi - r0_ ) / lambdac_ ) );
 
 	  
-	  double cosphi = Z(i,j) / normi;
+	  double cosphi = dist(2) / normi;
 	  double sinphi = sqrt( 1.0 - cosphi * cosphi );
 
+	  double hopping = cosphi * cosphi * Vsigma  +  sinphi * sinphi * Vpi;
+
+	  //hopping *= exp( std::complex<double>(0,1) * ( X(i,j) * K(0) + X(i,j) * K(1) ) );
 	  
+	  tripletList.push_back(T(i,j_ele , hopping ) );
+      	  
 	  
-	  vals_[ i * max_NN + j ] = cosphi * cosphi * Vsigma  +  sinphi * sinphi * Vpi;
-	  rows_[ i * max_NN + j ] = i; 
-	  cols_[ i * max_NN + j ] = connTable_(i,j);
-	  //vals_[ i * max_NN + j ] *= exp( std::complex<double>(0,1) * ( X(i,j) * K(0) + X(i,j) * K(1) ) );
+	  //vals_[ i * max_NN + j ] = cosphi * cosphi * Vsigma  +  sinphi * sinphi * Vpi;
+	  //rows_[ i * max_NN + j ] = i; 
+	  //cols_[ i * max_NN + j ] = connTable_(i,j);
+	  //vals_[ i * max_NN + j ]
 	  
 	}
     }
 
-    Eigen::Map<Eigen::SparseMatrix<r_type, Eigen::RowMajor> > sm1(DIM, DIM, DIM*max_NN, cols_.data(), rows_.data(), vals_.data() );
 
-    set_H(sm1);
-    H().prune(1E-9);
+
+
+    H().resize(DIM,DIM);	
+    H().setFromTriplets(tripletList.begin(), tripletList.end());
+
+    //H().prune(1E-12);
     H().makeCompressed();
+
 };
 
 
