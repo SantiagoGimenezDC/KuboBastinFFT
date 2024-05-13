@@ -25,6 +25,7 @@
 #include "../complex_op.hpp"
 #include "Kubo_solver_filtered.hpp"
 
+#include "time_station.hpp"
 
 
 
@@ -72,8 +73,16 @@ void Kubo_solver_filtered::compute(){
   
   auto start0 = std::chrono::steady_clock::now();
 
+  //----------------Initializing the Device---------------//
+  time_station device_init_time;
+  time_station hamiltonian_setup_time;
   
   device_.build_Hamiltonian();
+
+  hamiltonian_setup_time.stop("    Time to setup the Hamiltonian:            ");
+  
+
+
   device_.setup_velOp();
   
   if(parameters_.a_==1.0){
@@ -87,8 +96,8 @@ void Kubo_solver_filtered::compute(){
   
   device_.adimensionalize(parameters_.a_, parameters_.b_);
 
-
-
+  device_init_time.stop("    Time to setup the whole device:         ");
+  std::cout<<std::endl;
   
 
   int W      = device_.parameters().W_,

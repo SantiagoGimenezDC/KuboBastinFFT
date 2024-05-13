@@ -4,7 +4,7 @@
 #include "Read_ConTable.hpp"
 #include<fstream>
 #include"../Kubo_solver/time_station.hpp"
-
+#include<omp.h>
 
 Read_ConTable::Read_ConTable(device_vars& device_vars):Read_Hamiltonian(device_vars){
 
@@ -87,6 +87,7 @@ Read_ConTable::Read_ConTable(device_vars& device_vars):Read_Hamiltonian(device_v
 
 
 
+
 void Read_ConTable::build_Hamiltonian(){
 
 
@@ -95,64 +96,73 @@ void Read_ConTable::build_Hamiltonian(){
 
     typedef Eigen::Triplet<r_type> T;
     std::vector<T> tripletList;
-    tripletList.reserve(35*DIM);
+    tripletList.reserve( max_NN * DIM );
 
     
-    Coordinates coords = coordinates();
+    MatrixXp coords = coordinates().data();
     //Eigen::MatrixXd X(DIM, max_NN), Y(DIM, max_NN),Z(DIM, max_NN);
 
     //Eigen::Vector2d K(0,0);
     
+    std::size_t num_threads=omp_get_num_threads();
+
+    //    double U0_norm = ( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1) ),
+    // U1_norm = ( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1) );
+
+
+
+ #pragma omp parallel 
+  {
+    int id,  Nthrds;
+    std::size_t l_start, l_end;
+    id      = omp_get_thread_num();
+    Nthrds  = omp_get_num_threads();
+    l_start = id * max_NN / Nthrds;
+    l_end   = (id+1) * max_NN / Nthrds;
+
+    if (id == Nthrds-1)
+      l_end = max_NN;
+
+
+    std::vector<T> local_tripletList;
+    local_tripletList.reserve( max_NN * DIM / num_threads );
+
     
-    double V0pi_ = -2.7;//eV
-    double V0sigma_ = 0.3675;//eV
-    double qpibya0_ = 2.218;//A-1
-    double qsigmabyb0_ = qpibya0_;
-    double a0_ = 1.42;//A
-    double d0_ = 3.43;//A
-    double r0_ = 6.14;//A
-    double lambdac_ = 0.265;//A
+    for (std::size_t j = l_start; j < l_end; j++) {
+ 
+      for (std::size_t i = 0; i < DIM; i++) {
 
+        std::size_t j_ele = connTable_(i,j);
 
+        if( j_ele < DIM ){
 
-    for (std::size_t i = 0; i < DIM; i++) {
-
-
-      for (std::size_t j = 0; j < max_NN; j++) {
-	
-
-	std::size_t j_ele = connTable_(i,j);
-	if( j_ele >= DIM ) break;
-	
+	 
 	Eigen::Vector3d dist = Eigen::Vector3d::Zero(),
-	  pos_i = coords.data().row(i),
-	  pos_j = coords.data().row(j_ele);	  
-	  
-	dist(0) = ( pos_j(0) - pos_i(0) );
-	dist(1) = ( pos_j(1) - pos_i(1) );
-	dist(2) = ( pos_j(2) - pos_i(2) );
-
-          double atmp = ( dist(0) * U_(1,1) - dist(1) * U_(1,0) ) / ( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1) ),
-	         btmp = ( dist(0) * U_(0,1) - dist(1) * U_(0,0) ) / ( U_(1,0) * U_(0,1) - U_(0,0) * U_(1,1) );          
-
-	    if( atmp > 0.5){
-	      dist(0) -= U_(0,0);
-	      dist(1) -= U_(0,1);
-	    }
-	    if( atmp < -0.5){
-	      dist(0) += U_(0,0);
-	      dist(1) += U_(0,1);
-	    }
+	  pos_i = coords.row(i),
+	  pos_j = coords.row(j_ele);	  
+	
+	dist = pos_j-pos_i;
+	
+	double atmp = ( dist(0) * U_(1,1) - dist(1) * U_(1,0) ) / ( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1) ),
+	       btmp = ( dist(0) * U_(0,1) - dist(1) * U_(0,0) ) / ( U_(1,0) * U_(0,1) - U_(0,0) * U_(1,1) );          
+	
+	if( atmp > 0.5){
+	  dist(0) -= U_(0,0);
+	  dist(1) -= U_(0,1);
+	}
+	if( atmp < -0.5){
+	  dist(0) += U_(0,0);
+	  dist(1) += U_(0,1);
+        }
 	    
-	    if( btmp > 0.5){
-	      dist(0) -= U_(1,0);
-	      dist(1) -= U_(1,1);
-	    }
-
-	    if( btmp < -0.5){
-	      dist(0) += U_(1,0);
-	      dist(1) += U_(1,1);
-	    }
+	if( btmp > 0.5){
+	  dist(0) -= U_(1,0);
+	  dist(1) -= U_(1,1);
+	}
+	if( btmp < -0.5){
+	  dist(0) += U_(1,0);
+	  dist(1) += U_(1,1);
+        }
 	  
 
 
@@ -167,29 +177,143 @@ void Read_ConTable::build_Hamiltonian(){
 	  double sinphi = sqrt( 1.0 - cosphi * cosphi );
 
 	  double hopping = cosphi * cosphi * Vsigma  +  sinphi * sinphi * Vpi;
-
+	  
 	  //hopping *= exp( std::complex<double>(0,1) * ( X(i,j) * K(0) + X(i,j) * K(1) ) );
 	  
-	  tripletList.push_back(T(i,j_ele , hopping ) );
+	  local_tripletList.push_back(T(i,j_ele , hopping ) );
       	  
-	  
-	  //vals_[ i * max_NN + j ] = cosphi * cosphi * Vsigma  +  sinphi * sinphi * Vpi;
-	  //rows_[ i * max_NN + j ] = i; 
-	  //cols_[ i * max_NN + j ] = connTable_(i,j);
-	  //vals_[ i * max_NN + j ]
+
 	  
 	}
     }
-
-
+   }
+   
+    #pragma omp critical
+    tripletList.insert(tripletList.end(), local_tripletList.begin(), local_tripletList.end());
+  }
 
 
     H().resize(DIM,DIM);	
-    H().setFromTriplets(tripletList.begin(), tripletList.end());
-
+    H().setFromTriplets(tripletList.begin(), tripletList.end(), [] (const r_type &,const r_type &b) { return b; });
     //H().prune(1E-12);
     H().makeCompressed();
-
+	 
 };
 
 
+
+
+void Read_ConTable::setup_velOp(){
+  
+  int Dim = this->parameters().DIM_;
+  vx().resize(Dim,Dim);
+  vx().setZero();
+
+  typedef Eigen::Triplet<r_type> T;
+
+  std::vector<T> tripletList;
+  tripletList.reserve(5*Dim);
+
+  MatrixXp coords = coordinates().data();
+
+  std::cout<<"  Generating VX from Hamiltonian"<<std::endl;
+  for (int k=0; k<H().outerSize(); ++k)
+    for (typename SpMatrixXp::InnerIterator it(H(),k); it; ++it)
+    {
+
+      int i = it.row(),
+	  j = it.col();
+
+      Eigen::Vector3d dist = Eigen::Vector3d::Zero(),
+	  pos_i = coords.row(i),
+	  pos_j = coords.row(j);	  
+	  
+      dist(0) = ( pos_i(0) - pos_j(0) );
+      dist(1) = ( pos_i(1) - pos_j(1) );
+      dist(2) = ( pos_i(2) - pos_j(2) );
+	
+
+      double atmp = ( dist(0) * U_(1,1) - dist(1) * U_(1,0) ) / ( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1) ),
+	     btmp = ( dist(0) * U_(0,1) - dist(1) * U_(0,0) ) / ( U_(1,0) * U_(0,1) - U_(0,0) * U_(1,1) );          
+	
+	if( atmp > 0.5)
+	  dist(0) -= U_(0,0);
+	
+	    
+	if( atmp < -0.5)
+	  dist(0) += U_(0,0);
+	
+	     
+	if( btmp > 0.5)
+	  dist(0) -= U_(1,0);
+	
+	    
+	if( btmp < -0.5)
+	  dist(0) += U_(1,0);
+	
+	  
+	  
+
+      r_type ijHam = it.value(), v_ij;
+
+      r_type a0_ = 1.42;
+      v_ij  =  a0_ * dist(0) * ijHam;
+      tripletList.push_back(T(i,j, v_ij) );
+
+  }
+
+
+  vx().setFromTriplets(tripletList.begin(), tripletList.end(),[] (const r_type &,const r_type &b) { return b; });  
+  vx().makeCompressed();
+  std::cout<<"  Finished Generating VX from Hamiltonian"<<std::endl<<std::endl;
+    
+  bool print_CSR =false;
+  if(print_CSR){
+    auto start_wr = std::chrono::steady_clock::now();    
+
+    Eigen::SparseMatrix<type,Eigen::ColMajor> printVX(vx().cast<type>());
+    
+  
+    int nnz = printVX.nonZeros(), cols = printVX.cols();
+    type * valuePtr = printVX.valuePtr();//(nnz)
+    int * innerIndexPtr = printVX.innerIndexPtr(),//(nnz)
+      * outerIndexPtr = printVX.outerIndexPtr();//(cols+1)
+  
+    std::ofstream data2;
+    data2.open("ARM.VX.CSR");
+
+    data2.setf(std::ios::fixed,std::ios::floatfield);
+    data2.precision(18);
+
+    data2<<cols<<" "<<nnz<<std::endl;
+
+    for (int i=0;i<nnz;i++)
+      data2<<real(valuePtr[i])<<" "<<imag(valuePtr[i])<<" ";
+
+    data2<<std::endl;
+    for (int i=0;i<nnz;i++)
+      data2<<innerIndexPtr[i]<<" ";
+
+  
+    data2<<std::endl;
+    for (int i=0;i<cols;i++)
+      data2<<outerIndexPtr[i]<<" ";
+
+  
+    data2.close();
+    auto end_wr = std::chrono::steady_clock::now();
+
+
+  std::cout<<"   Time to write vel. OP on disk:     ";
+  int millisec=std::chrono::duration_cast<std::chrono::milliseconds>
+    (end_wr - start_wr).count();
+  int sec=millisec/1000;
+  int min=sec/60;
+  int reSec=sec%60;
+  std::cout<<min<<" min, "<<reSec<<" secs;"<<" ("<< millisec<<"ms) "
+           <<std::endl<<std::endl;
+
+  }
+
+
+}

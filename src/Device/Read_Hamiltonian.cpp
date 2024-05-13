@@ -56,7 +56,7 @@ void Read_Hamiltonian::build_Hamiltonian(){
   Eigen::Map<Eigen::SparseMatrix<r_type> > sm1(DIM,DIM,NNZ,outerIndexPtr, // read-write
                                innerIndices,values);
 
-  
+  inFile.close();
   H_=sm1;
 
 
@@ -183,7 +183,7 @@ void Read_Hamiltonian::setup_velOp(){
   Eigen::Map<Eigen::SparseMatrix<r_type> > sm1(DIM,DIM,NNZ,outerIndexPtr, // read-write
                                innerIndices,values);
 
-  
+  inFile.close();
   vx_=sm1;
 
 };

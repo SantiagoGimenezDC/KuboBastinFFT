@@ -68,6 +68,8 @@ int main(int , char **argv){
   if(s_vars.num_p_<s_vars.M_)
     s_vars.num_p_=s_vars.M_;
 
+
+  
   Device *device;
 
   graphene_vars.filename_=s_vars.filename_;
@@ -82,7 +84,6 @@ int main(int , char **argv){
     device = new Read_Hamiltonian(graphene_vars);
   if(device_choice==3)
     device = new Read_ConTable(graphene_vars);
-
 
 
   if(sim_type == "SSD"){
@@ -136,3 +137,23 @@ int main(int , char **argv){
   return 0;
 }
 
+
+  /*
+  Read_Hamiltonian test_ham(graphene_vars);
+  Read_ConTable test_con(graphene_vars);
+
+  test_ham.build_Hamiltonian();
+  test_con.build_Hamiltonian();
+  test_ham.setup_velOp();
+  test_con.setup_velOp();
+
+
+  for(int i=0;i<test_con.H().nonZeros(); i++){
+    if(test_con.H().valuePtr()[i]-test_ham.H().valuePtr()[i] != 0 && i < 400)
+      std::cout<<i<<"  "<<test_con.H().valuePtr()[i]<<"    "<<test_ham.H().valuePtr()[i]<<std::endl;
+
+  }
+    std::cout<<"Nonzeros: "<<test_con.vx().nonZeros()<<"  "<<test_ham.vx().nonZeros()<<std::endl;
+  std::cout<<(test_con.vx()-test_ham.vx()).norm()<<std::endl;
+*/
+  

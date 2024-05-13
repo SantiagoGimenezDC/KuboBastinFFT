@@ -32,13 +32,24 @@ private:
   Eigen::VectorXi  rows_;
   Eigen::VectorXi  cols_;
 
+
+      
+    const double V0pi_ = -2.7;//eV
+    const double V0sigma_ = 0.3675;//eV
+    const double qpibya0_ = 2.218;//A-1
+    const double qsigmabyb0_ = qpibya0_;
+    const double a0_ = 1.42;//A
+    const double d0_ = 3.43;//A
+    const double r0_ = 6.14;//A
+    const double lambdac_ = 0.265;//A
+
   
 public:
   ~Read_ConTable(){};
   Read_ConTable(device_vars& );
   
    virtual void build_Hamiltonian();
-    
+   virtual void setup_velOp();    
 
 };
 

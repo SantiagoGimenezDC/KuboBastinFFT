@@ -13,7 +13,7 @@ build/src/Kubo_solver/Kubo_solver_filtered.o: \
  src/Kubo_solver/../Device/Coordinates.hpp \
  src/Kubo_solver/../complex_op.hpp \
  src/Kubo_solver/Kubo_solver_filtered.hpp src/Kubo_solver/KB_filter.hpp \
- src/Kubo_solver/solver_vars.hpp
+ src/Kubo_solver/solver_vars.hpp src/Kubo_solver/time_station.hpp
 src/Kubo_solver/../static_vars.hpp:
 src/Kubo_solver/../vec_base.hpp:
 src/Kubo_solver/../static_vars.hpp:
@@ -33,3 +33,4 @@ src/Kubo_solver/../complex_op.hpp:
 src/Kubo_solver/Kubo_solver_filtered.hpp:
 src/Kubo_solver/KB_filter.hpp:
 src/Kubo_solver/solver_vars.hpp:
+src/Kubo_solver/time_station.hpp:
