@@ -75,6 +75,25 @@ int main(int , char **argv){
   graphene_vars.filename_=s_vars.filename_;
   graphene_vars.run_dir_=s_vars.run_dir_;
 
+  /*
+    Read_Hamiltonian test_ham(graphene_vars);
+  Read_ConTable test_con(graphene_vars);
+
+  test_ham.build_Hamiltonian();
+  test_con.build_Hamiltonian();
+  test_ham.setup_velOp();
+  test_con.setup_velOp();
+
+ 
+  for(int i=0;i<test_con.H().nonZeros(); i++){
+    double error = abs ( test_con.H().valuePtr()[i] - test_ham.H().valuePtr()[i] ) /  test_ham.H().valuePtr()[i] ;
+    if( error > 0.00001)
+      std::cout<<i<<"  "<<test_con.H().valuePtr()[i]<<"    "<<test_ham.H().valuePtr()[i]<<std::endl;
+
+  }
+    std::cout<<"Nonzeros: "<<test_con.vx().nonZeros()<<"  "<<test_ham.vx().nonZeros()<<std::endl;
+  std::cout<<(test_con.vx()-test_ham.vx()).norm()<<std::endl;
+  */
   
   if(device_choice==0)
     device = new Graphene(graphene_vars);

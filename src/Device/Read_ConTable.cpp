@@ -80,11 +80,11 @@ Read_ConTable::Read_ConTable(device_vars& device_vars):Read_Hamiltonian(device_v
   std::cout<<"  Finished Reading the connectivity table and xyz files;"<<std::endl<<std::endl;
 
 
-
+  //  generate_Hamiltonian();
+  //generate_velOp();
 
 
 };
-
 
 
 
@@ -193,6 +193,7 @@ void Read_ConTable::build_Hamiltonian(){
   }
 
 
+
     H().resize(DIM,DIM);	
     H().setFromTriplets(tripletList.begin(), tripletList.end(), [] (const r_type &,const r_type &b) { return b; });
     //H().prune(1E-12);
@@ -203,7 +204,7 @@ void Read_ConTable::build_Hamiltonian(){
 
 
 
-void Read_ConTable::setup_velOp(){
+void Read_ConTable::build_velOp(){
   
   int Dim = this->parameters().DIM_;
   vx().resize(Dim,Dim);
@@ -228,9 +229,9 @@ void Read_ConTable::setup_velOp(){
 	  pos_i = coords.row(i),
 	  pos_j = coords.row(j);	  
 	  
-      dist(0) = ( pos_i(0) - pos_j(0) );
-      dist(1) = ( pos_i(1) - pos_j(1) );
-      dist(2) = ( pos_i(2) - pos_j(2) );
+      dist(0) = ( pos_j(0) - pos_i(0) );
+      dist(1) = ( pos_j(1) - pos_i(1) );
+
 	
 
       double atmp = ( dist(0) * U_(1,1) - dist(1) * U_(1,0) ) / ( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1) ),

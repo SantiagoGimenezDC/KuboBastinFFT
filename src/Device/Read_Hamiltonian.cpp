@@ -35,8 +35,8 @@ void Read_Hamiltonian::build_Hamiltonian(){
   parameters().LE_     = DIM;
 
 
-  int outerIndexPtr[DIM+1];
-  int innerIndices[NNZ];
+  long long int outerIndexPtr[DIM+1];
+  long long int innerIndices[NNZ];
   r_type values[NNZ];
 
 
@@ -52,14 +52,19 @@ void Read_Hamiltonian::build_Hamiltonian(){
   for(std::size_t j=0; j<DIM+1; j++)  
     inFile>>outerIndexPtr[j];    
 
-  
-  Eigen::Map<Eigen::SparseMatrix<r_type> > sm1(DIM,DIM,NNZ,outerIndexPtr, // read-write
-                               innerIndices,values);
+
+  for(std::size_t i=0;i<DIM; i++){
+    if(outerIndexPtr[i]>NNZ || outerIndexPtr[i]<0)
+      std::cout<<i<<"  "<<outerIndexPtr[i]<<" - Here."<<std::endl;
+
+    if(innerIndices[i]>DIM || innerIndices[i]<0)
+      std::cout<<i<<"  "<<innerIndices[i]<<" - Here inner."<<std::endl;
+  }
+    
+  H_.resize(DIM,DIM);
+  H_=Eigen::Map<Eigen::SparseMatrix<r_type, Eigen::RowMajor,long long int> > (DIM, DIM, NNZ, outerIndexPtr, innerIndices,values);
 
   inFile.close();
-  H_=sm1;
-
-
 };
 
 
@@ -162,8 +167,8 @@ void Read_Hamiltonian::setup_velOp(){
   inFile>>NNZ;
   
 
-  int outerIndexPtr[DIM+1];
-  int innerIndices[NNZ];
+  long long int outerIndexPtr[DIM+1];
+  long long int innerIndices[NNZ];
   r_type values[NNZ];
 
 
@@ -180,11 +185,11 @@ void Read_Hamiltonian::setup_velOp(){
     inFile>>outerIndexPtr[j];    
 
   
-  Eigen::Map<Eigen::SparseMatrix<r_type> > sm1(DIM,DIM,NNZ,outerIndexPtr, // read-write
+  Eigen::Map<Eigen::SparseMatrix<r_type, Eigen::RowMajor, long long int > > sm1(DIM,DIM,NNZ,outerIndexPtr, // read-write
                                innerIndices,values);
 
   inFile.close();
-  vx_=sm1;
+  vx_= Eigen::Map<Eigen::SparseMatrix<r_type, Eigen::RowMajor, long long int > >(DIM,DIM,NNZ,outerIndexPtr, innerIndices,values);
 
 };
 

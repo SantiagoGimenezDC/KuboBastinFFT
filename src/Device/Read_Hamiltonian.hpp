@@ -8,7 +8,7 @@
 
 
 class Read_Hamiltonian: public Device{
-  typedef Eigen::SparseMatrix<r_type,Eigen::RowMajor> SpMatrixXp;
+  typedef Eigen::SparseMatrix<r_type,Eigen::RowMajor, long long int> SpMatrixXp;
   typedef Eigen::Matrix<r_type,-1,-1> MatrixXp;
   typedef Eigen::Matrix<type, -1, 1>                 VectorXdT;
 
