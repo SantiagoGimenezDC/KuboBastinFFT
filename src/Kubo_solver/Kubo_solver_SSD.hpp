@@ -32,7 +32,7 @@ private:
   CAP*      cap_;
   Vec_Base* vec_base_;
 
-  double RAM_buffer_size_;//In GBs
+  std::size_t RAM_buffer_size_;//In GBs
   int num_buffers_;
   int interval_,
       M_rest_ ;  

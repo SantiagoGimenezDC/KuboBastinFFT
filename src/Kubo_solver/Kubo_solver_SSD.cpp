@@ -60,9 +60,9 @@ void Kubo_solver_SSD::update_SSD_buffer( const std::string &side, const int M_si
 
 
 
-Kubo_solver_SSD::Kubo_solver_SSD(solver_vars& parameters, double RAM_size, Device& device) : parameters_(parameters), RAM_buffer_size_(RAM_size), device_(device)
+Kubo_solver_SSD::Kubo_solver_SSD(solver_vars& parameters, double RAM_size, Device& device) : parameters_(parameters), RAM_buffer_size_(1E9*RAM_size), device_(device)
 {
-  RAM_buffer_size_*=1E9;
+
   
   if(parameters_.cap_choice_==0)
     cap_      = new Mandelshtam(parameters_.E_min_, parameters_.eta_/parameters_.a_);
@@ -150,12 +150,14 @@ void Kubo_solver_SSD::compute(){
   
 /*------------Big memory allocation--------------*/
 
+  if(RAM_buffer_size_> 2 * std::size_t( M ) * std::size_t( SEC_SIZE ) * sizeof(type) )
+    RAM_buffer_size_ = 2 * std::size_t( M ) * std::size_t( SEC_SIZE ) * sizeof(type);
 
-  SSD_buffer bras_SSD(M, SEC_SIZE, RAM_buffer_size_ * 0.5 , parameters_.run_dir_+"buffer/bras.bin"), 
-             kets_SSD(M, SEC_SIZE, RAM_buffer_size_ * 0.5 , parameters_.run_dir_+"buffer/kets.bin");
+  SSD_buffer bras_SSD(M, SEC_SIZE, RAM_buffer_size_ / 2 , parameters_.run_dir_+"buffer/bras.bin"), 
+             kets_SSD(M, SEC_SIZE, RAM_buffer_size_ / 2 , parameters_.run_dir_+"buffer/kets.bin");
 
 
-  std::size_t num_elements = static_cast<size_t>(RAM_buffer_size_ * 0.5 / double(sizeof(type)) );
+  std::size_t num_elements = static_cast<size_t>( (RAM_buffer_size_ / 2 ) / double(sizeof(type)) );
 
   //Single Shot vectors
   type *bras = new type [ num_elements ],
@@ -276,14 +278,15 @@ void Kubo_solver_SSD::compute(){
          auto csrmv_start = std::chrono::steady_clock::now();
 	 
 	 for(int k=0;k<DIM;k++){
-           vec     [k] = 0.0;
+	 
+	   vec     [k] = 0.0;
            pp_vec  [k] = rand_vec[k];
            p_vec   [k] = 0.0;
          }    
-
+  
 	 bras_SSD.reset_buffer();
 	 kets_SSD.reset_buffer();
-	 
+
          polynomial_cycle_ket( kets, kets_SSD, vec, p_vec, pp_vec, dmp_op, dis_vec, s);
     
          auto csrmv_end = std::chrono::steady_clock::now();
@@ -433,7 +436,7 @@ void Kubo_solver_SSD::polynomial_cycle(type polys[], SSD_buffer& bras_SSD, type 
   std::size_t upload_time = 0;
   
 //=================================KPM Step 0======================================//
-
+    
 
   device_.traceover( &polys[0], pp_vec, s, num_parts);
   
@@ -454,7 +457,7 @@ void Kubo_solver_SSD::polynomial_cycle(type polys[], SSD_buffer& bras_SSD, type 
   
   int buffer_num=0, index = 2;  
   for( int m=2; m<M; m++ ){
-    
+
     device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
     device_.traceover( &polys[ index * SEC_SIZE ], vec, s, num_parts);
     index++;

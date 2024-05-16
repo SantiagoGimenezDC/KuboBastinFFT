@@ -8,7 +8,8 @@
 
 
 class Read_Hamiltonian: public Device{
-  typedef Eigen::SparseMatrix<r_type,Eigen::RowMajor, long long int> SpMatrixXp;
+  typedef int indexType;
+  typedef Eigen::SparseMatrix<r_type,Eigen::RowMajor> SpMatrixXp;
   typedef Eigen::Matrix<r_type,-1,-1> MatrixXp;
   typedef Eigen::Matrix<type, -1, 1>                 VectorXdT;
 
@@ -27,7 +28,7 @@ public:
 
   Coordinates& coordinates(){return coordinates_;};
   void set_coordinates(Coordinates new_coordinates){coordinates_ = new_coordinates;};
-  void set_H(Eigen::Map<Eigen::SparseMatrix<r_type, Eigen::RowMajor> > & new_H){ H_ = new_H; };
+  void set_H(Eigen::Map<Eigen::SparseMatrix<r_type, Eigen::RowMajor >> & new_H){ H_ = new_H; };
   SpMatrixXp& H(){return H_;};
   SpMatrixXp& vx(){return vx_;};
   

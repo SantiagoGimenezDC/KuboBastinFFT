@@ -43,7 +43,7 @@ DEPENDS    := $(addprefix $(BUILDDIR)/, $(cppSOURCES:%.cpp=%.d))
 
 .PHONY : standard debug clean
 
-debug : CXXLAGS = $(Debug_CFLAGS)
+debug : CXXFLAGS = $(Debug_CFLAGS)
 debug : LDFLAGS = $(Debug_LDFLAGS)
 debug : $(NAME)
 

@@ -75,10 +75,11 @@ int main(int , char **argv){
   graphene_vars.filename_=s_vars.filename_;
   graphene_vars.run_dir_=s_vars.run_dir_;
 
-  /*
-    Read_Hamiltonian test_ham(graphene_vars);
+  
+  /*  
   Read_ConTable test_con(graphene_vars);
-
+  Read_Hamiltonian test_ham(graphene_vars);
+ 
   test_ham.build_Hamiltonian();
   test_con.build_Hamiltonian();
   test_ham.setup_velOp();

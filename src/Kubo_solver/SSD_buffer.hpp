@@ -27,12 +27,12 @@ static void print_err_message(int err)
 class SSD_buffer{
 private:
   int COLS_, ROWS_, ROWS_stride_, COLS_stride_, ROWS_rest_, COLS_rest_, num_write_buffers_, num_read_buffers_;
-  double  SSD_size_, RAM_size_;
+  std::size_t  SSD_size_, RAM_size_;
   std::string filename_;
   bool rest_buffer_=false;
 
   struct memkind *pmem_kind_unlimited_ = NULL;  
-  //void* addr_;
+  void* addr_;
   type *SSD_buffer_;
 
   
@@ -49,7 +49,7 @@ public:
         return;
     }
     
-    //munmap(addr_, std::size_t(SSD_size_));
+    munmap(addr_, std::size_t(SSD_size_));
   };
   
   int COLS_stride(){return COLS_stride_;};
@@ -58,7 +58,7 @@ public:
 
   int COLS_rest(){return COLS_rest_;};
   
-  SSD_buffer(int COLS, int ROWS, double RAM_size, std::string filename ) : COLS_(COLS), ROWS_(ROWS), RAM_size_(RAM_size), filename_(filename){
+  SSD_buffer(int COLS, int ROWS, std::size_t RAM_size, std::string filename ) : COLS_(COLS), ROWS_(ROWS), RAM_size_(RAM_size), filename_(filename){
 
     SSD_size_ =  double(COLS_) * double(ROWS_) * sizeof(type);
     
@@ -67,37 +67,36 @@ public:
 
 
     
-    ROWS_stride_ = RAM_size_int >= SSD_size_int ? ROWS_ : RAM_size_int /( sizeof(type) * COLS_) ;
-    COLS_stride_ = RAM_size_int >= SSD_size_int ? COLS_ : RAM_size_int /( sizeof(type) * ROWS_);
+    ROWS_stride_ = RAM_size_int /( sizeof(type) * COLS_) ;
+    COLS_stride_ = RAM_size_int /( sizeof(type) * ROWS_);
       
     num_write_buffers_ = static_cast<int>( COLS_ / COLS_stride_  );
     num_read_buffers_  = static_cast<int>( ROWS_ / ROWS_stride_  );
 
-    ROWS_rest_   = ROWS_  %  num_read_buffers_  ;
-    COLS_rest_   = COLS_  %  num_write_buffers_ ;
+    ROWS_rest_   = ROWS_  -  num_read_buffers_  * ROWS_stride_ ;
+    COLS_rest_   = COLS_  -  num_write_buffers_ * COLS_stride_;
 
 
     std::cout<<COLS_stride_<<" "<<COLS_rest_<<"      "<<ROWS_stride_<<" "<<ROWS_rest_<<"    "<< SSD_size_int <<std::endl;
 
 
 
-    std::string path = "/tmp/";
+    std::string path = "/mnt/mem/";
     int status = memkind_check_dax_path(path.c_str());
-    if (!status) {
+    if (!status)
         fprintf(stdout, "PMEM kind %s is on DAX-enabled file system.\n", path);
-    } else {
-        fprintf(stdout, "PMEM kind %s is not on DAX-enabled file system.\n",
-                path);
-    }
+    else 
+        fprintf(stdout, "PMEM kind %s is not on DAX-enabled file system.\n", path);
+    
 
 
     
     //addr_ = mmap(NULL, SSD_size_int, PROT_READ | PROT_WRITE,
-    //                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+    //                MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 
     
     int err = memkind_create_pmem(path.c_str(), 0, &pmem_kind_unlimited_);
-    //int err = memkind_create_fixed(addr_, 2 * SSD_size_int * std::size_t(sizeof(type)), &pmem_kind_unlimited_);
+    //int err = memkind_create_fixed(addr_, SSD_size_int * std::size_t(sizeof(type)), &pmem_kind_unlimited_);
 
     if (err) {
         print_err_message(err);
@@ -140,7 +139,8 @@ public:
   
   
   int retrieve_row_buffer_from_SSD(int buffer_num, type RAM_buffer[] ){
-    
+
+
     std::size_t buffer_size = ( buffer_num == num_read_buffers_ ? ROWS_rest_ : ROWS_stride_);
 
     if(buffer_size == 0)
@@ -149,12 +149,12 @@ public:
       
     for(int j = 0; j < COLS_; j++)
       for(std::size_t i = 0; i < buffer_size; i++)
-	RAM_buffer[buffer_num * buffer_size + i] = SSD_buffer_[ buffer_num * ROWS_stride_ + i ];
+	RAM_buffer[buffer_size * j  + i] = SSD_buffer_[ j * ROWS_ + buffer_num * ROWS_stride_ + i ];
       
 
     
  
-    return buffer_size;
+    return buffer_size ;
   }
   
 };

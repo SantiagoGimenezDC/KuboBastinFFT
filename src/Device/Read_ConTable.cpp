@@ -204,7 +204,7 @@ void Read_ConTable::build_Hamiltonian(){
 
 
 
-void Read_ConTable::build_velOp(){
+void Read_ConTable::setup_velOp(){
   
   int Dim = this->parameters().DIM_;
   vx().resize(Dim,Dim);
