@@ -66,7 +66,7 @@ public:
   void allocate_memory();
   void reset_recursion_vectors();
   void reset_Chebyshev_buffers();
-
+  void reset_r_data();
 
   //Heavy duty
   void compute();

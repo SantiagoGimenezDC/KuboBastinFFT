@@ -18,17 +18,21 @@
 #include "../../complex_op.hpp"
 #include "Kubo_solver_FFT.hpp"
 #include "../time_station.hpp"
+#include "../time_station_2.hpp"
 
 
 
 
 void Kubo_solver_FFT::compute(){
 
-  time_station solver_station;
-
+  time_station_2 solver_station;
+  solver_station.start();
+  
   
   //----------------Initializing the Device---------------//
-  time_station hamiltonian_setup_time;
+  time_station_2 hamiltonian_setup_time;
+  hamiltonian_setup_time.start();
+  
 
   device_.build_Hamiltonian();
   device_.setup_velOp();
@@ -65,30 +69,31 @@ void Kubo_solver_FFT::compute(){
          eta     = parameters_.eta_;
   
   int num_parts = parameters_.num_parts_,
-      num_p = parameters_.num_p_,
       R = parameters_.R_,
       D = parameters_.dis_real_;
 
-  std::string run_dir  = parameters_.run_dir_,
-              filename = parameters_.filename_;
-
+  
   E_min /= a;
   eta   /= a;
 
 
 
   
-  time_station allocation_time;
-
+  time_station_2 allocation_time;
+  allocation_time.start();
+  
+  
   allocate_memory();
   reset_Chebyshev_buffers();
 
   cap_->create_CAP(W, C, LE,  dmp_op_);
   device_.damp(dmp_op_);
 
+  
   allocation_time.stop("\n \nAllocation time:            ");
 
 
+  
 
 
 
@@ -96,10 +101,9 @@ void Kubo_solver_FFT::compute(){
   for(int d = 1; d <= D; d++){
 
 
-    
-    int total_time_csrmv = 0,
-        total_time_FFTs  = 0;
-
+    time_station_2 total_csrmv_time;
+    time_station_2 total_FFTs_time;
+	
     device_.Anderson_disorder(dis_vec_);
     device_.update_dis(dis_vec_, dmp_op_);
 
@@ -110,73 +114,75 @@ void Kubo_solver_FFT::compute(){
     for(int r = 1; r <= R; r++){
 
 
-      time_station randVec_time;
+      time_station_2 randVec_time;
+      randVec_time.start();
       std::cout<<std::endl<< std::to_string( d * r)+"/"+std::to_string(D*R)+"-Vector/disorder realization;"<<std::endl;
 
-
-      
       vec_base_->generate_vec_im( rand_vec_, r);       
       device_.rearrange_initial_vec( rand_vec_ ); //very hacky
-    
-      for(int k=0; k< 2 * num_p; k++ )
-        r_data_[k] = 0;
 
+      reset_r_data();
       
 
-      
+
+
       
       for(int s=0; s < num_parts; s++){
-
 
 	
 	std::cout<< "   -Section: "<<s+1<<"/"<<num_parts<<std::endl;
 
 
 	
-	time_station csrmv_time_kets;
 
+        time_station_2 csrmv_time_kets;
+        csrmv_time_kets.start();
+	
         polynomial_cycle_ket( kets_, s );
 
-	csrmv_time_kets.stop_add( &total_time_csrmv, "           Kets cycle time:            ");
+	csrmv_time_kets.stop("           Kets cycle time:            ");
+        total_csrmv_time += csrmv_time_kets;
 
 
 
-
-	time_station csrmv_time_bras;
-
+	
+	time_station_2 csrmv_time_bras;
+        csrmv_time_bras.start();
+	
 	polynomial_cycle( bras_, s );	
 
-	csrmv_time_bras.stop_add( &total_time_csrmv,  "           Bras cycle time:            ");
-
+	csrmv_time_bras.stop("           Bras cycle time:            ");
+        total_csrmv_time += csrmv_time_bras;
 
 	
 
 	 
 
-	time_station FFTs_time;
-
+	time_station_2 FFTs_time;
+	FFTs_time.start();
+	
 	if( sym_formula_ == KUBO_GREENWOOD )
 	  Greenwood_FFTs__imVec(bras_, kets_, r_data_, s);
 
         if( sym_formula_ == KUBO_BASTIN )
 	  Bastin_FFTs(bras_, kets_, r_data_, s);	
 
-	FFTs_time.stop_add( &total_time_FFTs, "           FFT operations time:        ");
-
+	FFTs_time.stop("           FFT operations time:        ");
+	total_FFTs_time += FFTs_time;
 	
 	
 	
       }
 
       
-      time_station total_CSRMV(total_time_csrmv, "\n       Total CSRMV time:           ");
-      time_station total_FFTs(total_time_FFTs, "       Total FFTs time:            ");
+      total_csrmv_time.stop( "\n       Total CSRMV time:           ");
+      total_FFTs_time.stop("       Total FFTs time:            ");
 
 
 
 
 
-      time_station time_postProcess;
+      time_station_2 time_postProcess;
 
       if( sym_formula_ == KUBO_GREENWOOD )
         Greenwood_postProcess( ( d - 1 ) * R + r );

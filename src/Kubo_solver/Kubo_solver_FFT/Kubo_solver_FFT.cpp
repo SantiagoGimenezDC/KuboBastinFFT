@@ -218,6 +218,13 @@ void Kubo_solver_FFT::reset_recursion_vectors(){
 }
 
 
+void Kubo_solver_FFT::reset_r_data(){
+  int num_p    = parameters_.num_p_;
+      
+  for(int k=0; k< 2 * num_p; k++ )
+    r_data_[k] = 0;
+}
+
 
 
 
