@@ -130,14 +130,14 @@ int main(int , char **argv){
     Input>>f_vars.post_filter_;
     Input>>f_vars.filter_;
     Input>>f_vars.L_,   Input>>f_vars.decRate_;
-    Input>>f_vars.k_dis_, Input>>f_vars.f_cutoff_;
+    Input>>f_vars.energy_center_, Input>>f_vars.f_cutoff_;
     Input>>f_vars.att_;
 
     if(!f_vars.post_filter_ && !f_vars.filter_)
       f_vars.decRate_ = 1;
 
     f_vars.M_ext_ =  f_vars.M_;
-    f_vars.k_dis_ += f_vars.M_ext_/4;
+    f_vars.k_dis_ = f_vars.M_ext_/4;
     f_vars.nump_  = f_vars.M_ext_/f_vars.decRate_;
 
     s_vars.num_p_ = f_vars.nump_;

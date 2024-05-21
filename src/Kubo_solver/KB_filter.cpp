@@ -8,8 +8,6 @@
 #include "../kernel.hpp"
 
 KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
-
-
   
   int M =parameters_.M_,
     M_ext=parameters_.M_ext_,
@@ -34,15 +32,34 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
   //att =96  
   //L=115
   
+    
   E_points_.resize(parameters_.nump_);
   E_points_.setZero();
 
   //Im missing a +1 here in case nump is odd  
-  for(int k = 0; k < nump/2; k++){
+  /*for(int k = 0; k < nump/2; k++){
     E_points_(k) = cos(M_PI * ( 2 * ( k - k_dis ) + 0.5 ) / M_ext);
     E_points_(nump/2+k + nump%2) = cos(M_PI * ( 2 * (  M_ext - nump/2  + k - k_dis ) + 0.5 ) / M_ext );
-    }
+    }*/
+  //k_dis=-k_dis;
 
+
+  //Ordering here is due to the FFTw output ordering.
+  //Is there an issue with odd k_dis???
+  if( nump % 2 == 1 ){
+    E_points_( nump / 2 + 1 ) = cos( M_PI * ( 2 * ( k_dis) + 0.5 ) / M_ext );
+
+    
+    for(int k = 0; k < nump / 2; k++){
+      E_points_( k )            = cos( M_PI * ( 2 * ( k_dis + k ) + 0.5 ) / M_ext );
+      E_points_( nump / 2 + k ) = cos( M_PI * ( 2 * ( k_dis + k - nump / 2 ) + 0.5 ) / M_ext );
+    }
+  }
+  else
+    for(int k = 0; k < nump/2 ; k++){
+      E_points_( k )            = cos( M_PI * ( 2 * ( k_dis + k ) + 0.5 ) / M_ext );             
+      E_points_( nump / 2 + k ) = cos( M_PI * ( 2 * ( k_dis + k - nump / 2 ) + 0.5 ) / M_ext );
+    }
 
   /* 
   for(int k=0;k<nump;k++)

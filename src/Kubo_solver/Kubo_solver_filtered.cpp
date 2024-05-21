@@ -93,6 +93,11 @@ void Kubo_solver_filtered::compute(){
     parameters_.b_ = -(Emax+Emin)/2.0;
 
   }
+
+  std::cout<<filter_.parameters().k_dis_<<std::endl;
+  
+  filter_.compute_k_dis(parameters_.a_,parameters_.b_);
+  std::cout<<filter_.parameters().k_dis_<<std::endl;
   
   device_.adimensionalize(parameters_.a_, parameters_.b_);
 
