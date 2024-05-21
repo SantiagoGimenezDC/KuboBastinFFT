@@ -76,7 +76,7 @@ void Kubo_solver_FFT::rearrange_crescent_order( r_type* rearranged){//The point 
   for( int k=0; k < nump; k++ )
     original[k] = rearranged[k];
 
-  
+  //odd nump??
   for( int k=0; k < nump / 2; k++ ){
     rearranged[ 2 * k ]   = original[ k ];
     rearranged[ 2 * k + 1 ] = original[ nump - k - 1 ]; 

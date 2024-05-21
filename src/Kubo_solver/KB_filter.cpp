@@ -15,10 +15,19 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
     k_dis = parameters_.k_dis_,
     nump = parameters_.nump_;
 
-  M_dec_ = M / decRate + ((M - 1) % decRate == 0) * ( (decRate != 1) );
+
+  M_dec_ = M / decRate ;
+  if( (M - 1) % decRate == 0 && (decRate != 1) ){
+    M_dec_++;
+    nump++;
+    parameters_.nump_++;
+  }
 
 
-  if(M%decRate != 0 )
+  //nump = M_dec_;
+  //parameters_.nump_;
+
+  if( M % decRate != 0 )
     std::cout<<"You should choose M divisible by decRate for best precision"<<std::endl;
 
   if(parameters_.L_%2 == 0)
@@ -41,30 +50,22 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
     E_points_(k) = cos(M_PI * ( 2 * ( k - k_dis ) + 0.5 ) / M_ext);
     E_points_(nump/2+k + nump%2) = cos(M_PI * ( 2 * (  M_ext - nump/2  + k - k_dis ) + 0.5 ) / M_ext );
     }*/
-  //k_dis=-k_dis;
 
 
-  //Ordering here is due to the FFTw output ordering.
-  //Is there an issue with odd k_dis???
-  if( nump % 2 == 1 ){
-    E_points_( nump / 2 + 1 ) = cos( M_PI * ( 2 * ( k_dis) + 0.5 ) / M_ext );
+    if( nump % 2 == 1 ){  
+       for(int k = 0; k < nump/2 ; k++){
+	E_points_( k )            = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
+	E_points_( nump / 2 + k + 1 ) = cos( 2 * M_PI * ( nump / 2 - ( k - k_dis + 0.25 ) )  / M_ext );
+       }
+       E_points_( nump / 2 )            = cos( 2 * M_PI * ( - k_dis + 0.25 ) / M_ext );             
+     }    
+    else
+      for(int k = 0; k < nump/2 ; k++){
+	E_points_( k )            = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
+	E_points_( nump / 2 + k ) = cos( 2 * M_PI * ( nump / 2 - ( k - k_dis + 0.25 ) )  / M_ext );
+      }
 
     
-    for(int k = 0; k < nump / 2; k++){
-      E_points_( k )            = cos( M_PI * ( 2 * ( k_dis + k ) + 0.5 ) / M_ext );
-      E_points_( nump / 2 + k ) = cos( M_PI * ( 2 * ( k_dis + k - nump / 2 ) + 0.5 ) / M_ext );
-    }
-  }
-  else
-    for(int k = 0; k < nump/2 ; k++){
-      E_points_( k )            = cos( M_PI * ( 2 * ( k_dis + k ) + 0.5 ) / M_ext );             
-      E_points_( nump / 2 + k ) = cos( M_PI * ( 2 * ( k_dis + k - nump / 2 ) + 0.5 ) / M_ext );
-    }
-
-  /* 
-  for(int k=0;k<nump;k++)
-    E_points_(k) = cos(  M_PI * (r_type) ( (  2 * ( - k + k_dis - M/2 - ( decRate - 1) * M / ( 2 * decRate ) ) ) + 0.5 ) /  (r_type)  M );
-  */
 
   if(att<21)
     beta_ = 0;

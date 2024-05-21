@@ -94,7 +94,7 @@ void Read_ConTable::build_Hamiltonian(){
     std::size_t max_NN = connTable_.cols();
     std::size_t DIM = parameters().DIM_;
 
-    typedef Eigen::Triplet<r_type> T;
+    typedef Eigen::Triplet<r_type, indexType> T;
     std::vector<T> tripletList;
     tripletList.reserve( max_NN * DIM );
 
@@ -210,10 +210,10 @@ void Read_ConTable::setup_velOp(){
   vx().resize(Dim,Dim);
   vx().setZero();
 
-  typedef Eigen::Triplet<r_type> T;
+  typedef Eigen::Triplet<r_type,  indexType> T;
 
   std::vector<T> tripletList;
-  tripletList.reserve(5*Dim);
+  tripletList.reserve( 5 * Dim);
 
   MatrixXp coords = coordinates().data();
 

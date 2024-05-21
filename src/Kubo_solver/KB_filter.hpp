@@ -32,29 +32,28 @@ public:
 
   void compute_k_dis(r_type a, r_type b){
     r_type adim_e_center = (parameters_.energy_center_ + b )/a;
-    parameters_.k_dis_ =  ( r_type(parameters_.M_ext_) * std::acos ( adim_e_center ) / ( 2.0 * M_PI ) + 1 );
+    parameters_.k_dis_ =  int ( (  r_type(parameters_.M_ext_) * ( std::acos ( adim_e_center )  ) / ( 2.0 * M_PI ) - 0.25  ) );
 
     int k_dis = parameters_.k_dis_,
         M_ext = parameters_.M_ext_,
         nump = parameters_.nump_;
 
     if( nump % 2 == 1 ){
-    E_points_( nump / 2 + 1 ) = cos( M_PI * ( 2 * ( k_dis) + 0.5 ) / M_ext );
-
-    
-    for(int k = 0; k < nump / 2; k++){
-      E_points_( k )            = cos( M_PI * ( 2 * ( k_dis + k ) + 0.5 ) / M_ext );
-      E_points_( nump / 2 + k ) = cos( M_PI * ( 2 * ( k_dis + k - nump / 2 ) + 0.5 ) / M_ext );
+       for(int k = 0; k < nump/2 ; k++){
+	E_points_( k )            = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
+	E_points_( nump / 2 + k + 1 ) = cos( 2 * M_PI * ( nump / 2 - ( k - k_dis + 0.25 ) )  / M_ext );
+      }
+       E_points_( nump / 2 )            = cos( 2 * M_PI * ( nump / 2 - ( - k_dis + 0.25 ) )  / M_ext );             
     }
-  }
-  else
-    for(int k = 0; k < nump/2 ; k++){
-      E_points_( k )            = cos( M_PI * ( 2 * ( k_dis + k ) + 0.5 ) / M_ext );             
-      E_points_( nump / 2 + k ) = cos( M_PI * ( 2 * ( k_dis + k - nump / 2 ) + 0.5 ) / M_ext );
-    }
+    else
+      for(int k = 0; k < nump/2 ; k++){
+	E_points_( k )            = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
+	E_points_( nump / 2 + k ) = cos( 2 * M_PI * ( nump / 2 - ( k - k_dis + 0.25 ) )  / M_ext );
+      }
 
 
   };
+  
   int M_dec(){return M_dec_;};
   r_type* KB_window(){return KB_window_.data();};
 };

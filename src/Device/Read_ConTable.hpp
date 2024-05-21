@@ -16,8 +16,8 @@ num_atoms
 */
 
 class Read_ConTable: public Read_Hamiltonian{
-  typedef int indexType;
-  typedef Eigen::SparseMatrix<r_type,Eigen::RowMajor> SpMatrixXp;
+  typedef long int indexType;
+  typedef Eigen::SparseMatrix<r_type,Eigen::RowMajor, indexType> SpMatrixXp;
   typedef Eigen::Matrix<r_type,-1,-1> MatrixXp;
   typedef Eigen::Matrix<type, -1, 1>                 VectorXdT;
 

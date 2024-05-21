@@ -1,5 +1,6 @@
 .vscode*
 *.o
+*.d
 /build/*
 KuboBastinFFT
 .projectile
