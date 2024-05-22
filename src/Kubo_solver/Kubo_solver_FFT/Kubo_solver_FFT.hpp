@@ -15,7 +15,7 @@
 
 
 
-/*
+
 
 
 template <typename T>
@@ -42,6 +42,19 @@ public:
 
   void operator = (State& new_state){ state_ = new_state.data(); };  
 
+
+  State operator * ( const T a ){
+    std::vector<T> result(state_);
+
+    #pragma omp parallel for
+    for(indexType i; i<D_;i++)
+      result += a * state_[i]; 
+
+      
+    return State( result );
+  };  
+
+  
   State operator + (State& other_state){
     std::vector<T> result(state_);
 
@@ -53,6 +66,19 @@ public:
     return State( result );
   };  
 
+
+
+  State operator - (State& other_state){
+    std::vector<T> result(state_);
+
+    #pragma omp parallel for
+    for(indexType i; i<D_;i++)
+      result -= other_state[i]; 
+
+      
+    return State( result );
+  };
+  
 };
 
 
@@ -82,7 +108,7 @@ public:
   StateType& operator()(indexType m ){ return states_.at(m); };
   StateType& operator[](indexType m ){ return states_[m]; };
   
-  //  type operator()(indexType m, int i){ return states_[m][i]; };
+  
 
 };
 
@@ -99,25 +125,30 @@ public:
   Chebyshev_states(Device& device ):device_(device), States_buffer<StateType>( device_.parameters().DIM_, 3 ) {};
 
   indexType update() {
+    
     if( head_num_ == 0 )
-      this->(1) = device_.H_ket( this(0) );
+      (*this)(1) = device_.H_ket( (*this)(0) );
     else{
-      this->(2) = device_.H_ket( this(1) ) - this(0);
+      (*this)(2) = device_.H_ket( (*this)(1) ) - (*this)(0);
 
-      this->(0) = this->(1);
-      this->(1) = this->(2);
+      (*this)(0) = (*this)(1);
+      (*this)(1) = (*this)(2);
     }
+    
     head_num_++;
     return head_num_;
   };
 
   
-  void reset_init_state( StateType& init_state ){ this(0) = init_state; head_num_ = 0; };
+  void reset_init_state( StateType& init_state ){
+    (*this)(0) = init_state;
+    head_num_ = 0;
+  };
 
 
 };
 
-
+/*
 class FFT_Operations{
 private:
 public:
@@ -126,8 +157,8 @@ public:
   void compute (States_buffer, States_buffer, std::vector<r_type>, int);
 
 };
-
 */
+
 
 
 class Kubo_solver_FFT{
