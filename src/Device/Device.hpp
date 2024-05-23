@@ -4,7 +4,7 @@
 #include "../static_vars.hpp"
 #include "../CAP.hpp"
 #include "../Random.hpp"
-
+#include "../States/States.hpp"
 
 struct device_vars{
   int W_, LE_, C_, DIM_, SUBDIM_,  dis_seed_;

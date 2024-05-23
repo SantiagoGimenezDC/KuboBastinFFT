@@ -58,29 +58,12 @@ Kubo_solver_FFT::Kubo_solver_FFT(solver_vars& parameters, Device& device) : para
 
 
 Kubo_solver_FFT::~Kubo_solver_FFT(){
-
-  int M      = parameters_.M_;
   
 /*------------Delete everything--------------*/
-  //Single Shot vectors
-  for(int m=0;m<M;m++){
-    delete []bras_[m];
-    delete []kets_[m];
-  }
-  delete []bras_;
-  delete []kets_;
-
-  //Recursion Vectors
-  delete []vec_;
-  delete []p_vec_;
-  delete []pp_vec_;
-  delete []rand_vec_;
-  delete []tmp_;
-  
   //Auxiliary - disorder and CAP vectors
   delete []dmp_op_;
   delete []dis_vec_;
-/*-----------------------------------------------*/
+/*-------------------------------------------*/
 
   delete kernel_;
   delete cap_;
@@ -99,39 +82,25 @@ void Kubo_solver_FFT::allocate_memory(){
       SEC_SIZE = SUBDIM / parameters_.num_parts_;
 
   parameters_.SECTION_SIZE_=SEC_SIZE;
+
   
 /*------------Big memory allocation--------------*/
-  //Single Shot vectors
-  bras_ = new type* [ M ];
-  kets_ = new type* [ M ];
 
-  for(int m = 0; m < M; m++){
-    bras_[m] = new type [ SEC_SIZE ];
-    kets_[m] = new type [ SEC_SIZE ];
-  }
-
-  
-  //Recursion Vectors
-  vec_      = new type [ DIM ];
-  p_vec_    = new type [ DIM ];
-  pp_vec_   = new type [ DIM ];
-  rand_vec_ = new type [ DIM ];
-  tmp_      = new type [ DIM ];
   
   //Disorder and CAP vectors
-  dmp_op_  = new r_type [ DIM ],
+  rand_vec_= new type [ DIM ]; 
+  dmp_op_  = new r_type [ DIM ];
   dis_vec_ = new r_type [ SUBDIM ];
 /*-----------------------------------------------*/
 
 
 
   
-/*---------------Dataset vectors----------------*/
-  E_points_ = new r_type [ num_p ];
-  r_data_     = new type [ 2 * num_p ];  
-  final_data_ = new type [ 2 * num_p ];
-  
-  conv_R_   = new r_type [ 2 * D * R ];
+/*---------------Dataset vectors-----------------*/
+  E_points_  .reserve( num_p );
+  r_data_    .reserve( 2 * num_p );  
+  final_data_.reserve( 2 * num_p );  
+  conv_R_    .reserve( 2 * D * R );
 /*-----------------------------------------------*/  
 
   
@@ -164,8 +133,8 @@ void Kubo_solver_FFT::allocate_memory(){
 
 
 
-  r_type buffer_mem    = r_type( 2 * r_type(M) * r_type(SEC_SIZE) * sizeof(type) ) / r_type( 1E9 ),
-         recursion_mem = r_type( ( 5 * DIM + 1 * SUBDIM ) * sizeof(type) )/ r_type( 1E9 ),
+  r_type buffer_mem    = 2 * r_type( SEC_SIZE ) * r_type( M ),
+         recursion_mem = 5 * r_type( DIM ),
          FFT_mem       = 0.0,
          Ham_mem = 2 * device_.Hamiltonian_size() / r_type( 1E9 ), //the 2 is because of the vel operator
          Total = 0.0;
@@ -191,39 +160,6 @@ void Kubo_solver_FFT::allocate_memory(){
 
 
 
-void Kubo_solver_FFT::reset_Chebyshev_buffers(){
-  int SEC_SIZE  = parameters_.SECTION_SIZE_,
-      M         = parameters_.M_;
-
-  for(int m = 0; m < M; m++){
-#pragma omp parallel for	
-    for(int l = 0; l < SEC_SIZE; l++){
-      bras_[m][l] = 0.0;
-      kets_[m][l] = 0.0;
-    }
-  }
-}
-
-
-
-void Kubo_solver_FFT::reset_recursion_vectors(){
-  int DIM    = device_.parameters().DIM_;
-  
-#pragma omp parallel for	
-   for(int k=0; k < DIM; k++){
-     vec_     [k] = 0.0;
-     pp_vec_  [k] = rand_vec_[k];
-     p_vec_   [k] = 0.0;
-   }
-}
-
-
-void Kubo_solver_FFT::reset_r_data(){
-  int num_p    = parameters_.num_p_;
-      
-  for(int k=0; k< 2 * num_p; k++ )
-    r_data_[k] = 0;
-}
 
 
 
