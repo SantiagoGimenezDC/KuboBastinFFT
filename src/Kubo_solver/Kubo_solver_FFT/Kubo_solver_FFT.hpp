@@ -16,7 +16,10 @@
 
 
 
-
+/*
+  //whats being passed as reference/ as value?
+  //Type conversions.
+  //operator overloading hmmm
 
 template <typename T>
 class State{
@@ -24,8 +27,8 @@ class State{
 private:
   indexType D_;
   std::vector<T> state_;
-  //whats being passed as reference/ as value?
-  //operator overloading hmmm
+  Eigen::Vector< T, Eigen::Dynamic> state_data_;
+
 public:
   State(indexType D):D_(D){ state_.reserve(D); };
   State(State& new_state): D_( new_state.dimension() ), state_( new_state.data() ){};
@@ -82,8 +85,6 @@ public:
 };
 
 
-
-
 template <class StateType>
 class States_buffer{
   typedef int indexType;
@@ -114,22 +115,105 @@ public:
 
 
 
+
+
+
+
+
+
+
+
+template <typename T>
+class Eigen_state{
+private:
+  Eigen::Vector< T, Eigen::Dynamic> state_data_;
+
+public:
+  Eigen_state(int D){ state_data_.resize(D); };
+  Eigen_state(Eigen_state& new_state) : state_data_( new_state.state_data() ){};
+  Eigen_state(Eigen::Vector< T, Eigen::Dynamic>& new_state_data) : state_data_( new_state_data ){};  
+
+  int dimension(){return state_data_.size(); };
+
+  int memory_size(){return state_data_.size() * sizeof(T); };
+  
+  inline
+  Eigen::Vector< T, Eigen::Dynamic>& state_data() { return state_data_; }
+
+  
+
+  
+  inline
+  type operator () (int i ){ return state_data_(i); };
+
+  inline
+  type operator [] (int i ){ return state_data_[i]; };
+
+  inline
+  void operator = (Eigen_state& new_state){ state_data_ = new_state.state_data(); };  
+
+  inline //isn't this creating an extra copy? maybe axpy is the way to go really. What if I use Eigen_state& as output?? -- My understanding is that the result gets destroyed after the oveloaded function call ends.
+  Eigen_state& operator * ( const T a ){ return Eigen_state( a * state_data_ ); };  
+
+  inline
+  Eigen_state& operator + (Eigen_state& other_state){ return State( this->state_data() + other_state.state_data() ); };  
+
+  inline
+  Eigen_state& operator - (Eigen_state& other_state){ return State( this->state_data() - other_state.state_data() ); };  
+
+  
+};
+
+
+
+template <typename T>
+class Eigen_states_buffer{
+private:
+  Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> state_list_;
+  std::vector< Eigen_state<T> > state_wrapper_; //wraps each column of state_list_ as an Eigen_state
+  
+public:
+  Eigen_states_buffer(int D, int M){
+    state_list_.resize(D,M);
+    state_wrapper_.reserve(M);
+    
+    for(int m = 0; m < state_list_.cols(); m++)
+      state_wrapper_.push_back( Eigen_state( state_list_.col(m) ) );
+    
+  }
+
+  void reset(){state_list_.setZero();};
+
+///implement size matching assertions?  
+  inline
+  void insert( Eigen_state<T>& new_state, int m){ state_list_.col(m) = new_state.state_data(); };
+
+  int memory_size(){ return state_list_.size() * sizeof(T); };
+  Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& data(){ return state_list_; };
+
+  inline
+  Eigen_state<T>& operator[](int m ){ return state_wrapper_[m]; };
+  
+};
+
+
+
 template<class StateType>
 class Chebyshev_states: public States_buffer<StateType>{
-  typedef int indexType;
 private:
   Device device_;
-  indexType head_num_ = 0;
+  int head_num_ = 0;
 
 public:
   Chebyshev_states(Device& device ):device_(device), States_buffer<StateType>( device_.parameters().DIM_, 3 ) {};
 
-  indexType update() {
+  int update() {
     
     if( head_num_ == 0 )
       (*this)(1) = device_.H_ket( (*this)(0) );
+
     else{
-      (*this)(2) = device_.H_ket( (*this)(1) ) - (*this)(0);
+      (*this)(2) = 2 * device_.H_ket( (*this)(1) ) - (*this)(0);
 
       (*this)(0) = (*this)(1);
       (*this)(1) = (*this)(2);
@@ -147,6 +231,8 @@ public:
 
 
 };
+*/
+
 
 /*
 class FFT_Operations{
