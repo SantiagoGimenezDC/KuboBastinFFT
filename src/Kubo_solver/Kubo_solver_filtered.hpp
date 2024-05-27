@@ -40,12 +40,15 @@ public:
   
   solver_vars& parameters(){return parameters_;};
   void compute();
-
+  void compute_E_points( r_type* );
 
   void integration ( r_type*, r_type*, r_type* );
   void eta_CAP_correct(r_type*, r_type* );
   void update_data ( r_type*,r_type*, r_type*, r_type*, r_type*, int ,  std::string, std::string );
   void plot_data   ( std::string, std::string );
+
+
+  void filter( int, type*, type**, type*, type*, int, int);
   
   void filtered_polynomial_cycle( type** , type*,  r_type* , r_type* , int , int );
   void filtered_polynomial_cycle_direct( type** , type*,  r_type* , r_type* , int , int );

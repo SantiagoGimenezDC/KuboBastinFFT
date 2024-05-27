@@ -45,26 +45,6 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
   E_points_.resize(parameters_.nump_);
   E_points_.setZero();
 
-  //Im missing a +1 here in case nump is odd  
-  /*for(int k = 0; k < nump/2; k++){
-    E_points_(k) = cos(M_PI * ( 2 * ( k - k_dis ) + 0.5 ) / M_ext);
-    E_points_(nump/2+k + nump%2) = cos(M_PI * ( 2 * (  M_ext - nump/2  + k - k_dis ) + 0.5 ) / M_ext );
-    }*/
-
-
-    if( nump % 2 == 1 ){  
-       for(int k = 0; k < nump/2 ; k++){
-	E_points_( k )            = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
-	E_points_( nump / 2 + k + 1 ) = cos( 2 * M_PI * ( nump / 2 - ( k - k_dis + 0.25 ) )  / M_ext );
-       }
-       E_points_( nump / 2 )            = cos( 2 * M_PI * ( - k_dis + 0.25 ) / M_ext );             
-     }    
-    else
-      for(int k = 0; k < nump/2 ; k++){
-	E_points_( k )            = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
-	E_points_( nump / 2 + k ) = cos( 2 * M_PI * ( nump / 2 - ( k - k_dis + 0.25 ) )  / M_ext );
-      }
-
     
 
   if(att<21)
