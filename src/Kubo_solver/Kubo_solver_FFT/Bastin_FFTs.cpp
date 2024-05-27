@@ -20,8 +20,7 @@
   //================================================================================================================================================*/
 
 
-
-void Kubo_solver_FFT::Bastin_FFTs( type** bras, type** kets, type r_data[], int s){
+void Kubo_solver_FFT::Bastin_FFTs( type** bras, type** kets, std::vector<type>& r_data, int s){
 
   const std::complex<double> im(0,1);
   

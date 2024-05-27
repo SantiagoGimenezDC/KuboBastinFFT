@@ -49,7 +49,6 @@ public:
 
 
   void reset_buffer(type**);
-  
   void filter( int, type*, type**, type*, type*, int, int);
   
   void filtered_polynomial_cycle( type** , type*,  r_type* , r_type* , int , int );

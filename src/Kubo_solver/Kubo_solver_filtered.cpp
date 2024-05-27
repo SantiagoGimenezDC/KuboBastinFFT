@@ -102,6 +102,7 @@ void Kubo_solver_filtered::compute_E_points( r_type* E_points ){
 };
 
 
+
 void Kubo_solver_filtered::compute(){
   
   auto start0 = std::chrono::steady_clock::now();

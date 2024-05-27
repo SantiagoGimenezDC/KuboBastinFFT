@@ -70,6 +70,7 @@ public:
   void reset_Chebyshev_buffers();
 
   template<typename T>
+  inline
   void reset_data(std::vector<T>){std::fill(r_data_.begin(), r_data_.end(), 0);}
   
   void update_data(std::vector<type>&, const std::vector<type>&, int );  

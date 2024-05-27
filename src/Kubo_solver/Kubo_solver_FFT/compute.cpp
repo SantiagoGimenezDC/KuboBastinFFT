@@ -28,8 +28,10 @@ void Kubo_solver_FFT::compute(){
   time_station_2 solver_station;
   solver_station.start();
   
+
   
   //----------------Initializing the Device---------------//
+  //------------------------------------------------------//
   time_station_2 hamiltonian_setup_time;
   hamiltonian_setup_time.start();
   
@@ -55,8 +57,12 @@ void Kubo_solver_FFT::compute(){
   std::cout<<std::endl;
 
   //------------------------------------------------------//
-  
+  //------------------------------------------------------//  
 
+
+
+
+  
   
   int W      = device_.parameters().W_,
       C      = device_.parameters().C_,
@@ -81,6 +87,7 @@ void Kubo_solver_FFT::compute(){
   
   time_station_2 allocation_time;
   allocation_time.start();
+
   
   
   allocate_memory();
@@ -88,6 +95,8 @@ void Kubo_solver_FFT::compute(){
 
   cap_->create_CAP(W, C, LE,  dmp_op_);
   device_.damp(dmp_op_);
+
+  Kubo_solver_FFT_postProcess postProcess( (*this) );
 
   
   allocation_time.stop("\n \nAllocation time:            ");
@@ -121,7 +130,7 @@ void Kubo_solver_FFT::compute(){
       vec_base_->generate_vec_im( rand_vec_, r);       
       device_.rearrange_initial_vec( rand_vec_ ); //very hacky
 
-      reset_r_data();
+      reset_data(r_data_);
       
 
 
@@ -162,7 +171,7 @@ void Kubo_solver_FFT::compute(){
 	FFTs_time.start();
 	
 	if( sym_formula_ == KUBO_GREENWOOD )
-	  Greenwood_FFTs__imVec(bras_, kets_, r_data_, s);
+	  Greenwood_FFTs(bras_, kets_, r_data_, s);
 
         if( sym_formula_ == KUBO_BASTIN )
 	  Bastin_FFTs(bras_, kets_, r_data_, s);	
@@ -184,12 +193,15 @@ void Kubo_solver_FFT::compute(){
 
       time_station_2 time_postProcess;
 
+
+      postProcess(final_data_, r_data_, r);
+      /*
       if( sym_formula_ == KUBO_GREENWOOD )
         Greenwood_postProcess( ( d - 1 ) * R + r );
 
       if( sym_formula_ == KUBO_BASTIN )
         Bastin_postProcess( ( d - 1 ) * R + r );
-
+      */
       time_postProcess.stop( "       Post-processing time:       ");
 
       

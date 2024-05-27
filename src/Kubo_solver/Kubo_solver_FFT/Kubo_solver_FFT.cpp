@@ -127,11 +127,10 @@ void Kubo_solver_FFT::allocate_memory(){
 
   
 /*---------------Dataset vectors----------------*/
-  E_points_ = new r_type [ num_p ];
-  r_data_     = new type [ 2 * num_p ];  
-  final_data_ = new type [ 2 * num_p ];
+  E_points_.resize( num_p );
+  r_data_.resize( 2 * num_p );  
+  final_data_.resize( 2 * num_p );
   
-  conv_R_   = new r_type [ 2 * D * R ];
 /*-----------------------------------------------*/  
 
   
@@ -146,22 +145,14 @@ void Kubo_solver_FFT::allocate_memory(){
     dis_vec_  [k] = 0.0;
 
 
+  reset_data(r_data_);
+  reset_data(final_data_);  
+
   
-  
-  for(int k = 0; k<num_p; k++){
+  for(int k = 0; k<num_p; k++)
     E_points_[k]   = cos(  M_PI * (  2.0 * r_type(k) + 0.5 ) / r_type (num_p) ); 
 
-    r_data_[k]     = 0.0;
-    final_data_[k] = 0.0;
-    
-    r_data_[k + num_p]     = 0.0;
-    final_data_[k + num_p] = 0.0;
-  }
-
-  for(int k = 0; k < 2 * D * R; k++){
-    conv_R_[k] = 0.0;
-  }
-
+  
 
 
   r_type buffer_mem    = r_type( 2 * r_type(M) * r_type(SEC_SIZE) * sizeof(type) ) / r_type( 1E9 ),
@@ -218,15 +209,21 @@ void Kubo_solver_FFT::reset_recursion_vectors(){
 }
 
 
-void Kubo_solver_FFT::reset_r_data(){
-  int num_p    = parameters_.num_p_;
-      
-  for(int k=0; k< 2 * num_p; k++ )
-    r_data_[k] = 0;
-}
 
 
 
+void Kubo_solver_FFT::update_data(std::vector<type>& final_data, const std::vector<type>& new_r_data, int  r){
+  int nump    = parameters_.num_p_, end = 0;
+
+  if( sym_formula_ == KUBO_GREENWOOD )
+    end = nump;
+  if( sym_formula_ == KUBO_BASTIN )
+    end= 2 * nump;
+
+  
+  for(int i = 0; i < end; i++)
+      final_data[i] = ( final_data[i] * type( r - 1 ) + new_r_data[i] ) / type(r);
+};
 
 
 

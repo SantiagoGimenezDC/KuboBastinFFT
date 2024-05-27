@@ -12,7 +12,7 @@
 
 
 
-void Kubo_solver_FFT::Greenwood_FFTs__imVec(std::complex<r_type> **bras, std::complex<r_type> **kets, type r_data[], int s){
+void Kubo_solver_FFT::Greenwood_FFTs(std::complex<r_type> **bras, std::complex<r_type> **kets, std::vector<type>& r_data, int s){
 
   int M     = parameters_.M_,
       size  = parameters_.SECTION_SIZE_,
