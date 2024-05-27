@@ -58,11 +58,11 @@ void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::comp
         
     for(int l = l_start; l < l_end;l++){      
       for(int m = 0; m < M_dec; m++){
-	re_bras.input()[ m ] = real( bras[ m ][ l ] ) ;
+	re_bras.input()[ m ] =  bras[ m ][ l ]  ;
         re_kets.input()[ m ] = real( kets[ m ][ l ] ) ;
 	
 	im_bras.input()[ m ] = imag( bras[ m ][ l ] ) ;
-        im_kets.input()[ m ] = imag( kets[ m ][ l ] ) ;	
+        im_kets.input()[ m ] = kets[ m ][ l ]  ;	
       }
       
       re_bras.execute();
@@ -72,10 +72,12 @@ void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::comp
       im_kets.execute();
       
       for(int m = 0; m < nump; m++ )
-        thread_data[ m ] += real(
-	  ( real( re_bras( m ) ) + im * real( im_bras( m ) ) ) *
+        thread_data[ m ] += real(re_bras(m)) * real(im_kets(m));
+      /*
+	  real(
+	  ( real( re_bras( m ) ) - im * real( im_bras( m ) ) ) *
 	  ( real( re_kets( m ) ) + im * real( im_kets( m ) ) )
-				 );
+	  );*/
 			
     }
 

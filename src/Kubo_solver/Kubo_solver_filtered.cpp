@@ -68,6 +68,16 @@ void Station(int millisec, std::string msg ){
 }
 */
 
+void Kubo_solver_filtered::reset_buffer(type** polys){
+    
+  int M_dec = filter_.M_dec(),
+    SEC_SIZE    =   parameters_.SECTION_SIZE_;
+
+#pragma omp parallel for
+  for(int m = 0; m < M_dec; m++)
+    for(int i = 0; i < SEC_SIZE; i++)
+      polys[m][i] = 0.0;
+};
 
 void Kubo_solver_filtered::compute_E_points( r_type* E_points ){
       
@@ -275,7 +285,7 @@ void Kubo_solver_filtered::compute(){
     device_.Anderson_disorder(dis_vec);
     device_.update_dis(dis_vec, dmp_op);
 
-
+   
 
 
     
@@ -285,7 +295,10 @@ void Kubo_solver_filtered::compute(){
       std::cout<<std::endl<< d * r <<"/"<< D * R << "-Vector/disorder realization;"<<std::endl;
 
 
+      reset_buffer(bras);
+      reset_buffer(kets);
 
+      
        vec_base_->generate_vec_im( rand_vec, r);       
        device_.rearrange_initial_vec(rand_vec); //very hacky
   
@@ -1114,7 +1127,7 @@ void Kubo_solver_filtered::update_data(r_type E_points[], r_type integrand[], r_
 
   
   for(int e=0;e<nump;e++)  
-    dataR<< a * E_points[e] - b<<"  "<< r_data [e] <<std::endl;
+    dataR<< a * E_points[e] - b<<"  "<< omega * r_data [e]<<"  "<< final_data [e] <<std::endl;
     //  dataP<<  e <<"  "<< final_data [e] <<std::endl;
 
   
@@ -1126,14 +1139,16 @@ void Kubo_solver_filtered::update_data(r_type E_points[], r_type integrand[], r_
   std::ofstream dataP;
   dataP.open(run_dir+"currentResult_"+filename);
 
-    for(int e=0;e<nump;e++){
-    if(e<nump/2)
-      dataP<<e<<"  ";
-    else
-      dataP<<-(nump-e)<<"  ";
-    
-    dataP<<e<<"  "<< a * E_points[e] - b<<"  "<< final_data [e] <<std::endl;
-  }
+    for(int e=0;e<nump;e++){    
+      dataP<< a * E_points[e] - b<<"  "<< final_data [e];
+
+      if(e<nump/2)
+        dataP<<"  "<<e;
+      else
+        dataP<<"  "<<-(nump-e);
+
+      dataP<<"  "<<e<<std::endl;
+    }
 
   dataP.close();
 
