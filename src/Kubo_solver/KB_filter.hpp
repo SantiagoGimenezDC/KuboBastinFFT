@@ -40,10 +40,10 @@ public:
 
     if( nump % 2 == 1 ){
        for(int k = 0; k < nump/2 ; k++){
-	 E_points_( k )            = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
+	 E_points_( k )                = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
 	 E_points_( nump / 2 + k + 1 ) = cos( 2 * M_PI * ( nump / 2 - ( k - k_dis + 0.25 ) )  / M_ext );
        }
-       E_points_( nump / 2 )            = cos( 2 * M_PI * ( nump / 2 - ( - k_dis + 0.25 ) )  / M_ext );             
+       E_points_( nump / 2 )           = cos( 2 * M_PI * ( nump / 2 - ( - k_dis + 0.25 ) )  / M_ext );             
     }
     else
       for(int k = 0; k < nump/2 ; k++){

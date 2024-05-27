@@ -54,7 +54,7 @@ void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::comp
       im_kets.create();
     } 
 
-    
+    //SO the solution here is to store separetely the two parts of each vector: real and imaginary. 
         
     for(int l = l_start; l < l_end;l++){      
       for(int m = 0; m < M_dec; m++){
