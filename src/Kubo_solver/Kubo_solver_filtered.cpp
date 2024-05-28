@@ -85,6 +85,11 @@ void Kubo_solver_filtered::compute_E_points( r_type* E_points ){
       M_ext = filter_.parameters().M_ext_,
       nump = filter_.parameters().nump_;
 
+  //  for(int k = -nump/2; k < nump ; k++)
+  //	E_points[ k +nump/2]            = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
+	
+    
+  
     if( nump % 2 == 1 ){
        for(int k = 0; k < nump/2 ; k++){
 	 E_points[ k ]                = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
@@ -97,7 +102,7 @@ void Kubo_solver_filtered::compute_E_points( r_type* E_points ){
 	E_points[ k ]            = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
 	E_points[ nump / 2 + k ] = cos( 2 * M_PI * ( nump / 2 - ( k - k_dis + 0.25 ) )  / M_ext );
       }
-
+  
 
 };
 
@@ -293,7 +298,7 @@ void Kubo_solver_filtered::compute(){
     for(int r=1; r<=R;r++){
        
       auto start_RV = std::chrono::steady_clock::now();
-      std::cout<<std::endl<< d * r <<"/"<< D * R << "-Vector/disorder realization;"<<std::endl;
+      std::cout<<std::endl<< ( d - 1 ) * R + r <<"/"<< D * R << "-Vector/disorder realization;"<<std::endl;
 
 
       reset_buffer(bras);
@@ -751,7 +756,6 @@ void Kubo_solver_filtered::filter( int m, type* new_vec, type** poly_buffer, typ
 
   
   r_type KB_window[L];
-
  
   for(int i=0; i < L; i++)
     KB_window[i] = filter_.KB_window()[i];

@@ -80,7 +80,7 @@ public:
 
   
   inline const std::complex<r_type>* operator()() { return reinterpret_cast< std::complex<r_type>* > ( output_ ); };
-  inline const std::complex<r_type> operator()(int m) { return * reinterpret_cast< std::complex<r_type>* > ( &output_[m] ); };
+  inline const std::complex<r_type>& operator()(int m) { return * reinterpret_cast< std::complex<r_type>* > ( &output_[m] ); };
 
   inline std::complex<r_type>* input(int m)  { return reinterpret_cast< std::complex<r_type>* > ( &input_[m] ); };    
 
@@ -103,14 +103,12 @@ enum cft_type{
 class out_of_place_cft{
 private:
   fftw_plan
-    re_plan_,
-    im_plan_;      
+    plan_;
 
   r_type
-    * re_input_,
-    * im_input_,
-    * re_output_,
-    * im_output_;
+    * input_,
+    * output_;
+   
   
   int nump_;
   cft_type type_;
@@ -120,47 +118,41 @@ public:
   out_of_place_cft( int nump, cft_type type ) : nump_(nump), type_(type){
 
 
-    re_output_ = ( r_type* ) fftw_malloc( sizeof( r_type ) * nump_ );    
-    re_input_  = ( r_type* ) fftw_malloc( sizeof( r_type ) * nump_ );    
+    output_ = ( r_type* ) fftw_malloc( sizeof( r_type ) * nump_ );    
+    input_  = ( r_type* ) fftw_malloc( sizeof( r_type ) * nump_ );    
 
-    im_output_ = ( r_type* ) fftw_malloc( sizeof( r_type ) * nump_ );    
-    im_input_  = ( r_type* ) fftw_malloc( sizeof( r_type ) * nump_ );    
-
-    for(int m=0;m<nump;m++){
-      re_input_ [ m ] = 0;
-      im_input_ [ m ] = 0;
-    }
+    for(int m=0;m<nump;m++)
+      input_ [ m ] = 0;
+      
+    
   };
 
   
-  inline void create(){
-    re_plan_ = fftw_plan_r2r_1d(nump_, re_input_, re_output_, FFTW_REDFT01, FFTW_ESTIMATE);
-    im_plan_ = fftw_plan_r2r_1d(nump_, im_input_, im_output_, FFTW_REDFT01, FFTW_ESTIMATE);
-  };//NOT thread safe
+  inline void create(){ plan_ = fftw_plan_r2r_1d(nump_, input_, output_, FFTW_REDFT01, FFTW_ESTIMATE); };//NOT thread safe
 
   
-  inline void execute() {
-    fftw_execute( re_plan_ );
-    fftw_execute( im_plan_ );
-  };
+  inline void execute() { fftw_execute( plan_ ); };
 
   
-  inline r_type* re_input()  { return  re_input_ ; };    
-  inline r_type* re_output() { return  re_output_ ; };  
 
   
-  inline r_type* im_input()  { return  im_input_ ; };    
-  inline r_type* im_output() { return  im_output_ ; };
+  inline r_type* input()  { return input_; };    
+  inline const r_type* output() { return output_; };
+
+
+  
+  inline const r_type* operator()() { return output_; };
+  inline const r_type& operator()(int m) { return output_[m] ; };
+
+  inline std::complex<r_type>* input(int m)  { return reinterpret_cast< std::complex<r_type>* > ( &input_[m] ); };    
+
 
   
   ~out_of_place_cft(){
-    fftw_free(re_output_);
-    fftw_free(re_input_);
-    fftw_destroy_plan(re_plan_);
-    
-    fftw_free(im_output_);
-    fftw_free(im_input_);
-    fftw_destroy_plan(im_plan_);
+    fftw_free(output_);
+    fftw_free(input_);
+    fftw_destroy_plan(plan_);
+
   }
   
 };

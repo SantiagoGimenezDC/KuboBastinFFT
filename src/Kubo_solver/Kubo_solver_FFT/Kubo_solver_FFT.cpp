@@ -17,7 +17,26 @@
 
 #include "../../complex_op.hpp"
 #include "Kubo_solver_FFT.hpp"
-#include "../time_station.hpp"
+
+
+void Kubo_solver_FFT::initialize_device(){
+
+  device_.build_Hamiltonian();
+  device_.setup_velOp();
+  
+  if(parameters_.a_ == 1.0){
+    r_type Emin, Emax;
+    device_.minMax_EigenValues(300, Emax,Emin);
+
+    
+    parameters_.a_ =  ( Emax - Emin ) / ( 2.0 - parameters_.edge_ );
+    parameters_.b_ = -( Emax + Emin ) / 2.0;
+
+  }
+  
+  device_.adimensionalize( parameters_.a_, parameters_.b_ );
+}
+
 
 
 Kubo_solver_FFT::Kubo_solver_FFT(solver_vars& parameters, Device& device) : parameters_(parameters), device_(device)
@@ -91,8 +110,6 @@ Kubo_solver_FFT::~Kubo_solver_FFT(){
 void Kubo_solver_FFT::allocate_memory(){
 
   int M        = parameters_.M_,
-      R        = parameters_.R_,
-      D        = parameters_.dis_real_,
       DIM      = device_.parameters().DIM_,
       SUBDIM   = device_.parameters().SUBDIM_,
       num_p    = parameters_.num_p_,
@@ -127,7 +144,7 @@ void Kubo_solver_FFT::allocate_memory(){
 
   
 /*---------------Dataset vectors----------------*/
-  E_points_.resize( num_p );
+
   r_data_.resize( 2 * num_p );  
   final_data_.resize( 2 * num_p );
   
@@ -148,12 +165,8 @@ void Kubo_solver_FFT::allocate_memory(){
   reset_data(r_data_);
   reset_data(final_data_);  
 
-  
-  for(int k = 0; k<num_p; k++)
-    E_points_[k]   = cos(  M_PI * (  2.0 * r_type(k) + 0.5 ) / r_type (num_p) ); 
 
   
-
 
   r_type buffer_mem    = r_type( 2 * r_type(M) * r_type(SEC_SIZE) * sizeof(type) ) / r_type( 1E9 ),
          recursion_mem = r_type( ( 5 * DIM + 1 * SUBDIM ) * sizeof(type) )/ r_type( 1E9 ),

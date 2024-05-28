@@ -13,6 +13,65 @@
 
 #include "../solver_vars.hpp"
 
+template<typename T>
+class State{
+private:
+  int D_;
+  T* data_;
+
+public:
+  ~State(){delete []data_;};
+
+  State(int D) : D_(D){
+    data_ = new T[D_];
+  };
+
+  State(int D, T data) : D_(D){
+    data_ = new T[D_];
+
+#pragma omp parallel for
+    for(int i = 0; i < D; i++ )
+      data_[i] = data(i);
+    
+  };
+
+  
+  State(State& other_state):D_(other_state.D()){
+    data_ = new T[D_];
+
+#pragma omp parallel for
+    for(int i = 0; i < D; i++ )
+      data_[i] = other_state(i);
+    
+  };
+
+  
+  
+  int D(){ return D; };
+  T* data(){ return data_; };
+  T& operator() (int i){ data_[ i ]; };
+
+  
+  State<T>& operator=(const State<T>& other_state){
+        if (this == &other_state) 
+            return *this; // Handle self-assignment
+        
+
+        // Delete existing data if necessary
+        delete[] data_;
+
+        D_ = other_state.D();
+        data_ = new T[D_];
+
+#pragma omp parallel for
+        for (int i = 0; i < D_; i++) 
+            data_[i] = other_state(i);
+        
+
+        return *this;
+  };
+  
+};
 
 
 class Kubo_solver_FFT{
@@ -49,8 +108,6 @@ private:
   
   
 //---------------Dataset vectors--------------//
-  std::vector<r_type> E_points_,
-                      conv_R_;
   std::vector<type> r_data_,
                     final_data_ ;
 //--------------------------------------------//
@@ -61,41 +118,35 @@ public:
   Kubo_solver_FFT( solver_vars&, Device&);
   ~Kubo_solver_FFT();
 
-  Device& device(){return device_; };
+  Device& device(){ return device_; };
   solver_vars& parameters(){ return parameters_; };
-  formula simulation_formula(){return sym_formula_; };
+  formula simulation_formula(){ return sym_formula_; };
+
+
   //Initializers
   void allocate_memory();
+  void initialize_device();
   void reset_recursion_vectors();
   void reset_Chebyshev_buffers();
 
   template<typename T>
-  void reset_data(std::vector<T>){std::fill(r_data_.begin(), r_data_.end(), 0);}
+  inline
+  void reset_data ( std::vector<T>){ std::fill(r_data_.begin(), r_data_.end(), 0); };
   
-  void update_data(std::vector<type>&, const std::vector<type>&, int );  
+  void update_data ( std::vector<type>&, const std::vector<type>&, int );  
+
+
   //Heavy duty
   void compute();
+  void polynomial_cycle ( type**, int, bool);
 
-  void polynomial_cycle     ( type**, int);
-  void polynomial_cycle_ket ( type**, int);
-
+  
   void Greenwood_FFTs( type**, type**,  std::vector<type>&, int);
   void Bastin_FFTs ( type**, type**, std::vector<type>&, int);
 
 
 
-  
-  //Post-process
-  void Greenwood_postProcess (  int  );
-  void Bastin_postProcess ( int  );
-
-  void integration ( r_type*, r_type*, r_type* );
-  void partial_integration ( r_type*, r_type*, r_type* );
-
-  void rearrange_crescent_order( r_type* );
-  void eta_CAP_correct(r_type*, r_type* );  
-  void plot_data   ( std::string, std::string );
-  
+   
 };
 
 
@@ -137,8 +188,9 @@ class Kubo_solver_FFT_postProcess{//will interpret data_set of points k=0,...,nu
         void plot_data   ( const std::string&, const std::string& );
 
 
-    
-  };
+    };
+
+
 
 #endif
 

@@ -62,6 +62,7 @@ public:
   //void Greenwood_FFTs__reVec_noEta ( r_type**, r_type**, r_type*, r_type*);  
   //void Greenwood_FFTs__reVec_eta   ( r_type*, r_type*, r_type*, r_type*);
   void Greenwood_FFTs( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
+  void Greenwood_FFTs_2( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
   void Bastin_FFTs   ( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
   
 };
