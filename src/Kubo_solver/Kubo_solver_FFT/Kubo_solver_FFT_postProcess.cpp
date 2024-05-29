@@ -240,7 +240,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
 
   
   std::ofstream dataP;
-  dataP.open(filename);
+  dataP.open(run_dir+"currentResult_"+filename);
 
   for(int e=0;e<nump;e++)  
     dataP<< a * rearranged_E_points[e] - b<<"  "<<  partial_result [e] <<std::endl;
@@ -272,7 +272,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
   data2.close();
 
 
-  //  plot_data(run_dir,filename);
+  plot_data(run_dir,filename);
 
 }
 
@@ -294,13 +294,13 @@ void Kubo_solver_FFT_postProcess::Greenwood_postProcess(const std::vector<type>&
   //    R = parameters_.R_,
   //  D = parameters_.dis_real_;
   
-  int DIM = parent_solver_.device().parameters().DIM_;    
+  int SUBDIM = parent_solver_.device().parameters().SUBDIM_;    
 
   r_type a = parent_solver_.parameters().a_,
-            b = parent_solver_.parameters().b_;
-  //    sysSubLength = device_.sysSubLength();
+         b = parent_solver_.parameters().b_,
+         sysSubLength = parent_solver_.device().sysSubLength();
   
-  r_type omega = DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
+  r_type omega = -2.0 * SUBDIM/( a * a * sysSubLength * sysSubLength ) / ( 2 * M_PI );//Dimensional and normalizing constant
   
   //  r_value_t tmp, max=0, av=0;
 
@@ -315,18 +315,19 @@ void Kubo_solver_FFT_postProcess::Greenwood_postProcess(const std::vector<type>&
     partial_result[e] = 0.0;
     rvec_partial_result[e] = 0.0;
   }
-  rearrange_crescent_order(rearranged_E_points);
+
   /*When introducing a const. eta with modified polynomials, the result is equals to that of a
   simulation with regular polynomials and an variable eta_{var}=eta*sin(acos(E)). The following
   heuristical correction greatly improves the result far from the CNP to match that of the
   desired regular polys and const. eta.*/
-
+      
   
   for(int k=0; k < nump; k++){
-    rvec_partial_result[k] = 2.0 * omega * real( r_data[k] )     / (1.0 - E_points_[k] * E_points_[k] ) / ( 2 * M_PI );
-    partial_result[k]      = 2.0 * omega * real( final_data[k] ) / (1.0 - E_points_[k] * E_points_[k] ) / ( 2 * M_PI );
+    rvec_partial_result[k] = omega * real( r_data[k] )     / (1.0 - E_points_[k] * E_points_[k] ); //The minus sign represents the conjugation of vx being applied to the bra
+    partial_result[k]      = omega * real( final_data[k] ) / (1.0 - E_points_[k] * E_points_[k] );
   }
-
+  
+  rearrange_crescent_order(rearranged_E_points);
   rearrange_crescent_order(partial_result);
   rearrange_crescent_order(rvec_partial_result);
 
@@ -373,7 +374,7 @@ void Kubo_solver_FFT_postProcess::Greenwood_postProcess(const std::vector<type>&
 
   
   std::ofstream dataP;
-  dataP.open(filename);
+  dataP.open(run_dir+"currentResult_"+filename);
 
   for(int e=0;e<nump;e++)  
     dataP<<  a * rearranged_E_points[e]-b<<"  "<< partial_result [e] <<std::endl;

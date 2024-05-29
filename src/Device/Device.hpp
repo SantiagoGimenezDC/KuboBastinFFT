@@ -22,6 +22,8 @@ private:
   r_type sysLength_;
   r_type sysSubLength_;
 
+  r_type *dis_, *damp_;
+  
 public:
   ~Device(){};
   Device(device_vars& device_vars):device_vars_(device_vars),rng_(device_vars.dis_seed_){};
@@ -32,6 +34,13 @@ public:
   void set_sysSubLength(r_type sysSubLength){sysSubLength_=sysSubLength;};
   r_type sysSubLength(){return sysSubLength_;};
 
+  void set_dis(r_type* new_dis){ dis_=new_dis; };
+  void set_damp_op(r_type* new_damp){ damp_ = new_damp; };
+
+  r_type* dis(){ return dis_; };
+  r_type* damp_op(){ return damp_; };
+
+  
   virtual r_type Hamiltonian_size() = 0;  
 
   virtual void build_Hamiltonian() = 0;
@@ -49,6 +58,7 @@ public:
 
   virtual void update_cheb_filtered ( type*, type*, type*, r_type*, r_type* , type) {};  
 
+  virtual void update_cheb ( type*, type*, type* ){};  
   virtual void update_cheb ( type*, type*, type*, r_type*, r_type* ) = 0;  
   virtual void update_cheb ( type*, type*, type*, r_type*, r_type , r_type ){};
   virtual void update_cheb ( int ,  int, type*, type*, type*, type*, r_type*, r_type , r_type ){};

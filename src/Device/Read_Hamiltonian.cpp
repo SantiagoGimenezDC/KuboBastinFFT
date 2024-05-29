@@ -83,6 +83,10 @@ void Read_Hamiltonian::vel_op (type vec[], type p_vec[]){
   
 };
 
+void Read_Hamiltonian::H_ket ( type* vec, type* p_vec ){
+  H_ket(vec, p_vec, damp_op(), dis());
+};
+
 
 void Read_Hamiltonian::H_ket ( type* vec, type* p_vec, r_type* dmp_op, r_type* dis_vec) {
   int Dim = this->parameters().DIM_,
@@ -111,7 +115,11 @@ void Read_Hamiltonian::H_ket ( type* vec, type* p_vec, r_type* dmp_op, r_type* d
   
 }
 
+void Read_Hamiltonian::update_cheb ( type vec[], type p_vec[], type pp_vec[]){
+  update_cheb ( vec, p_vec, pp_vec, damp_op(), NULL);
+};
 
+  
 void Read_Hamiltonian::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type*){
 
   int Dim = this->parameters().DIM_;
@@ -125,6 +133,7 @@ void Read_Hamiltonian::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_
   Eigen::Map<VectorXdT> eig_vec(vec,Dim),
     eig_p_vec(p_vec, Dim),
     eig_pp_vec(pp_vec, Dim);
+  
   Eigen::Map<Eigen::Vector<double,-1>>   dmpt_op(damp_op,Dim);
   
 
@@ -139,6 +148,8 @@ void Read_Hamiltonian::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_
 
 
 void Read_Hamiltonian::damp ( r_type damp_op[]){
+
+  set_damp_op(damp_op);
   
   int Dim = this->parameters().DIM_;
  
@@ -199,6 +210,7 @@ void Read_Hamiltonian::update_dis ( r_type dis_vec[], r_type damp_op[]){
   int C   = this->parameters().C_,
       W   = this->parameters().W_;
 
+  set_dis(dis_vec);
 
   #pragma omp parallel for
   for(int i=0; i<subDim;i++)

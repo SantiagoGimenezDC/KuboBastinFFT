@@ -58,8 +58,14 @@ public:
   
 
   //Setting up
-  virtual void damp( r_type*);
-  virtual void update_dis(r_type*, r_type*){};
+  virtual void damp( r_type* new_damp){
+    set_damp_op(new_damp);
+    if(csc_mode)
+      damp_csc( new_damp);
+  };
+  virtual void damp_csc( r_type*);
+  
+  virtual void update_dis(r_type* new_dis, r_type*){ set_dis(new_dis); };
 
   virtual void rearrange_initial_vec(type*); //very hacky
   virtual void traceover(type*, type*, int, int);
@@ -67,6 +73,23 @@ public:
 
   //Generic interfaces
 
+  virtual void update_cheb ( type* vec, type* p_vec, type* pp_vec){
+    if(csc_mode)
+      update_cheb_csc( vec, p_vec, pp_vec, damp_op(), dis() );
+    else
+      update_cheb_otf( vec, p_vec, pp_vec, damp_op(), dis() );
+  };
+  
+  virtual void H_ket (  type* vec, type* p_vec){
+    if(csc_mode)
+      H_ket_csc( vec,  p_vec, damp_op(), dis() );
+    else
+      H_ket_otf( vec,  p_vec, damp_op(), dis() );
+  };
+
+
+
+  
   virtual void update_cheb ( type* vec, type* p_vec, type* pp_vec, r_type* dmp_op, r_type* dis_vec){
     if(csc_mode)
       update_cheb_csc( vec, p_vec, pp_vec, dmp_op, dis_vec);
@@ -107,7 +130,7 @@ public:
   
 
   //Unused
-  virtual void H_ket ( type*, type*);
+  //  virtual void H_ket ( type*, type*);
   virtual void update_cheb ( type*, type*, type*, r_type*, r_type , r_type ){};
   virtual void update_cheb ( int ,  int, type*, type*, type*, type*, r_type*, r_type , r_type ){};
 
@@ -136,11 +159,13 @@ public:
 
 
   
-  inline r_type SlaterCoster_intralayer_coefficient( r_type d_ij){
+  inline
+  r_type SlaterCoster_intralayer_coefficient( r_type d_ij){
     return VppPI_  * exp( - ( d_ij - a0_) / delta_ );
   };
 
-  inline r_type SlaterCoster_coefficient(Eigen::Matrix<r_type,3,1> R_ij, r_type d_ij){
+  inline
+  r_type SlaterCoster_coefficient(Eigen::Matrix<r_type,3,1> R_ij, r_type d_ij){
     return VppPI_  * exp(-(d_ij-a0_)/delta_) * (1.0-pow(R_ij.dot(Eigen::Matrix<r_type,3,1>(0.0,0.0,1.0))/d_ij,2.0))+
       VppSIG_ * exp(-(d_ij-d0_)/delta_) *      pow(R_ij.dot(Eigen::Matrix<r_type,3,1>(0.0,0.0,1.0))/d_ij,2.0);
   };

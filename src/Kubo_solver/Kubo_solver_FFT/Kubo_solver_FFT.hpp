@@ -13,67 +13,6 @@
 
 #include "../solver_vars.hpp"
 
-template<typename T>
-class State{
-private:
-  int D_;
-  T* data_;
-
-public:
-  ~State(){delete []data_;};
-
-  State(int D) : D_(D){
-    data_ = new T[D_];
-  };
-
-  State(int D, T data) : D_(D){
-    data_ = new T[D_];
-
-#pragma omp parallel for
-    for(int i = 0; i < D; i++ )
-      data_[i] = data(i);
-    
-  };
-
-  
-  State(State& other_state):D_(other_state.D()){
-    data_ = new T[D_];
-
-#pragma omp parallel for
-    for(int i = 0; i < D; i++ )
-      data_[i] = other_state(i);
-    
-  };
-
-  
-  
-  int D(){ return D; };
-  T* data(){ return data_; };
-  T& operator() (int i){ data_[ i ]; };
-
-  
-  State<T>& operator=(const State<T>& other_state){
-        if (this == &other_state) 
-            return *this; // Handle self-assignment
-        
-
-        // Delete existing data if necessary
-        delete[] data_;
-
-        D_ = other_state.D();
-        data_ = new T[D_];
-
-#pragma omp parallel for
-        for (int i = 0; i < D_; i++) 
-            data_[i] = other_state(i);
-        
-
-        return *this;
-  };
-  
-};
-
-
 class Kubo_solver_FFT{
 private:
   solver_vars parameters_;
@@ -131,9 +70,10 @@ public:
 
   template<typename T>
   inline
-  void reset_data ( std::vector<T>){ std::fill(r_data_.begin(), r_data_.end(), 0); };
+  void reset_data ( std::vector<T>& data ){ std::fill(data.begin(), data.end(), 0.0); };
   
-  void update_data ( std::vector<type>&, const std::vector<type>&, int );  
+  void update_data ( std::vector<type>&, const std::vector<type>&, int  );
+
 
 
   //Heavy duty
@@ -167,25 +107,25 @@ class Kubo_solver_FFT_postProcess{//will interpret data_set of points k=0,...,nu
   
         public:
        
-        Kubo_solver_FFT_postProcess( Kubo_solver_FFT& );
-        ~Kubo_solver_FFT_postProcess(){};
+          Kubo_solver_FFT_postProcess( Kubo_solver_FFT& );
+          ~Kubo_solver_FFT_postProcess(){};
 
   
-        void operator()( const std::vector<type>&, const std::vector<type>&, int);
+          void operator()( const std::vector<type>&, const std::vector<type>&, int);
   
-        void Greenwood_postProcess ( const std::vector<type>&, const std::vector<type>&, int );
-        void Bastin_postProcess    ( const std::vector<type>&, const std::vector<type>&, int);
+          void Greenwood_postProcess ( const std::vector<type>&, const std::vector<type>&, int );
+          void Bastin_postProcess    ( const std::vector<type>&, const std::vector<type>&, int);
 
-        void integration         ( const std::vector<r_type>&, const std::vector<r_type>&, std::vector<r_type>& );
-        void integration_linqt   ( const std::vector<r_type>&, const std::vector<r_type>&, std::vector<r_type>& );
-        void partial_integration ( const std::vector<r_type>&, const std::vector<r_type>&, std::vector<r_type>& );
+          void integration         ( const std::vector<r_type>&, const std::vector<r_type>&, std::vector<r_type>& );
+          void integration_linqt   ( const std::vector<r_type>&, const std::vector<r_type>&, std::vector<r_type>& );
+          void partial_integration ( const std::vector<r_type>&, const std::vector<r_type>&, std::vector<r_type>& );
 
   
-        void rearrange_crescent_order( std::vector<r_type>& );
+          void rearrange_crescent_order( std::vector<r_type>& );
   
-        void eta_CAP_correct(std::vector<r_type>&, std::vector<type>& );
+          void eta_CAP_correct(std::vector<r_type>&, std::vector<type>& );
   
-        void plot_data   ( const std::string&, const std::string& );
+          void plot_data   ( const std::string&, const std::string& );
 
 
     };

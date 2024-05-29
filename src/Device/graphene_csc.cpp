@@ -10,7 +10,7 @@
 
 
 
-void Graphene::damp ( r_type damp_op[]){
+void Graphene::damp_csc ( r_type damp_op[]){
   if(csc_mode){
   int Dim = this->parameters().DIM_;
  

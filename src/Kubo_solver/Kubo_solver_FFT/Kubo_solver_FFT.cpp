@@ -231,7 +231,7 @@ void Kubo_solver_FFT::update_data(std::vector<type>& final_data, const std::vect
   if( sym_formula_ == KUBO_GREENWOOD )
     end = nump;
   if( sym_formula_ == KUBO_BASTIN )
-    end= 2 * nump;
+    end = 2 * nump;
 
   
   for(int i = 0; i < end; i++)

@@ -248,7 +248,7 @@ void Graphene::horizontal_BC(type vec[], type p_vec[], r_type damp_op[]){
 
 
 
-
+/*
 void Graphene::H_ket ( type vec[], type p_vec[]){
 
   r_type t = t_a_,
@@ -285,7 +285,7 @@ void Graphene::H_ket ( type vec[], type p_vec[]){
     }
   } 
 }
-
+*/
 
 
 void Graphene::H_ket_otf ( type vec[], type p_vec[], r_type damp_op[], r_type dis[]){

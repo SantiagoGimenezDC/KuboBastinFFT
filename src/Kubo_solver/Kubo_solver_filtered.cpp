@@ -255,6 +255,7 @@ void Kubo_solver_filtered::compute(){
   cap_->create_CAP(W, C, LE,  dmp_op);
   device_.damp(dmp_op);
   
+  
 
   r_type buffer_mem    = r_type( 2 * M_dec * SEC_SIZE * sizeof(type) ) / r_type( 1000000000 ),
          recursion_mem = r_type( ( 5 * DIM + 1 * SUBDIM ) * sizeof(type) )/ r_type( 1000000000 ),
@@ -360,22 +361,7 @@ void Kubo_solver_filtered::compute(){
 	 
          auto FFT_start_2 = std::chrono::steady_clock::now();
 
-         //Bastin_FFTs__reVec_noEta(bras,kets, E_points, integrand);    	 
-         //Bastin_FFTs__imVec_noEta(bras,kets, E_points, integrand);
-	 //Greenwood_FFTs__reVec_noEta(bras,kets, E_points, r_data);         
-
 	 Greenwood_FFTs(bras, kets, r_data);
-	 
-	 /*
-         These 3 are meant to correct the pre factor .As it turns out, for small values of eta<0.1,
-	 those corrections are almost invisible and not worthwhile the huge increase in computational
-	 cost. The correction is meaningfull at the -1 and 1 edges, however, it is a lot more 
-         reasonable to adjuste edge_ variable to deal with those 
-	 
-	 //Bastin_FFTs__imVec_eta(bras,kets, E_points, integrand);
-         //Greenwood_FFTs__reVec_eta(bras,kets, E_points, r_data);
-	 
-         */
 	 
 	 auto FFT_end_2 = std::chrono::steady_clock::now();
          Station(std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000, "           FFT operations time:        ");
@@ -611,8 +597,10 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ra
 
     for( int m=2; m<M; m++ ){
 
+      
       device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
 
+      
       factor = 2 * std::polar(1.0,  M_PI * m * (  - 2 * k_dis + initial_disp_) / M_ext );
 
       if( vel_op == 1 ){
@@ -713,6 +701,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ra
 
 	device_.update_cheb_filtered ( vec_f, p_vec_f, pp_vec_f, damp_op, dis_vec, disp_factor);
 
+	
 	if( ( m - Np ) % decRate == 0 ){
 	  if( vel_op == 1 ){
             device_.vel_op( tmp_velOp, vec_f );
@@ -804,10 +793,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer
 
 
     
-  type *vec_f    = new type [ DIM ],
-       *p_vec_f  = new type [ DIM ],
-       *pp_vec_f = new type [ DIM ],
-       *vec      = new type [ DIM ],
+  type *vec      = new type [ DIM ],
        *p_vec    = new type [ DIM ],
        *pp_vec   = new type [ DIM ],
        *tmp      = new type [ SEC_SIZE ];
@@ -821,10 +807,6 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer
     vec[l] = 0;
     p_vec[l] = 0;
     pp_vec[l] = 0;
-
-    vec_f[l] = 0; 
-    p_vec_f[l] = 0;
-    pp_vec_f[l] = 0;
 
     tmp_velOp[l] = 0;
 
@@ -842,24 +824,22 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer
       pp_vec[l] = - rand_vec[l]; //This minus sign is due to the CONJUGATION of applying both velocity operators to the KET side!!!!
 
   
-  
-
+ 
   filter( 0, pp_vec, poly_buffer, tmp, tmp_velOp, s, vel_op );  
 
-    
-  device_.H_ket ( p_vec, pp_vec, damp_op, dis_vec);
+
+  
+  device_.H_ket ( p_vec, pp_vec );
   filter( 1, p_vec, poly_buffer, tmp, tmp_velOp, s, vel_op ); 
 
 
   for( int m=2; m<M; m++ ){
-    device_.update_cheb( vec, p_vec, pp_vec, damp_op, dis_vec);
+
+    device_.update_cheb( vec, p_vec, pp_vec );
+
     filter( m, vec, poly_buffer, tmp, tmp_velOp, s, vel_op );
   }
       
-  
-    delete []vec_f;
-    delete []p_vec_f;
-    delete []pp_vec_f;
     delete []vec;
     delete []p_vec;
     delete []pp_vec;
@@ -871,7 +851,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer
 
 
 
-
+/*
 void Kubo_solver_filtered::filtered_polynomial_cycle_direct(type** poly_buffer, type rand_vec[], r_type damp_op[], r_type dis_vec[], int s, int vel_op){
   
   int M         = parameters_.M_,
@@ -1072,7 +1052,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct(type** poly_buffer, 
 
 
 
-
+*/
 
 
 
@@ -1094,7 +1074,7 @@ void Kubo_solver_filtered::update_data(r_type E_points[], r_type integrand[], r_
 
 
   
-  r_type omega = SUBDIM/( a * a * sysSubLength * sysSubLength );//Dimensional and normalizing constant
+  r_type omega = SUBDIM/( a * a * sysSubLength * sysSubLength ) / ( 2 * M_PI );//Dimensional and normalizing constant
   
   r_type tmp, max=0, av=0;
 

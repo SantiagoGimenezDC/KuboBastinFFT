@@ -2,6 +2,7 @@
 #define STATES_HPP
 
 #include <vector>
+#include "../../Device/Device.hpp"
 //#include "../solver_vars.hpp"
 
 template<typename T>
@@ -95,6 +96,8 @@ public:
 };
 
 
+
+
 template<class State_T>
 class Chebyshev_states: public States_set<State_T>{
 private:
@@ -102,7 +105,7 @@ private:
   int head_num_ = 0;
 
 public:
-  Chebyshev_states(Device& device ):device_(device), States_buffer<State_T>( device_.parameters().DIM_, 3 ) {};
+  Chebyshev_states(Device& device ):device_(device), States_set<State_T>( device_.parameters().DIM_, 3 ) {};
 
   int update() {
     
@@ -121,7 +124,7 @@ public:
   };
 
 
-  void reset( StateType& init_state ){
+  void reset( State_T& init_state ){
     (*this)(0) = init_state;
     head_num_ = 0;
   };

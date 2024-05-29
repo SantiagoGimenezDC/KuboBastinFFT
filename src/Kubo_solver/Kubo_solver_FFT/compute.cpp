@@ -25,7 +25,6 @@
 
 
 
-
 void Kubo_solver_FFT::compute(){
 
   time_station_2 solver_station;
@@ -113,6 +112,7 @@ void Kubo_solver_FFT::compute(){
 
       time_station_2 randVec_time;
       randVec_time.start();
+      
       std::cout<<std::endl<< std::to_string( ( d - 1 ) * R + r)+"/"+std::to_string( D * R )+"-Vector/disorder realization;"<<std::endl;
 
       vec_base_->generate_vec_im( rand_vec_, r);       
@@ -180,6 +180,7 @@ void Kubo_solver_FFT::compute(){
 
       time_station_2 time_postProcess;
 
+      update_data(final_data_, r_data_, ( d - 1 ) * R + r );
       postProcess(final_data_, r_data_, r);
 
       time_postProcess.stop( "       Post-processing time:       ");
@@ -209,7 +210,9 @@ void Kubo_solver_FFT::polynomial_cycle(type** polys,  int s, bool vel){
       num_parts = parameters_.num_parts_;
 
   reset_recursion_vectors();
-  device_.vel_op( pp_vec_, rand_vec_ );
+
+  if(vel)
+    device_.vel_op( pp_vec_, rand_vec_ );
 
 
 //=================================KPM Step 0======================================//
@@ -223,7 +226,7 @@ void Kubo_solver_FFT::polynomial_cycle(type** polys,  int s, bool vel){
   
 //=================================KPM Step 1======================================//       
     
-  device_.H_ket ( p_vec_, pp_vec_, dmp_op_, dis_vec_);
+  device_.H_ket ( p_vec_, pp_vec_);
 
   if(vel){
     device_.vel_op( tmp_, p_vec_ );
@@ -235,7 +238,8 @@ void Kubo_solver_FFT::polynomial_cycle(type** polys,  int s, bool vel){
 //=================================KPM Steps 2 and on===============================//
     
   for( int m = 2; m < M; m++ ){
-    device_.update_cheb( vec_, p_vec_, pp_vec_, dmp_op_, dis_vec_);
+
+    device_.update_cheb( vec_, p_vec_, pp_vec_);
 
     if(vel){
       device_.vel_op( tmp_, vec_ );
