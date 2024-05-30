@@ -26,25 +26,21 @@ public:
       data_[i] = data(i);
     
   };
-
   
-  State(State& other_state):D_(other_state.D()){
-    data_ = new T[D_];
-
-#pragma omp parallel for
-    for(int i = 0; i < D; i++ )
-      data_[i] = other_state(i);
-    
-  };
-
+  // Copy constructor
+  State(const State& other) : D_(other.D_), data_(new T[other.D_]) {
+    std::copy(other.data_, other.data_ + D_, data_);
+  }
   
   
   int D(){ return D; };
+
   T* data(){ return data_; };
+
   T& operator() (int i){ data_[ i ]; };
 
   
-  State<T>& operator=(const State<T>& other_state){
+  State& operator=(const State& other_state){
         if (this == &other_state) 
             return *this; // Handle self-assignment
         
@@ -62,6 +58,18 @@ public:
 
         return *this;
   };
+
+ State operator+(const State& other) const {
+        if (D_ != other.D_) {
+            throw std::invalid_argument("Dimensions do not match.");
+        }
+        State result(D_);
+#pragma omp parallel for
+        for (int i = 0; i < D_; i++) {
+            result.data_[i] = data_[i] + other.data_[i];
+        }
+        return result;
+    }
   
 };
 
@@ -69,61 +77,59 @@ public:
 
 
 template <class State_T>
-class States_set{
+class States_buffer{
   typedef int indexType;
 private:
   indexType D_, M_;
-  std::vector<State_T*> states_set_;
+  std::vector<State_T*> states_buffer_;
     
 public:
-  States_set( indexType D, indexType M ) : D_(D), M_(M) {
-    states_set_.reserve(M);
+  States_buffer( indexType D, indexType M ) : D_(D), M_(M) {
+    states_buffer_.reserve(M);
 
     for( int m = 0; m < M_; m++ )
-      states_set_(m) = new State_T(D_);
+      states_buffer_.at(m) = new State_T(D_);
   };
   
-  void push_back( State_T& new_state){ states_set_.push_back(new_state); };
+  void push_back( State_T& new_state){ states_buffer_.push_back(new_state); };
 
-  indexType memory_size()       { return M_ * states_set_.at(0).memory_size(); };
-  std::vector<State_T*>& data() { return states_set_.data(); };
+  indexType memory_size()       { return M_ * states_buffer_.at(0).memory_size(); };
+  std::vector<State_T*>& data() { return states_buffer_.data(); };
   
-  State_T& operator()(indexType m ){ return states_set_.at(m); };
-  State_T& operator[](indexType m ){ return states_set_[m]; };
+  State_T& operator()(indexType m ){ return states_buffer_.at(m); };
+  State_T& operator[](indexType m ){ return states_buffer_[m]; };
   
-  
-
 };
 
 
 
 
 template<class State_T>
-class Chebyshev_states: public States_set<State_T>{
+class Chebyshev_states: public States_buffer<State_T>{
 private:
   Device& device_;
   int head_num_ = 0;
 
 public:
-  Chebyshev_states(Device& device ):device_(device), States_set<State_T>( device_.parameters().DIM_, 3 ) {};
+  Chebyshev_states(Device& device ):device_(device), States_buffer<State_T>( device_.parameters().DIM_, 3 ) {};
 
   int update() {
     
     if( head_num_ == 0 )
-      (*this)(1) = device_.H_ket( (*this)(0).state_data().data() );
+      (*this)(1) = device_.H_ket( (*this)(1).data(), (*this)(0).data() );
 
-    else{
-      (*this)(2) = 2 * device_.H_ket( (*this)(1).state_data().data() ) - (*this)(0);
+    else
+      device_.update_cheb( (*this)(2).data(), (*this)(1).data(), (*this)(0).data );
 
-      (*this)(0) = (*this)(1);
-      (*this)(1) = (*this)(2);
-    }
-    
+      
     head_num_++;
     return head_num_;
   };
 
 
+  State_T& head(){ return (*this)(2); };
+
+  
   void reset( State_T& init_state ){
     (*this)(0) = init_state;
     head_num_ = 0;

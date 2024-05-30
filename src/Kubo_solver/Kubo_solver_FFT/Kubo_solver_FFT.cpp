@@ -119,6 +119,9 @@ void Kubo_solver_FFT::allocate_memory(){
   
 /*------------Big memory allocation--------------*/
   //Single Shot vectors
+
+  States_buffer< State<type> > bras(SEC_SIZE, M);
+
   bras_ = new type* [ M ];
   kets_ = new type* [ M ];
 

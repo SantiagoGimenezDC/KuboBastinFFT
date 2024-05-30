@@ -13,6 +13,8 @@
 
 #include "../solver_vars.hpp"
 
+#include "States.hpp"
+
 class Kubo_solver_FFT{
 private:
   solver_vars parameters_;

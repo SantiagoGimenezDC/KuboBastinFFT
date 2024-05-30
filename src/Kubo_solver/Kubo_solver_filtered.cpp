@@ -752,7 +752,7 @@ void Kubo_solver_filtered::filter( int m, type* new_vec, type** poly_buffer, typ
 
   
   
-  type factor = ( 2 - ( m == 0 ) ) * kernel_->term(m,M) * std::polar(1.0,  M_PI * m * (  - 2 * k_dis + initial_disp_ ) / M_ext );
+  type factor = ( 2 - ( m == 0 ) ) * kernel_->term(m,M) * std::polar( 1.0,  M_PI * m * (  - 2 * k_dis + initial_disp_ ) / M_ext );
 
   
   if( vel_op == 1 ){
