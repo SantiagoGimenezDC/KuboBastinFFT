@@ -15,6 +15,39 @@
 
 #include "States.hpp"
 
+template<class State_T>
+class Chebyshev_states: public States_buffer<State_T>{
+private:
+  Device& device_;
+  int head_num_ = 0;
+
+public:
+  Chebyshev_states(Device& device ):device_(device), States_buffer<State_T>( device.parameters().DIM_, 3 ) {};
+
+  int update() {
+    
+    if( head_num_ == 0 )
+      device_.H_ket( (*this)(1).data(), (*this)(0).data() );
+
+    else
+      device_.update_cheb( (*this)(2).data(), (*this)(1).data(), (*this)(0).data() );
+
+      
+    head_num_++;
+    return head_num_;
+  };
+
+  State_T& head(){ return (*this)(2); };
+  
+  void reset( State_T& init_state ){
+    (*this)(0) = init_state;
+    head_num_ = 0;
+  };
+
+};
+
+
+
 class Kubo_solver_FFT{
 private:
   solver_vars parameters_;
@@ -80,7 +113,7 @@ public:
 
   //Heavy duty
   void compute();
-  void polynomial_cycle ( type**, int, bool);
+  void polynomial_cycle ( type**, Chebyshev_states< State<type> >, int, bool);
 
   
   void Greenwood_FFTs( type**, type**,  std::vector<type>&, int);
