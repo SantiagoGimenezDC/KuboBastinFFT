@@ -120,8 +120,11 @@ void Kubo_solver_FFT::allocate_memory(){
 /*------------Big memory allocation--------------*/
   //Single Shot vectors
 
-  States_buffer< State<type> > bras(SEC_SIZE, M);
+  States_buffer_sliced< State<type> > bras(SUBDIM, M, parameters_.num_parts_);
+  States_buffer_sliced< State<type> > kets(SUBDIM, M, parameters_.num_parts_);
 
+  Chebyshev_states<State<type>> cheb_vectors( device() );
+  
   bras_ = new type* [ M ];
   kets_ = new type* [ M ];
 

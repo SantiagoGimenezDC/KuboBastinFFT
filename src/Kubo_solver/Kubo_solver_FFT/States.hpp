@@ -37,7 +37,7 @@ public:
 
   T* data(){ return data_; };
 
-  T& operator() (int i){ data_[ i ]; };
+  T& operator() (int i){ return data_[ i ]; };
 
   
   State& operator=(const State& other_state){
@@ -94,7 +94,7 @@ public:
   void push_back( State_T& new_state){ states_buffer_.push_back(new_state); };
 
   indexType memory_size()       { return M_ * states_buffer_.at(0).memory_size(); };
-  std::vector<State_T*>& data() { return states_buffer_.data(); };
+  std::vector<State_T*>* data() { return states_buffer_.data(); };
   
   State_T& operator()(indexType m ){ return states_buffer_.at(m); };
   State_T& operator[](indexType m ){ return states_buffer_[m]; };
@@ -130,9 +130,32 @@ public:
   State_T& head(){ return (*this)(2); };
 
   
-  void reset( State_T& init_state ){
+  void reset( const State_T& init_state ){
     (*this)(0) = init_state;
     head_num_ = 0;
+  };
+
+
+};
+
+
+
+
+template<class State_T>
+class States_buffer_sliced: public States_buffer<State_T>{//MAKE sure that num_buffers = mem/col_size. Otherwise, you are exposed to M / num_buffers< M%num_buffers
+private:
+  int DIM_,  num_buffers_, buffer_size_, rest_size_;
+  
+public:
+  States_buffer_sliced(int DIM, int M, int num_buffers) :
+    DIM_(DIM), num_buffers_(num_buffers), buffer_size_( DIM_ / num_buffers_ ), rest_size_( DIM_ % num_buffers_ ), States_buffer<State_T>( DIM_ / num_buffers_, M ){};
+
+  
+  int buffer_end(int s){
+    if( s == num_buffers_ )
+      return rest_size_;
+    else
+      return buffer_size_;
   };
 
 

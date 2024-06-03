@@ -211,12 +211,12 @@ void Kubo_solver_FFT::polynomial_cycle(type** polys,  int s, bool vel){
 
   reset_recursion_vectors();
 
-  if(vel)
-    device_.vel_op( pp_vec_, rand_vec_ );
-
+  
 
 //=================================KPM Step 0======================================//
   if(vel){
+    device_.vel_op( pp_vec_, rand_vec_ );
+
     device_.vel_op( tmp_, pp_vec_ );
     device_.traceover(polys[0], tmp_, s, num_parts);  
   }
