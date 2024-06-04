@@ -635,6 +635,7 @@ void TBG::H_ket ( type* vec, type* p_vec){
 }
 
 
+
 void TBG::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type* ){
 
   int Dim = this->parameters().DIM_;

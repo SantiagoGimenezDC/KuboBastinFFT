@@ -53,7 +53,7 @@ public:
   
   void filtered_polynomial_cycle( type** , type*,  r_type* , r_type* , int , int );
   void filtered_polynomial_cycle_direct( type** , type*,  r_type* , r_type* , int , int );
-  void filtered_polynomial_cycle_direct_2( type** , type*,  r_type* , r_type* , int , int );
+  void filtered_polynomial_cycle_direct_2( type** , type*, int , int );
   
   //  void Bastin_FFTs__reVec_noEta     ( r_type*, r_type*, r_type*, r_type*);
   //void Bastin_FFTs__imVec_noEta     ( std::complex<r_type>**, std::complex<r_type>**, r_type*, r_type*);

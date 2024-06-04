@@ -72,8 +72,8 @@ int main(int , char **argv){
   
   Device *device;
 
-  graphene_vars.filename_=s_vars.filename_;
-  graphene_vars.run_dir_=s_vars.run_dir_;
+  Input>>graphene_vars.filename_;
+  graphene_vars.run_dir_ = s_vars.run_dir_;
 
   
   /*  

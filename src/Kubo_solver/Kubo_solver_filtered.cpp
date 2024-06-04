@@ -124,12 +124,12 @@ void Kubo_solver_filtered::compute(){
 
   device_.setup_velOp();
   
-  if(parameters_.a_==1.0){
-    r_type Emin, Emax;
+  if(parameters_.a_ == 1.0){
+    r_type Emin = 0, Emax = 0;
     device_.minMax_EigenValues(300, Emax,Emin);
 
-    parameters_.a_ = (Emax-Emin)/(2.0-parameters_.edge_);
-    parameters_.b_ = -(Emax+Emin)/2.0;
+    parameters_.a_ = ( Emax - Emin ) / ( 2.0 - parameters_.edge_ );
+    parameters_.b_ = - ( Emax + Emin ) / 2.0;
 
   }
 
@@ -137,7 +137,6 @@ void Kubo_solver_filtered::compute(){
   
   filter_.compute_k_dis(parameters_.a_,parameters_.b_);
 
-  
   device_.adimensionalize(parameters_.a_, parameters_.b_);
 
   device_init_time.stop("    Time to setup the whole device:         ");
@@ -335,7 +334,7 @@ void Kubo_solver_filtered::compute(){
 
          auto csrmv_start_2 = std::chrono::steady_clock::now();
     
-         filtered_polynomial_cycle_direct_2(bras, rand_vec, dmp_op, dis_vec, s, 0);     
+         filtered_polynomial_cycle_direct_2(bras, rand_vec, s, 0);     
 
          auto csrmv_end_2 = std::chrono::steady_clock::now();
          Station(std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end_2 - csrmv_start_2).count()/1000, "           Bras cycle time:            ");
@@ -348,7 +347,7 @@ void Kubo_solver_filtered::compute(){
 	 
          auto csrmv_start = std::chrono::steady_clock::now();
 
-	 filtered_polynomial_cycle_direct_2(kets, rand_vec,  dmp_op, dis_vec, s, 1);
+	 filtered_polynomial_cycle_direct_2(kets, rand_vec, s, 1);
 	 
          auto csrmv_end = std::chrono::steady_clock::now();
          Station( std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end - csrmv_start).count()/1000, "           Kets cycle time:            ");
@@ -459,6 +458,132 @@ void ay(type factor, type vec[], int size){
   for(int i=0;i<size;i++)
     vec[i] * factor;
 }
+
+
+
+void Kubo_solver_filtered::filter( int m, type* new_vec, type** poly_buffer, type* tmp, type* tmp_velOp, int s, int vel_op ){
+
+  
+  int M         = parameters_.M_,
+      M_ext     = filter_.parameters().M_ext_,
+      num_parts = parameters_.num_parts_,
+      SEC_SIZE  = parameters_.SECTION_SIZE_ ;
+
+  
+  bool cyclic = true;
+  
+  int k_dis     = filter_.parameters().k_dis_,
+      L         = filter_.parameters().L_,
+      Np        = (L-1)/2,
+      decRate   = filter_.parameters().decRate_;
+
+  
+  r_type KB_window[L];
+ 
+  for(int i=0; i < L; i++)
+    KB_window[i] = filter_.KB_window()[i];
+
+
+  
+  
+  type factor = ( 2 - ( m == 0 ) ) * kernel_->term(m,M) * std::polar( 1.0,  M_PI * m * (  - 2 * k_dis + initial_disp_ ) / M_ext );
+
+  
+  if( vel_op == 1 ){
+    device_.vel_op( tmp_velOp, new_vec );
+    device_.traceover(tmp, tmp_velOp, s, num_parts);
+  }
+  else
+    device_.traceover(tmp, new_vec, s, num_parts);
+
+
+      
+  for(int dist = -Np; dist <= Np;  dist++){
+    int i = ( m + dist );  
+
+    if( i >= 0 && i < M - 1 && i % decRate == 0 ){
+      int i_dec = i / decRate;  
+      plus_eq( poly_buffer[ i_dec ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
+    }
+	
+    if( cyclic && i < 0 && ( M - 1 + ( i + 1 )  ) % decRate == 0 )
+      plus_eq( poly_buffer[ ( M - 1 + ( i + 1 ) ) / decRate ], tmp,  factor * KB_window[ Np + dist ], SEC_SIZE );
+	
+	
+    if( cyclic && i > M - 1 && ( ( i - 1 ) - ( M - 1 )  ) % decRate == 0 )
+      plus_eq( poly_buffer[ ( i - M + 1 ) / decRate ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
+  }
+  
+};
+
+
+
+
+void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer, type rand_vec[],  int s, int vel_op){
+  
+  int M         = parameters_.M_,
+      DIM       = device_.parameters().DIM_,
+      SEC_SIZE  = parameters_.SECTION_SIZE_ ;
+
+
+    
+  type *vec      = new type [ DIM ],
+       *p_vec    = new type [ DIM ],
+       *pp_vec   = new type [ DIM ],
+       *tmp      = new type [ SEC_SIZE ];
+
+  type *tmp_velOp = new type [ DIM ];
+  
+
+  
+#pragma omp parallel for
+  for(int l=0;l<DIM;l++){
+    vec[l] = 0;
+    p_vec[l] = 0;
+    pp_vec[l] = 0;
+
+    tmp_velOp[l] = 0;
+
+    if( l < SEC_SIZE )
+      tmp[l] = 0;
+  }
+
+
+  
+  if( vel_op == 1 )
+    device_.vel_op( pp_vec, rand_vec );  
+  else
+#pragma omp parallel for
+    for(int l = 0; l < DIM; l++)
+      pp_vec[l] = - rand_vec[l]; //This minus sign is due to the CONJUGATION of applying both velocity operators to the KET side!!!!
+
+  
+ 
+  filter( 0, pp_vec, poly_buffer, tmp, tmp_velOp, s, vel_op );  
+
+
+  
+  device_.H_ket ( p_vec, pp_vec );
+  filter( 1, p_vec, poly_buffer, tmp, tmp_velOp, s, vel_op ); 
+
+
+  for( int m=2; m<M; m++ ){
+
+    device_.update_cheb( vec, p_vec, pp_vec );
+
+    filter( m, vec, poly_buffer, tmp, tmp_velOp, s, vel_op );
+  }
+      
+    delete []vec;
+    delete []p_vec;
+    delete []pp_vec;
+    delete []tmp;
+    delete []tmp_velOp;
+  
+}
+
+
+
 
 
 
@@ -724,132 +849,6 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ra
     delete []tmp_velOp;
   
 }
-
-
-
-void Kubo_solver_filtered::filter( int m, type* new_vec, type** poly_buffer, type* tmp, type* tmp_velOp, int s, int vel_op ){
-
-  
-  int M         = parameters_.M_,
-      M_ext     = filter_.parameters().M_ext_,
-      num_parts = parameters_.num_parts_,
-      SEC_SIZE  = parameters_.SECTION_SIZE_ ;
-
-  
-  bool cyclic = true;
-  
-  int k_dis     = filter_.parameters().k_dis_,
-      L         = filter_.parameters().L_,
-      Np        = (L-1)/2,
-      decRate   = filter_.parameters().decRate_;
-
-  
-  r_type KB_window[L];
- 
-  for(int i=0; i < L; i++)
-    KB_window[i] = filter_.KB_window()[i];
-
-
-  
-  
-  type factor = ( 2 - ( m == 0 ) ) * kernel_->term(m,M) * std::polar( 1.0,  M_PI * m * (  - 2 * k_dis + initial_disp_ ) / M_ext );
-
-  
-  if( vel_op == 1 ){
-    device_.vel_op( tmp_velOp, new_vec );
-    device_.traceover(tmp, tmp_velOp, s, num_parts);
-  }
-  else
-    device_.traceover(tmp, new_vec, s, num_parts);
-
-
-      
-  for(int dist = -Np; dist <= Np;  dist++){
-    int i = ( m + dist );  
-
-    if( i >= 0 && i < M - 1 && i % decRate == 0 ){
-      int i_dec = i / decRate;  
-      plus_eq( poly_buffer[ i_dec ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
-    }
-	
-    if( cyclic && i < 0 && ( M - 1 + ( i + 1 )  ) % decRate == 0 )
-      plus_eq( poly_buffer[ ( M - 1 + ( i + 1 ) ) / decRate ], tmp,  factor * KB_window[ Np + dist ], SEC_SIZE );
-	
-	
-    if( cyclic && i > M - 1 && ( ( i - 1 ) - ( M - 1 )  ) % decRate == 0 )
-      plus_eq( poly_buffer[ ( i - M + 1 ) / decRate ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
-  }
-  
-};
-
-
-
-
-void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer, type rand_vec[], r_type damp_op[], r_type dis_vec[], int s, int vel_op){
-  
-  int M         = parameters_.M_,
-      DIM       = device_.parameters().DIM_,
-      SEC_SIZE  = parameters_.SECTION_SIZE_ ;
-
-
-    
-  type *vec      = new type [ DIM ],
-       *p_vec    = new type [ DIM ],
-       *pp_vec   = new type [ DIM ],
-       *tmp      = new type [ SEC_SIZE ];
-
-  type *tmp_velOp = new type [ DIM ];
-  
-
-  
-#pragma omp parallel for
-  for(int l=0;l<DIM;l++){
-    vec[l] = 0;
-    p_vec[l] = 0;
-    pp_vec[l] = 0;
-
-    tmp_velOp[l] = 0;
-
-    if( l < SEC_SIZE )
-      tmp[l] = 0;
-  }
-
-
-  
-  if( vel_op == 1 )
-    device_.vel_op( pp_vec, rand_vec );  
-  else
-#pragma omp parallel for
-    for(int l = 0; l < DIM; l++)
-      pp_vec[l] = - rand_vec[l]; //This minus sign is due to the CONJUGATION of applying both velocity operators to the KET side!!!!
-
-  
- 
-  filter( 0, pp_vec, poly_buffer, tmp, tmp_velOp, s, vel_op );  
-
-
-  
-  device_.H_ket ( p_vec, pp_vec );
-  filter( 1, p_vec, poly_buffer, tmp, tmp_velOp, s, vel_op ); 
-
-
-  for( int m=2; m<M; m++ ){
-
-    device_.update_cheb( vec, p_vec, pp_vec );
-
-    filter( m, vec, poly_buffer, tmp, tmp_velOp, s, vel_op );
-  }
-      
-    delete []vec;
-    delete []p_vec;
-    delete []pp_vec;
-    delete []tmp;
-    delete []tmp_velOp;
-  
-}
-
-
-
 
 /*
 void Kubo_solver_filtered::filtered_polynomial_cycle_direct(type** poly_buffer, type rand_vec[], r_type damp_op[], r_type dis_vec[], int s, int vel_op){

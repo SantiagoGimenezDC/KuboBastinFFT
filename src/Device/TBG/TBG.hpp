@@ -73,7 +73,8 @@ class TBG: public Device{
   
     virtual void H_ket ( type*, type*);
     virtual void H_ket ( type* vec, type* p_vec, r_type*, r_type*){this->H_ket(vec, p_vec);};  
-    virtual void update_cheb ( type*, type*, type*, r_type*, r_type* );  
+    virtual void update_cheb ( type*, type*, type*, r_type*, r_type* );
+    virtual void update_cheb ( type vec[], type p_vec[], type pp_vec[] ){ update_cheb(vec, p_vec, pp_vec, damp_op(), NULL); };  
     virtual void vel_op (type*, type*);
     virtual void setup_velOp();
   
