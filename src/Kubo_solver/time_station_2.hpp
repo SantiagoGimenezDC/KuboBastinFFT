@@ -41,7 +41,7 @@ public:
 
 
   
-  inline long int stop(std::string msg ){
+  inline long int stop( std::string msg ){
     
     end_ = std::chrono::steady_clock::now();
     time_microSec_ +=  std::chrono::duration_cast<std::chrono::microseconds>(end_ - start_).count() ;
@@ -53,26 +53,32 @@ public:
 
 
   
-    
   
-  inline void print_msg(int time, std::string msg ){
+  inline void print_time_msg( std::string msg ){ print_msg(time_microSec_, msg); };
+      
+  
+  inline void print_msg( long int time, std::string msg ){
     
-    int sec   =  time/1000000;
-    int min   = sec / 60;
-    int hour  = min / 60;
-    int reSec = sec % 60;
-    int reMin = min % 60;
+    long int sec   = time/ ( long int ) 1000000;
+    long int min   = sec / ( long int ) 60;
+    long int hour  = min / ( long int ) 60;
+    long int reSec = sec % ( long int ) 60;
+    long int reMin = min % ( long int ) 60;
   
     std::cout<<msg;
 
-    if(hour>0)
+    if( hour > 0 )
       std::cout<<hour<<" hrs, "<<reMin<<" mins;"<<std::endl;
-    else if(min>0)
+    else if( min > 0 )
       std::cout<<min<<" mins, "<<reSec<<" secs;"<<std::endl;
-    else if(sec>0)
-      std::cout<<sec<<" secs;"<<" ("<< r_type(time)/r_type(1000)<<"ms) "<<std::endl;
+    else if( sec > 0 ){
+      std::cout<<sec<<" secs;";
+      if( sec < 3 )
+	std::cout<<" ("<< r_type( time ) / r_type( 1000 )<<"ms) ";
+      std::cout<<std::endl;
+    }
     else
-      std::cout<< r_type(time)/r_type(1000)<<" ms "<<std::endl;    
+      std::cout<< r_type( time )/r_type( 1000 )<<" ms "<<std::endl;    
  }
 
 

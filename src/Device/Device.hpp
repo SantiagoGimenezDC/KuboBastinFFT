@@ -25,8 +25,10 @@ private:
   r_type *dis_, *damp_;
   
 public:
-  ~Device(){};
-  Device(device_vars& device_vars):device_vars_(device_vars),rng_(device_vars.dis_seed_){};
+  ~Device(){ delete []dis_; };
+  Device( device_vars& device_vars ) : device_vars_( device_vars ), rng_( device_vars.dis_seed_ ){
+    dis_ = new r_type[ device_vars_.SUBDIM_ ];
+  };
 
 
   void set_sysLength(r_type sysLength){sysLength_=sysLength;};
@@ -44,8 +46,9 @@ public:
   virtual r_type Hamiltonian_size() = 0;  
 
   virtual void build_Hamiltonian() = 0;
-  virtual void damp   ( r_type*) = 0;
-  virtual void update_dis(r_type*,r_type*) = 0; 
+  virtual void damp   ( r_type* ) = 0;
+  virtual void update_dis( r_type* ){};
+  virtual void update_dis( r_type*, r_type* ){}; 
   virtual void adimensionalize ( r_type,  r_type ) = 0;
   
   virtual void rearrange_initial_vec(type*) ; //very hacky
@@ -69,7 +72,8 @@ public:
   virtual void vel_op (type*, type*)=0;
   virtual void setup_velOp() = 0;
   
-  void Anderson_disorder(r_type*);  
+  void Anderson_disorder();
+  void Anderson_disorder( r_type* );  
 
   void minMax_EigenValues( int , r_type& , r_type& );
 };

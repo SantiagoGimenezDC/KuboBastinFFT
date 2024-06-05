@@ -81,6 +81,14 @@ Kubo_solver_FFT::~Kubo_solver_FFT(){
   int M      = parameters_.M_;
   
 /*------------Delete everything--------------*/
+
+  //Recursion Vectors
+  delete []rand_vec_;
+  delete []tmp_;
+  
+  //Auxiliary - disorder and CAP vectors
+  delete []dmp_op_;
+
   //Single Shot vectors
   for(int m=0;m<M;m++){
     delete []bras_[m];
@@ -89,16 +97,6 @@ Kubo_solver_FFT::~Kubo_solver_FFT(){
   delete []bras_;
   delete []kets_;
 
-  //Recursion Vectors
-  delete []vec_;
-  delete []p_vec_;
-  delete []pp_vec_;
-  delete []rand_vec_;
-  delete []tmp_;
-  
-  //Auxiliary - disorder and CAP vectors
-  delete []dmp_op_;
-  delete []dis_vec_;
 /*-----------------------------------------------*/
 
   delete kernel_;
@@ -115,7 +113,7 @@ void Kubo_solver_FFT::allocate_memory(){
       num_p    = parameters_.num_p_,
       SEC_SIZE = SUBDIM / parameters_.num_parts_;
 
-  parameters_.SECTION_SIZE_=SEC_SIZE;
+  parameters_.SECTION_SIZE_ = SEC_SIZE;
   
 /*------------Big memory allocation--------------*/
   //Single Shot vectors
@@ -130,15 +128,11 @@ void Kubo_solver_FFT::allocate_memory(){
 
   
   //Recursion Vectors
-  vec_      = new type [ DIM ];
-  p_vec_    = new type [ DIM ];
-  pp_vec_   = new type [ DIM ];
   rand_vec_ = new type [ DIM ];
   tmp_      = new type [ DIM ];
   
   //Disorder and CAP vectors
-  dmp_op_  = new r_type [ DIM ],
-  dis_vec_ = new r_type [ SUBDIM ];
+  dmp_op_  = new r_type [ DIM ];
 /*-----------------------------------------------*/
 
 
@@ -158,13 +152,9 @@ void Kubo_solver_FFT::allocate_memory(){
     rand_vec_ [k] = 0.0;
   }
     
-#pragma omp parallel for	
-  for(int k=0; k < SUBDIM; k++)  
-    dis_vec_  [k] = 0.0;
 
-
-  reset_data(r_data_);
-  reset_data(final_data_);  
+  reset_data( r_data_ );
+  reset_data( final_data_ );  
 
 
   
@@ -187,7 +177,7 @@ void Kubo_solver_FFT::allocate_memory(){
   std::cout<<std::endl;
   std::cout<<"Expected memory cost breakdown:"<<std::endl;
   std::cout<<"   Chebyshev buffers:    "<< buffer_mem<<" GBs"<<std::endl;  
-  std::cout<<"   Operators size:     "<< Ham_mem<<" GBs"<<std::endl;  
+  std::cout<<"   Operators size:       "<< Ham_mem<<" GBs"<<std::endl;  
   std::cout<<"   Recursion vectors:    "<<  recursion_mem <<" GBs"<<std::endl;
   std::cout<<"   FFT auxiliary lines:  "<<  FFT_mem <<" GBs"<<std::endl<<std::endl;   
   std::cout<<"TOTAL:  "<<  Total<<" GBs"<<std::endl<<std::endl;
@@ -197,6 +187,7 @@ void Kubo_solver_FFT::allocate_memory(){
 
 
 void Kubo_solver_FFT::reset_Chebyshev_buffers(){
+
   int SEC_SIZE  = parameters_.SECTION_SIZE_,
       M         = parameters_.M_;
 
@@ -209,18 +200,6 @@ void Kubo_solver_FFT::reset_Chebyshev_buffers(){
   }
 }
 
-
-
-void Kubo_solver_FFT::reset_recursion_vectors(){
-  int DIM    = device_.parameters().DIM_;
-  
-#pragma omp parallel for	
-   for(int k=0; k < DIM; k++){
-     vec_     [k] = 0.0;
-     pp_vec_  [k] = rand_vec_[k];
-     p_vec_   [k] = 0.0;
-   }
-}
 
 
 

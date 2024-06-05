@@ -78,11 +78,10 @@ void Kubo_solver_FFT::compute(){
   time_station_2 allocation_time;
   allocation_time.start();
 
+  Chebyshev_states<State<type>> cheb_vectors( device() );
+  
   States_buffer_sliced< State<type> > bras(SUBDIM, M, parameters_.num_parts_);
   States_buffer_sliced< State<type> > kets(SUBDIM, M, parameters_.num_parts_);
-
-  Chebyshev_states<State<type>> cheb_vectors( device() );
-
  
   allocate_memory();
   
@@ -109,8 +108,8 @@ void Kubo_solver_FFT::compute(){
     time_station_2 total_csrmv_time;
     time_station_2 total_FFTs_time;
 	
-    device_.Anderson_disorder(dis_vec_);
-    device_.update_dis(dis_vec_, dmp_op_);
+    //device_.Anderson_disorder(dis_vec_);
+    device_.update_dis( dmp_op_);
 
 
 
@@ -143,7 +142,7 @@ void Kubo_solver_FFT::compute(){
         time_station_2 csrmv_time_kets;
         csrmv_time_kets.start();
 	
-        polynomial_cycle( kets_, cheb_vectors, s, false );
+        polynomial_cycle( kets, cheb_vectors, s, false );
 
 	csrmv_time_kets.stop("           Kets cycle time:            ");
         total_csrmv_time += csrmv_time_kets;
@@ -154,12 +153,12 @@ void Kubo_solver_FFT::compute(){
 	time_station_2 csrmv_time_bras;
         csrmv_time_bras.start();
 	
-	polynomial_cycle( bras_, cheb_vectors, s , true );	
+	polynomial_cycle( bras, cheb_vectors, s , true );	
 
 	csrmv_time_bras.stop("           Bras cycle time:            ");
         total_csrmv_time += csrmv_time_bras;
 
-	
+
 
 	 
 
@@ -167,10 +166,10 @@ void Kubo_solver_FFT::compute(){
 	FFTs_time.start();
 	
 	if( sym_formula_ == KUBO_GREENWOOD )
-	  Greenwood_FFTs(bras_, kets_, r_data_, s);
+	  Greenwood_FFTs(bras, kets, r_data_, s);
 
         if( sym_formula_ == KUBO_BASTIN )
-	  Bastin_FFTs(bras_, kets_, r_data_, s);	
+	  Bastin_FFTs(bras, kets, r_data_, s);	
 
 	FFTs_time.stop("           FFT operations time:        ");
 	total_FFTs_time += FFTs_time;
@@ -179,28 +178,29 @@ void Kubo_solver_FFT::compute(){
 	
       }
 
-      
-      total_csrmv_time.stop( "\n       Total CSRMV time:           ");
-      total_FFTs_time.stop("       Total FFTs time:            ");
+
+      total_csrmv_time.print_time_msg( "\n       Total CSRMV time:           ");
+      total_FFTs_time.print_time_msg("       Total FFTs time:            ");
 
 
 
 
 
       time_station_2 time_postProcess;
-
+      time_postProcess.start();
+      
       update_data(final_data_, r_data_, ( d - 1 ) * R + r );
       postProcess(final_data_, r_data_, r);
 
       time_postProcess.stop( "       Post-processing time:       ");
 
-      
 
       
       randVec_time.stop("       Total RandVec time:         ");
       std::cout<<std::endl;
-
+     
     }
+
   }
 
 
@@ -213,64 +213,55 @@ void Kubo_solver_FFT::compute(){
 
 
 
-void Kubo_solver_FFT::polynomial_cycle(type** polys,  Chebyshev_states< State<type> > cheb_vectors, int s, bool vel){
+void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states< State<type> >& cheb_vectors, int s, bool vel){
 
   int M   = parameters_.M_,
       num_parts = parameters_.num_parts_;
 
-  reset_recursion_vectors();
 
   State<type> init_state( device().parameters().DIM_, rand_vec_ );
   cheb_vectors.reset( init_state );
   
 
 //=================================KPM Step 0======================================//
-  /*if(vel){
-    device_.vel_op( pp_vec_, rand_vec_ );
-
-    device_.vel_op( tmp_, pp_vec_ );
-    device_.traceover(polys[0], tmp_, s, num_parts);  
-  }
-  else
-  device_.traceover(polys[0], pp_vec_, s, num_parts);  */
-
-
   
   if(vel){
     device_.vel_op( cheb_vectors(0).data(), rand_vec_ );
 
     device_.vel_op( tmp_, cheb_vectors(0).data() );
-    device_.traceover(polys[0], tmp_, s, num_parts);  
+    device_.traceover(polys[0].data(), tmp_, s, num_parts);  
   }
   else
-    device_.traceover(polys[0], cheb_vectors(0).data(), s, num_parts);  
+    device_.traceover(polys[0].data(), cheb_vectors(0).data(), s, num_parts);  
+
 
   
 //=================================KPM Step 1======================================//       
 
   cheb_vectors.update();
-  //device_.H_ket ( p_vec_, pp_vec_);
+
 
   if(vel){
     device_.vel_op( tmp_, cheb_vectors(1).data() );
-    device_.traceover(polys[1], tmp_, s, num_parts);  
+    device_.traceover(polys[1].data(), tmp_, s, num_parts);  
   }
   else
-    device_.traceover(polys[1], cheb_vectors(1).data(), s, num_parts);      
+    device_.traceover(polys[1].data(), cheb_vectors(1).data(), s, num_parts);      
 
+
+  
 //=================================KPM Steps 2 and on===============================//
     
   for( int m = 2; m < M; m++ ){
 
     cheb_vectors.update();
-    //device_.update_cheb( vec_, p_vec_, pp_vec_);
 
     if(vel){
       device_.vel_op( tmp_, cheb_vectors(2).data() );
-      device_.traceover(polys[m], tmp_, s, num_parts);
+      device_.traceover(polys[m].data(), tmp_, s, num_parts);
     }
     else
-      device_.traceover(polys[m], cheb_vectors(2).data(), s, num_parts);      
+      device_.traceover(polys[m].data(), cheb_vectors(2).data(), s, num_parts);      
   }
 }
 

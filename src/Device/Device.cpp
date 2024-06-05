@@ -19,6 +19,22 @@ void Device::Anderson_disorder(r_type disorder_vec[]){
   
 }
 
+
+
+
+void Device::Anderson_disorder(){
+
+  int SUBDIM = device_vars_.SUBDIM_;
+  r_type str = device_vars_.dis_str_;
+  
+  for(int i=0;i<SUBDIM; i++){
+    r_type random_potential = str * this->rng().get()-str/2;
+
+    dis_[i] = random_potential;
+  }
+  
+}
+
 void Device::rearrange_initial_vec(type r_vec[]){ //supe duper hacky; Standard for 2-terminal devices.
   int Dim = this->parameters().DIM_,
     subDim = this->parameters().SUBDIM_;

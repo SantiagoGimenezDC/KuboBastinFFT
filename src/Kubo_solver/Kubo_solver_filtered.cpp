@@ -256,14 +256,14 @@ void Kubo_solver_filtered::compute(){
   
   
 
-  r_type buffer_mem    = r_type( 2 * M_dec * SEC_SIZE * sizeof(type) ) / r_type( 1000000000 ),
-         recursion_mem = r_type( ( 5 * DIM + 1 * SUBDIM ) * sizeof(type) )/ r_type( 1000000000 ),
+  r_type buffer_mem    = r_type( 2 * r_type(M_dec) * r_type( SEC_SIZE) * sizeof(type) ) / r_type( 1E9 ),
+         recursion_mem = r_type( ( 5 * r_type( DIM ) + 1 * r_type( SUBDIM ) ) * sizeof(type) )/ r_type( 1E9 ),
          FFT_mem       = 0.0,
-         Ham_mem = device_.Hamiltonian_size()/ r_type( 1000000000 ),
+         Ham_mem = device_.Hamiltonian_size()/ r_type( 1E9 ),
          Total = 0.0;
 
   
-  FFT_mem = r_type( ( 1 + omp_get_num_threads() * ( 8 + 1 ) ) * nump * sizeof(type) ) / r_type( 1000000000 );
+  FFT_mem = r_type( ( 1 + omp_get_num_threads() * ( 8 + 1 ) ) * nump * sizeof(type) ) / r_type( 1E9 );
   
   Total = buffer_mem + Ham_mem + recursion_mem + FFT_mem;
 

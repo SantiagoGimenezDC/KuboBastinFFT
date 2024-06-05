@@ -38,9 +38,11 @@ public:
 
   T operator() (int i){ return data_[ i ]; };
 
+  inline
+  T operator[] (int i){ return data_[ i ]; };
   
   void operator = ( State<T>& other_state){
-        if (this == &other_state) 
+        if ( this == &other_state ) 
             return ; // Handle self-assignment
         
 
@@ -52,7 +54,7 @@ public:
 
 #pragma omp parallel for
         for (int i = 0; i < D_; i++) 
-            data_[i] = other_state(i);
+            data_[i] = other_state[i];
         
   };
   /*
@@ -94,6 +96,8 @@ public:
   std::vector<State_T*>* data() { return states_buffer_.data(); };
   
   State_T& operator()(indexType m ){ return *states_buffer_.at(m); };
+
+  inline
   State_T& operator[](indexType m ){ return *states_buffer_[m]; };
   
 };

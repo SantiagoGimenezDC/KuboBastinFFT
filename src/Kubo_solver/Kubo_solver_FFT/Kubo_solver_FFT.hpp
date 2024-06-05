@@ -49,17 +49,20 @@ public:
 
 
 class Kubo_solver_FFT{
+  //typedef  type** storageType;
+  typedef  States_buffer_sliced< State<type> >& storageType;
 private:
   solver_vars parameters_;
   formula sym_formula_;
-
+  
   
   Device&  device_;
   Kernel*   kernel_;
   CAP*      cap_;
   Vec_Base* vec_base_;
 
-  
+ 
+
 
   
 //---------------Large vectors----------------//  
@@ -67,10 +70,7 @@ private:
        **kets_ ;
   
   //Recursion Vectors
-  type *vec_,
-       *p_vec_,
-       *pp_vec_,
-       *rand_vec_,
+  type *rand_vec_,
        *tmp_;
   
   //Auxiliary - disorder and CAP vectors
@@ -113,11 +113,11 @@ public:
 
   //Heavy duty
   void compute();
-  void polynomial_cycle ( type**, Chebyshev_states< State<type> >, int, bool);
+  void polynomial_cycle ( storageType, Chebyshev_states< State<type> >&, int, bool);
 
   
-  void Greenwood_FFTs( type**, type**,  std::vector<type>&, int);
-  void Bastin_FFTs ( type**, type**, std::vector<type>&, int);
+  void Greenwood_FFTs( storageType, storageType, std::vector<type>&, int);
+  void Bastin_FFTs   ( storageType, storageType, std::vector<type>&, int);
 
 
 
@@ -132,7 +132,7 @@ class Kubo_solver_FFT_postProcess{//will interpret data_set of points k=0,...,nu
         typedef std::complex< r_value_t > value_t;
 
         private:
-          Kubo_solver_FFT parent_solver_;
+          Kubo_solver_FFT& parent_solver_;
           std::vector<r_type>
 	    E_points_,
 	    prev_partial_result_,

@@ -65,7 +65,7 @@ public:
   };
   virtual void damp_csc( r_type*);
   
-  virtual void update_dis(r_type* new_dis, r_type*){ set_dis(new_dis); };
+  virtual void update_dis(r_type*){ Anderson_disorder(); };
 
   virtual void rearrange_initial_vec(type*); //very hacky
   virtual void traceover(type*, type*, int, int);
