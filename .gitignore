@@ -6,3 +6,6 @@ KuboBastinFFT
 .projectile
 /tests/*
 #*
+Viet_75x75_dis0.6.log
+nohup.out
+output_dis0.15.log
