@@ -50,6 +50,7 @@ public:
 
   void reset_buffer(type**);
   void filter( int, type*, type**, type*, type*, int, int);
+  void filter_2( int, type*, type**, type*, type*, int, int);
   
   void filtered_polynomial_cycle( type** , type*,  r_type* , r_type* , int , int );
   void filtered_polynomial_cycle_direct( type** , type*,  r_type* , r_type* , int , int );

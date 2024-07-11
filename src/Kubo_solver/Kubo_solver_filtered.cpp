@@ -783,6 +783,58 @@ void Kubo_solver_filtered::filter( int m, type* new_vec, type** poly_buffer, typ
 };
 
 
+void Kubo_solver_filtered::filter_2( int m, type* new_vec, type** poly_buffer, type* tmp, type* tmp_velOp, int s, int vel_op ){
+
+  
+  int M         = parameters_.M_,
+      M_ext     = filter_.parameters().M_ext_,
+      num_parts = parameters_.num_parts_,
+      SEC_SIZE  = parameters_.SECTION_SIZE_ ;
+
+  std::vector<int> list = filter_.decimated_list();
+  int M_dec = list.size();
+  
+  bool cyclic = true;
+  
+  int k_dis     = filter_.parameters().k_dis_,
+      L         = filter_.parameters().L_,
+      Np        = (L-1)/2,
+      decRate   = filter_.parameters().decRate_;
+
+  
+  r_type KB_window[L];
+ 
+  for(int i=0; i < L; i++)
+    KB_window[i] = filter_.KB_window()[i];
+
+
+  
+  
+  type factor = ( 2 - ( m == 0 ) ) * kernel_->term(m,M) * std::polar( 1.0,  M_PI * m * (  - 2 * k_dis + initial_disp_ ) / M_ext );
+
+  
+  if( vel_op == 1 ){
+    device_.vel_op( tmp_velOp, new_vec );
+    device_.traceover(tmp, tmp_velOp, s, num_parts);
+  }
+  else
+    device_.traceover(tmp, new_vec, s, num_parts);
+
+
+      
+  for(int i = 0; i < M_dec; m++ ){
+    int dist = abs(m - list[i]);
+    
+    if( cyclic )
+      if( ( i < Np && m > M-Np ) || ( m < Np && i > M-Np ) )
+        dist -= M;
+    
+    if(dist < Np)
+      plus_eq( poly_buffer[ i ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
+  }
+  
+};
+
 
 
 void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer, type rand_vec[], r_type damp_op[], r_type dis_vec[], int s, int vel_op){

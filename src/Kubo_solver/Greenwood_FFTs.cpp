@@ -11,7 +11,7 @@
 
 void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::complex<r_type>** kets, r_type r_data[]){  
 
-  int nump    = parameters_.num_p_,
+  int nump    = filter_.M_dec(),//parameters_.num_p_,
       size    = parameters_.SECTION_SIZE_,
       M_dec   = filter_.M_dec();
   

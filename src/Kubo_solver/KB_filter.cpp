@@ -10,22 +10,26 @@
 KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
   
   int M =parameters_.M_,
-    M_ext=parameters_.M_ext_,
-    decRate = parameters_.decRate_,
-    k_dis = parameters_.k_dis_,
-    nump = parameters_.nump_;
+    decRate = parameters_.decRate_;
+    
 
+  
 
-  M_dec_ = M / decRate ;
+  for( int m = 0; m < M; m++)
+    if( m % decRate == 0 )
+      decimated_list_.push_back(m);
+    
+  M_dec_=decimated_list_.size();
+
+  /*  M_dec_ = M / decRate ;
   if( (M - 1) % decRate == 0 && (decRate != 1) ){
     M_dec_++;
-    nump++;
-    parameters_.nump_++;
-  }
+    parameters_.nump_=M_dec_;
+    }*/
 
 
   //nump = M_dec_;
-  //parameters_.nump_;
+  parameters_.nump_ = M_dec_;
 
   if( M % decRate != 0 )
     std::cout<<"You should choose M divisible by decRate for best precision"<<std::endl;
