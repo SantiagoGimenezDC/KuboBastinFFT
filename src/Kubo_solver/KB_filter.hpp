@@ -20,6 +20,7 @@ private:
   filter_vars& parameters_;
   r_type beta_;
   Eigen::VectorXd E_points_, KB_window_;
+  std::vector<int> decimated_list_;
   int M_dec_;
   
 public:
@@ -30,6 +31,8 @@ public:
   r_type* E_points(){return E_points_.data();};
   void post_process_filter(type**  , int );
 
+  std::vector<int>& decimated_list(){ return decimated_list_;};
+  
   void compute_k_dis(r_type a, r_type b){
     r_type adim_e_center = (parameters_.energy_center_ + b )/a;
     parameters_.k_dis_ =  int ( (  r_type(parameters_.M_ext_) * ( std::acos ( adim_e_center )  ) / ( 2.0 * M_PI ) - 0.25  ) );
