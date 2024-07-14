@@ -175,6 +175,7 @@ void Kubo_solver_filtered::compute(){
   filter_.compute_filter(); //Initialize filter and filter variables
 
   int M_dec = filter_.M_dec();
+
   parameters_.num_p_ = filter_.parameters().nump_;
   nump = parameters_.num_p_;
   
@@ -564,9 +565,11 @@ void Kubo_solver_filtered::filter_2( int m, type* new_vec, type** poly_buffer, t
     int dist = abs( m - list[i] );
 
     if( cyclic )
-      if( ( list[i] < Np && m > M - Np - 1 ) || ( m < Np && list[i] > M - Np - 1 ) )
-        dist = M - ( m + list[i] );
-    
+      if( ( list[i] < Np && m > M - Np - 1 ) )
+        dist = M - m + list[i];
+      if( ( m < Np && list[i] > M - Np - 1 ) )
+        dist = M - list[i] + m ;
+	
     if(dist < Np)
       plus_eq( poly_buffer[ i ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
   }

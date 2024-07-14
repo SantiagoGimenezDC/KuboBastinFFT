@@ -11,7 +11,7 @@
 
 void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::complex<r_type>** kets, r_type r_data[]){  
 
-  int nump    = filter_.M_dec(),//parameters_.num_p_,
+  int nump    = parameters_.num_p_,
       size    = parameters_.SECTION_SIZE_,
       M_dec   = filter_.M_dec();
   
@@ -54,8 +54,8 @@ void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::comp
         
     for(int l = l_start; l < l_end;l++){      
       for(int m = 0; m < M_dec; m++){
-	bras_dft.input()[ m ] = bras[ m ][ l ]  ;
-        kets_dft.input()[ m ] = kets[ m ][ l ]  ;        
+	bras_dft.input()[ m ] = conj(bras[ m ][ l ]  );
+	kets_dft.input()[ m ] = conj(kets[ m ][ l ]  );        
       }
       
       bras_dft.execute();

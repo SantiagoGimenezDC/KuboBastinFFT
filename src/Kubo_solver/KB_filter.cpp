@@ -9,7 +9,7 @@
 
 KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
   
-  int M =parameters_.M_,
+  int M = parameters_.M_ext_,
     decRate = parameters_.decRate_;
     
 
@@ -19,8 +19,8 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
     if( m % decRate == 0 )
       decimated_list_.push_back(m);
     
-  M_dec_=decimated_list_.size();
-  parameters_.nump_=M_dec_;
+  M_dec_ = decimated_list_.size();
+  parameters_.nump_ = M_dec_;
 
   /*  M_dec_ = M / decRate ;
   if( (M - 1) % decRate == 0 && (decRate != 1) ){
