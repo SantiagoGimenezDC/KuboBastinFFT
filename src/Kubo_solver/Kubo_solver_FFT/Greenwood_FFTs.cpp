@@ -30,7 +30,7 @@ void Kubo_solver_FFT::Greenwood_FFTs( storageType bras, storageType kets, std::v
   type pre_factors [ M ];
 
   for(int m=0; m<M; m++)
-    pre_factors[m]  = ( 2 - ( m == 0 ) ) * kernel_->term(m, M) * std::polar( 1.0, M_PI * m / ( 2.0 * M ) ) ;
+    pre_factors[m]  = ( 2 - ( m == 0 ) ) * kernel_->term(m, M) * std::polar( 1.0, M_PI * m / ( 2.0 * nump ) ) ;
   
   const std::complex<double> im(0,1);
 

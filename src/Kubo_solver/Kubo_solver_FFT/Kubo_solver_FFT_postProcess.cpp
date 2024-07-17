@@ -360,6 +360,7 @@ void Kubo_solver_FFT_postProcess::Greenwood_postProcess(const std::vector<type>&
     conv_R_av_ [ ( r - 1 ) ] = av;
   }
 
+  prev_partial_result_ = partial_result;
   
  
   std::ofstream dataR;
