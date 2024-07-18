@@ -108,7 +108,7 @@ void Kubo_solver_filtered::compute_E_points( r_type* E_points ){
 
 
 
-void Kubo_solver_filtered::compute(){
+void Kubo_solver_filtered::compute_real(){
   
   auto start0 = std::chrono::steady_clock::now();
 
@@ -441,7 +441,7 @@ void Kubo_solver_filtered::compute(){
 
 
 
-
+/*
 inline
 void copy_vector(type vec_destination[], type vec_original[], int size){
 #pragma omp parallel for
@@ -462,7 +462,7 @@ void ay(type factor, type vec[], int size){
   for(int i=0;i<size;i++)
     vec[i] * factor;
 }
-
+*/
 
 
 void Kubo_solver_filtered::filter( int m, type* new_vec, type** poly_buffer, type* tmp, type* tmp_velOp, int s, int vel_op ){
@@ -474,7 +474,7 @@ void Kubo_solver_filtered::filter( int m, type* new_vec, type** poly_buffer, typ
       SEC_SIZE  = parameters_.SECTION_SIZE_ ;
 
   
-  bool cyclic = true;
+  bool cyclic = false;
   
   int k_dis     = filter_.parameters().k_dis_,
       L         = filter_.parameters().L_,
@@ -537,8 +537,7 @@ void Kubo_solver_filtered::filter_2( int m, type* new_vec, type** poly_buffer, t
   
   int k_dis     = filter_.parameters().k_dis_,
       L         = filter_.parameters().L_,
-      Np        = (L-1)/2,
-      decRate   = filter_.parameters().decRate_;
+      Np        = (L-1)/2;
 
   
   r_type KB_window[L];
@@ -564,13 +563,14 @@ void Kubo_solver_filtered::filter_2( int m, type* new_vec, type** poly_buffer, t
   for(int i = 0; i < M_dec; i++ ){
     int dist = abs( m - list[i] );
 
-    if( cyclic )
+    if( cyclic ){
       if( ( list[i] < Np && m > M - Np - 1 ) )
         dist = M - m + list[i];
       if( ( m < Np && list[i] > M - Np - 1 ) )
         dist = M - list[i] + m ;
-	
-    if(dist < Np)
+    }
+    
+    if( dist < Np )
       plus_eq( poly_buffer[ i ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
   }
   

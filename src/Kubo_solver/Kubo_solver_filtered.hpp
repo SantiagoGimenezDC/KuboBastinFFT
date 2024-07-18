@@ -39,7 +39,17 @@ public:
   Kubo_solver_filtered( solver_vars&, Device&, KB_filter&);
   
   solver_vars& parameters(){return parameters_;};
-  void compute();
+
+  void compute(){
+    if( parameters_.base_choice_ == 2 )
+      compute_imag();
+    else
+      compute_real();
+  };
+
+  
+  void compute_real();
+  
   void compute_E_points( r_type* );
 
   void integration ( r_type*, r_type*, r_type* );
@@ -55,17 +65,51 @@ public:
   void filtered_polynomial_cycle( type** , type*,  r_type* , r_type* , int , int );
   void filtered_polynomial_cycle_direct( type** , type*,  r_type* , r_type* , int , int );
   void filtered_polynomial_cycle_direct_2( type** , type*, int , int );
-  
-  //  void Bastin_FFTs__reVec_noEta     ( r_type*, r_type*, r_type*, r_type*);
-  //void Bastin_FFTs__imVec_noEta     ( std::complex<r_type>**, std::complex<r_type>**, r_type*, r_type*);
-  //void Bastin_FFTs__imVec_eta       ( std::complex<r_type>**, std::complex<r_type>**, r_type*, r_type*);
 
-  //void Greenwood_FFTs__reVec_noEta ( r_type**, r_type**, r_type*, r_type*);  
-  //void Greenwood_FFTs__reVec_eta   ( r_type*, r_type*, r_type*, r_type*);
+  
+
   void Greenwood_FFTs( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
   void Greenwood_FFTs_2( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
   void Bastin_FFTs   ( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
+
+
+  void compute_imag();
+  void filter_imag( int, type*, type**, type**, type*, type*, int, int);
+  void filtered_polynomial_cycle_direct_imag( type** , type** , type*, int , int );
+  void Greenwood_FFTs_imag( std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  r_type*);
   
+
+inline
+void copy_vector(type vec_destination[], type vec_original[], int size){
+#pragma omp parallel for
+  for(int i=0;i<size;i++)
+    vec_destination[i] = vec_original[i];
+}
+
+inline
+void plus_eq(type vec_1[], type vec_2[], type factor, int size){
+#pragma omp parallel for
+  for(int i=0;i<size;i++)
+    vec_1[i] += factor * vec_2[i];
+}
+  
+inline
+void plus_eq_imag(type vec_1_re[], type vec_1_im[], type vec_2[], type factor, int size){
+#pragma omp parallel for
+  for(int i=0;i<size;i++){
+    vec_1_re[i] += factor * real ( vec_2[i] );
+    vec_1_im[i] += factor * imag ( vec_2[i] );
+  }
+}
+  
+inline
+void ay(type factor, type vec[], int size){
+#pragma omp parallel for
+  for(int i=0;i<size;i++)
+    vec[i] * factor;
+}
+
+
 };
 
 
