@@ -11,9 +11,18 @@
 
 void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::complex<r_type>** kets, r_type r_data[]){  
 
-  int nump    = parameters_.num_p_,
-      size    = parameters_.SECTION_SIZE_,
-      M_dec   = filter_.M_dec();
+  int  M    = parameters_.M_,
+    nump    = parameters_.num_p_,
+    size    = parameters_.SECTION_SIZE_;
+
+
+  
+  int M_dec = filter_.M_dec(),
+      M_ext = filter_.parameters().M_ext_,
+      L = filter_.parameters().L_,
+      Np = (L-1)/2;
+  std::vector<int> list = filter_.decimated_list();
+
   
   const std::complex<double> im(0,1);  
 
@@ -53,7 +62,30 @@ void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::comp
     //SO the solution here is to store separetely the two parts of each vector: real and imaginary. 
         
     for(int l = l_start; l < l_end;l++){      
-      for(int m = 0; m < M_dec; m++){
+      if( M_ext > M + Np ){
+        int m = 0;
+        while( list[m] < M + Np){
+	  bras_dft.input()[ m ] = bras[ m ][ l ];
+	  kets_dft.input()[ m ] = kets[ m ][ l ];
+          m++;
+        }
+
+        m = 0;
+        while( list[M_dec - 1 - m ] > M_ext - 1 - Np ){
+	  bras_dft.input()[ nump - 1 - m ] = bras[ M_dec - 1 - m ][ l ];
+	  kets_dft.input()[ nump - 1 - m ] = kets[ M_dec - 1 - m ][ l ];
+          m++;
+        }
+      }
+      else	
+        for(int m = 0; m < nump; m++){
+	  bras_dft.input()[ m ] = bras[ m ][ l ];
+	  kets_dft.input()[ m ] = kets[ m ][ l ];
+	}
+
+
+
+      for(int m = 0; m < nump; m++){
 	bras_dft.input()[ m ] = bras[ m ][ l ];
 	kets_dft.input()[ m ] = kets[ m ][ l ];        
       }

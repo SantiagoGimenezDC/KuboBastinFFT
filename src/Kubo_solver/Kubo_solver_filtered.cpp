@@ -564,10 +564,10 @@ void Kubo_solver_filtered::filter_2( int m, type* new_vec, type** poly_buffer, t
     int dist = abs( m - list[i] );
 
     if( cyclic ){
-      if( ( list[i] < Np && m > M - Np - 1 ) )
-        dist = M - m + list[i];
-      if( ( m < Np && list[i] > M - Np - 1 ) )
-        dist = M - list[i] + m ;
+      if( ( list[i] < Np && m > M_ext - Np - 1 ) )
+        dist = M_ext - m + list[i];
+      if( ( m < Np && list[i] > M_ext - Np - 1 ) )
+        dist = M_ext - list[i] + m ;
     }
     
     if( dist < Np )
