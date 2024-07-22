@@ -211,9 +211,10 @@ void Kubo_solver_filtered::compute_real(){
   
   
 /*---------------Dataset vectors----------------*/
-  r_type r_data      [ nump ],
-         final_data  [ nump ],
-         conv_R      [ 2 * D * R ],
+  type r_data      [ 2 * nump ],
+       final_data  [ nump ];
+
+  r_type conv_R      [ 2 * D * R ],
          E_points    [ nump ];
 
   r_type integrand   [ nump ] ;
@@ -315,8 +316,9 @@ void Kubo_solver_filtered::compute_real(){
 
     
        for(int k=0; k<nump; k++ ){
-         r_data    [k] = 0;
-         integrand [k] = 0;
+         r_data    [ k ] = 0;
+	 r_data    [ nump + k ] = 0;
+         integrand [ k ] = 0;
        }
 
 
@@ -364,7 +366,9 @@ void Kubo_solver_filtered::compute_real(){
 	 
          auto FFT_start_2 = std::chrono::steady_clock::now();
 
-	 Greenwood_FFTs(bras, kets, r_data);
+	 //Greenwood_FFTs(bras, kets, r_data);
+
+	 Bastin_FFTs(bras, kets, r_data, 1);
 	 
 	 auto FFT_end_2 = std::chrono::steady_clock::now();
          Station(std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000, "           FFT operations time:        ");
@@ -381,28 +385,24 @@ void Kubo_solver_filtered::compute_real(){
        std::cout<<"       Total FFTs time:            "<< total_FFTs<<" (ms)"<<std::endl;
 
 
-       
+       /*
        auto start_pr = std::chrono::steady_clock::now();
     
        //integration(E_points, integrand, r_data);
     
        auto end_pr = std::chrono::steady_clock::now();
        Station(std::chrono::duration_cast<std::chrono::microseconds>(end_pr - start_pr).count()/1000, "       Integration time:           ");
-       
+       */
 
        
     
        auto plot_start = std::chrono::steady_clock::now();    
 
-       /*When introducing a const. eta with modified polynomials, the result is equals to that of a
-       simulation with regular polynomials and an variable eta_{var}=eta*sin(acos(E)). The following
-       heuristical correction greatly improves the result far from the CNP to match that of the
-       desired regular polys and const. eta.*/
-       if( parameters_.eta_!=0 )
-         eta_CAP_correct(E_points, r_data);
 
+       //update_data(E_points, integrand, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
 
-       update_data(E_points, integrand, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
+       update_data_Bastin(E_points, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
+
        plot_data(run_dir,filename);
 
        
@@ -1242,12 +1242,207 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct(type** poly_buffer, 
 
 
 
+void Kubo_solver_filtered::rearrange_crescent_order( r_type* rearranged){//The point choice of the FFT has unconvenient ordering for file saving and integrating; This fixes that.
+  int nump = parameters_.num_p_;
+  std::vector<r_type> original(nump);
+
+  for( int k = 0; k < nump; k++ )
+    original[ k ] = rearranged[ k ];
+
+  
+  for( int k = 0; k < nump / 2; k++ ){
+    rearranged[ k ]   = original[ k ];
+    rearranged[ nump/2 + k ] = original[ nump - k - 1 ]; 
+  }
+  
+  for( int k=0; k < nump / 2; k++ ){
+    r_type tmp = rearranged[ k ]; 
+    rearranged[ k ]   = rearranged[ nump-k-1 ];
+    rearranged[ nump-k-1 ] = tmp;    
+  }  
+  
+}
+
+
+
+void Kubo_solver_filtered::integration_linqt(const r_type* E_points, const r_type* integrand, r_type* result){
+
+  int nump = parameters_.num_p_;
+
+  double acc = 0;
+  for( int i=0; i < nump-1; i++)
+  {
+     const double denerg = E_points[i+1]-E_points[i];
+     acc +=integrand[i]*denerg;
+     result[i] = acc;
+  }
+}
+
+
+void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], type final_data[], r_type conv_R[], int r, std::string run_dir, std::string filename){
+
+  const std::complex<double> im(0,1);  
+  
+  
+  int nump = parameters_.num_p_,
+    R = parameters_.R_,
+    D = parameters_.dis_real_;
+  
+  int SUBDIM = device_.parameters().SUBDIM_;    
+
+  r_type a = parameters_.a_,
+    b = parameters_.b_,
+     sysSubLength = device_.sysSubLength();
+  
+  r_type omega = -2.0 * 1000*SUBDIM/( a * a * sysSubLength * sysSubLength ) / ( 2 * M_PI );//Dimensional and normalizing constant
+  //DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
+  
+  //r_value_t tmp, max=0, av=0;
+
+  r_type
+    rearranged_E_points[nump],
+    integrand[nump],
+    rvec_integrand[nump],
+    partial_result[nump],
+    rvec_partial_result[nump];
+
+  for(int e=0; e<nump; e++){
+    rearranged_E_points[e] = E_points[e];
+    integrand[e]           = 0.0;
+    rvec_integrand[e]      = 0.0;
+    partial_result[e]      = 0.0;
+    rvec_partial_result[e] = 0.0;
+  }   
+
+  
+    
+
+
+  
+  for( int e = 0; e < nump; e++ ){  
+    //prev_partial_result[e] = final_data[e];
+    final_data[e] += ( final_data [e] * (r-1.0) + omega * r_data[e] ) / r;
+  }
+
+
+  
+
+    
+
+  //Keeping just the real part of E*p(E)+im*sqrt(1-E^2)*w(E) yields the Kubo-Bastin integrand:
+  for(int k = 0; k < nump; k++){
+    integrand[k]  = E_points[k] * real( final_data[ k ] ) - ( sqrt(1.0 - E_points[ k ] * E_points[ k ] ) * imag( final_data[ k + nump ] ) );
+    integrand[k] *= 1.0 / pow( (1.0 - E_points[k]  * E_points[k] ), 2.0);
+    integrand[k] *=  omega / ( M_PI ); 
+
+    rvec_integrand[k]  = E_points[k] * real( r_data[ k ] ) - ( sqrt(1.0 - E_points[ k ] * E_points[ k ] ) * real( r_data[ k + nump ] ) );
+    rvec_integrand[k] *= 1.0 / pow( (1.0 - E_points[k]  * E_points[k] ), 2.0);
+    rvec_integrand[k] *=  omega / ( M_PI ); 
+  }
+
+  rearrange_crescent_order(rearranged_E_points);
+  rearrange_crescent_order(integrand);
+  rearrange_crescent_order(rvec_integrand);
+
+  
+
+
+  time_station time_integration;
+      
+  integration_linqt(rearranged_E_points, rvec_integrand, rvec_partial_result);  
+  integration_linqt(rearranged_E_points, integrand, partial_result);    
+
+  time_integration.stop("       Integration time:           ");
+
+  
+
+  /*
+  if( parameters_.eta_!=0 ){
+    eta_CAP_correct(rearranged_E_points, partial_result);
+    eta_CAP_correct(rearranged_E_points, rvec_partial_result);
+  }
+  */
+
+
+  /*-----------------
+  r_type tmp = 1, max = 0, av=0;
+  //R convergence analysis  
+  for(int e = 0; e < nump; e++){
+
+    tmp = partial_result [ e ] ;
+    if( r > 1 ){
+      tmp = std::abs( ( partial_result [ e ] - prev_partial_result_ [e] ) / prev_partial_result_ [e] ) ;
+      if(tmp > max)
+        max = tmp;
+
+      av += tmp / nump ;
+    }
+  }
+
+  
+  if( r > 1 ){
+    conv_R[ 2 * ( r - 1 ) ] = max;
+    conv_R[ 2 * ( r - 1 ) + 1 ] = av;
+  }
+  */
+  
+  //prev_partial_result_=partial_result;
+
+
+  
+  std::ofstream dataR;
+  dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
+
+  for(int e=0;e<nump;e++)  
+    dataR<< a * rearranged_E_points[e] - b<<"  "<< rvec_partial_result [e] <<std::endl;
+
+  dataR.close();
+  
+
+
+  
+  std::ofstream dataP;
+  dataP.open(run_dir+"currentResult_"+filename);
+
+  for(int e=0;e<nump;e++)  
+    dataP<< a * rearranged_E_points[e] - b<<"  "<<  partial_result [e] <<std::endl;
+
+  dataP.close();
+
+
+
+  
+  std::ofstream data;
+  data.open(run_dir+"conv_R_"+filename);
+
+  for(int r=1;r<D*R;r++)  
+    data<< r <<"  "<< conv_R[ 2*(r-1) ]<<"  "<< conv_R[ 2*(r-1) + 1 ] <<std::endl;
+
+  data.close();  
+
+  
+  
+  
+  std::ofstream data2;
+  data2.open( run_dir + filename + "_integrand");
+
+  for(int e=0;e<nump;e++)  
+    data2<< a * rearranged_E_points[e] - b<<"  "<<  integrand[e] <<std::endl;
+  
+  data2.close();
+
+
+  plot_data(run_dir,filename);
+}
+
+
+
 
 void Kubo_solver_filtered::update_data(r_type E_points[], r_type integrand[], r_type r_data[], r_type final_data[], r_type conv_R[], int r, std::string run_dir, std::string filename){
 
   int nump = parameters_.num_p_,
-    R = parameters_.R_,
-    D = parameters_.dis_real_;
+      R = parameters_.R_,
+      D = parameters_.dis_real_;
 
 
   int SUBDIM = device_.parameters().SUBDIM_;    

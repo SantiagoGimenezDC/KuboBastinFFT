@@ -47,7 +47,9 @@ public:
       compute_real();
   };
 
-  
+
+  void rearrange_crescent_order( r_type* );
+  void integration_linqt(const r_type* , const r_type* , r_type* );
   void compute_real();
   
   void compute_E_points( r_type* );
@@ -55,6 +57,7 @@ public:
   void integration ( r_type*, r_type*, r_type* );
   void eta_CAP_correct(r_type*, r_type* );
   void update_data ( r_type*,r_type*, r_type*, r_type*, r_type*, int ,  std::string, std::string );
+  void update_data_Bastin ( r_type*, type*, type*, r_type*,  int ,  std::string, std::string );
   void plot_data   ( std::string, std::string );
 
 
@@ -70,7 +73,7 @@ public:
 
   void Greenwood_FFTs( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
   void Greenwood_FFTs_2( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
-  void Bastin_FFTs   ( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
+  void Bastin_FFTs   ( std::complex<r_type>**, std::complex<r_type>**,  type*, int );
 
 
   void compute_imag();

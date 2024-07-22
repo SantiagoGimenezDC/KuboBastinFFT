@@ -82,16 +82,6 @@ void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::comp
 	  bras_dft.input()[ m ] = bras[ m ][ l ];
 	  kets_dft.input()[ m ] = kets[ m ][ l ];
 	}
-
-
-
-      for(int m = 0; m < nump; m++){
-	bras_dft.input()[ m ] = bras[ m ][ l ];
-	kets_dft.input()[ m ] = kets[ m ][ l ];        
-      }
-      
-      bras_dft.execute();
-      kets_dft.execute();
       
       bras_dft.execute();
       kets_dft.execute();
