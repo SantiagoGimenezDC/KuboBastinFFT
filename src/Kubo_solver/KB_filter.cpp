@@ -9,20 +9,38 @@
 
 KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
   
-  int M_ext = parameters_.M_ext_,
-      M = parameters_.M_,
+  int M_ext   = parameters_.M_ext_,
+      M       = parameters_.M_,
       decRate = parameters_.decRate_,
-      L = this->parameters().L_,
-      Np = (L-1)/2;
-    
+      L       = this->parameters().L_,
+      Np      = (L-1)/2;
 
+
+
+  if( M_ext % decRate != 0 ){
+    std::cout<<"M_ext is being increased by "<< M_ext % decRate<<" to match divisibility by the decimation rate" <<std::endl;
+
+    M_ext              += M_ext % decRate;
+    parameters_.M_ext_ = M_ext;
+
+  }
+  
+  if(parameters_.L_%2 == 0)
+    std::cout<<"Filter length L should be odd."<<std::endl;
+
+  if(parameters_.L_ > M)
+    std::cout<<"Filter length L should smaller than M."<<std::endl;
+
+  
+
+    
   int nump = 0;
 
   for( int m = 0; m < M_ext; m++)
     if( m % decRate == 0 ){
       nump++;
       if( ( m < M + Np ) ||  ( m > M_ext - 1 - Np ) )
-        decimated_list_.push_back(m);
+        decimated_list_.push_back( m );
     }
 
   
@@ -38,16 +56,6 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
 
   //nump = M_dec_;
 
-
-  if( M_ext % decRate != 0 )
-    std::cout<<"You should choose M divisible by decRate for best precision"<<std::endl;
-
-  if(parameters_.L_%2 == 0)
-    std::cout<<"Filter length L should be odd."<<std::endl;
-
-  if(parameters_.L_ > M)
-    std::cout<<"Filter length L should smaller than M."<<std::endl;
-  
   
   r_type att = parameters.att_;
 
