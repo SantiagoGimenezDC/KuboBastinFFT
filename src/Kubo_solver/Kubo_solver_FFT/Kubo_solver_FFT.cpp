@@ -71,7 +71,7 @@ Kubo_solver_FFT::Kubo_solver_FFT(solver_vars& parameters, Device& device) : para
   
   parameters_.SECTION_SIZE_ = device_.parameters().SUBDIM_ / parameters_.num_parts_ + device_.parameters().SUBDIM_ % parameters_.num_parts_;
   
-  sym_formula_ = KUBO_GREENWOOD;
+  sym_formula_ = KUBO_BASTIN;
 }
 
 

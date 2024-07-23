@@ -19,21 +19,34 @@
   //   only way I found of doing it.                                                                                                                //
   //================================================================================================================================================*/
 
-inline type derivate( out_of_place_dft& series, int j, int nump){
-  type delta = 1.0, der;
+inline type derivate( r_type E_points[], out_of_place_dft& series, int j, int nump){
+  type delta = 1.0, der=0;
 
+  if(j==nump/2)
+    der=0;
+  else{
+    if( j < nump - 1 ){
+      delta = E_points[j+1]-E_points[j];
+      der = ( series(j+1)-series(j) ) / delta;
+    }
+    if( j == nump - 1 ){
+      delta = E_points[0]-E_points[j];
+      der = ( series(0)-series(j) ) / delta;
+    }
+  }
+  /*
   if( j < nump/2 )
     der = ( series(j+1)-series(j) ) / delta;
   else if ( ( j != nump - 1 ) && ( j > nump/2 ) )
     der = ( series(j)-series(j+1) ) / delta;
   else // if( j == nump-1)
     der = 0;
-  
+      */
   return der; 
 
 } 
 
-void Kubo_solver_filtered::Bastin_FFTs  ( std::complex<r_type>** bras, std::complex<r_type>** kets,  type* r_data, int s){
+void Kubo_solver_filtered::Bastin_FFTs  (r_type E_points[], std::complex<r_type>** bras, std::complex<r_type>** kets,  type* r_data, int s){
 
   const std::complex<double> im(0,1);
   
@@ -120,8 +133,8 @@ void Kubo_solver_filtered::Bastin_FFTs  ( std::complex<r_type>** bras, std::comp
 
      for(int j = 0; j < nump; j++){
        
-       D_bras = derivate( bras_dft, j, nump);
-       D_kets = derivate( kets_dft, j, nump);
+       D_bras = derivate( E_points, bras_dft, j, nump);
+       D_kets = derivate( E_points, kets_dft, j, nump);
        
        //Here: p(k) += Re(G(k)) * G(k) + G(k) * Re(G(k)).
        p[j] +=  real( bras_dft(j) ) * ( kets_dft(j)   ) + //Re(G(k)) * G(k)+

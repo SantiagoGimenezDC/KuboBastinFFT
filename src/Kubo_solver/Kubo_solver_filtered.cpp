@@ -368,7 +368,7 @@ void Kubo_solver_filtered::compute_real(){
 
 	 //Greenwood_FFTs(bras, kets, r_data);
 
-	 Bastin_FFTs(bras, kets, r_data, 1);
+	 Bastin_FFTs(E_points, bras, kets, r_data, 1);
 	 
 	 auto FFT_end_2 = std::chrono::steady_clock::now();
          Station(std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000, "           FFT operations time:        ");
@@ -1249,17 +1249,23 @@ void Kubo_solver_filtered::rearrange_crescent_order( r_type* rearranged){//The p
   for( int k = 0; k < nump; k++ )
     original[ k ] = rearranged[ k ];
 
-  
-  for( int k = 0; k < nump / 2; k++ ){
-    rearranged[ k ]   = original[ k ];
-    rearranged[ nump/2 + k ] = original[ nump - k - 1 ]; 
+  if(nump%2==0)
+    for( int k = 0; k < nump / 2; k++ ){
+      rearranged[ k ]   = original[ nump/2 + k  ]; 
+      rearranged[ nump/2 + k ] = original[ k ]; 
+    }
+  else{
+    rearranged[ nump/2 + 1 ] = original[ nump/2 + 1 ]; 
+    for( int k = 0; k < nump / 2; k++ ){
+      rearranged[ k ]   = original[ nump/2 + k  ]; 
+      rearranged[ nump/2 + k + 1] = original[ k ]; 
+    }
   }
-  
-  for( int k=0; k < nump / 2; k++ ){
+  /*  for( int k=0; k < nump / 2; k++ ){
     r_type tmp = rearranged[ k ]; 
     rearranged[ k ]   = rearranged[ nump-k-1 ];
     rearranged[ nump-k-1 ] = tmp;    
-  }  
+    } */ 
   
 }
 
@@ -1294,7 +1300,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
     b = parameters_.b_,
      sysSubLength = device_.sysSubLength();
   
-  r_type omega = -2.0 * 1000*SUBDIM/( a * a * sysSubLength * sysSubLength ) / ( 2 * M_PI );//Dimensional and normalizing constant
+  r_type omega = -2.0 * SUBDIM/( a * a * sysSubLength * sysSubLength ) / ( 2 * M_PI );//Dimensional and normalizing constant
   //DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
   
   //r_value_t tmp, max=0, av=0;

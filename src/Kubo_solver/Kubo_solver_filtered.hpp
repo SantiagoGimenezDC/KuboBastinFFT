@@ -73,7 +73,7 @@ public:
 
   void Greenwood_FFTs( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
   void Greenwood_FFTs_2( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
-  void Bastin_FFTs   ( std::complex<r_type>**, std::complex<r_type>**,  type*, int );
+  void Bastin_FFTs   ( r_type*, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
 
 
   void compute_imag();
