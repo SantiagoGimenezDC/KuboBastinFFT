@@ -194,6 +194,16 @@ void Kubo_solver_filtered::compute_real(){
     kets[m] = new type [ SEC_SIZE ];
   }
 
+  
+  type **d_bras = new type* [ M_dec ],
+       **d_kets = new type* [ M_dec ];
+
+  for(int m=0;m<M_dec;m++){
+    d_bras[m] = new type [ SEC_SIZE ],
+    d_kets[m] = new type [ SEC_SIZE ];
+  }
+
+  
  
   //Recursion Vectors
   type *rand_vec = new type  [ DIM ];
@@ -212,12 +222,11 @@ void Kubo_solver_filtered::compute_real(){
   
 /*---------------Dataset vectors----------------*/
   type r_data      [ 2 * nump ],
-       final_data  [ nump ];
+       final_data  [ 2 * nump ];
 
   r_type conv_R      [ 2 * D * R ],
          E_points    [ nump ];
 
-  r_type integrand   [ nump ] ;
 /*-----------------------------------------------*/  
 
 
@@ -249,7 +258,8 @@ void Kubo_solver_filtered::compute_real(){
     E_points   [e] = filter_.E_points()[e];
     r_data     [e] = 0.0;
     final_data [e] = 0.0;
-    integrand  [e] = 0.0;
+    r_data     [nump+e] = 0.0;
+    final_data [nump+e] = 0.0;
   }
 /*-----------------------------------------------*/  
 
@@ -309,6 +319,9 @@ void Kubo_solver_filtered::compute_real(){
       reset_buffer(bras);
       reset_buffer(kets);
 
+      reset_buffer(d_bras);
+      reset_buffer(d_kets);
+      
       
        vec_base_->generate_vec_im( rand_vec, r);       
        device_.rearrange_initial_vec(rand_vec); //very hacky
@@ -318,7 +331,6 @@ void Kubo_solver_filtered::compute_real(){
        for(int k=0; k<nump; k++ ){
          r_data    [ k ] = 0;
 	 r_data    [ nump + k ] = 0;
-         integrand [ k ] = 0;
        }
 
 
@@ -340,7 +352,7 @@ void Kubo_solver_filtered::compute_real(){
 
          auto csrmv_start_2 = std::chrono::steady_clock::now();
     
-         filtered_polynomial_cycle_direct_2(bras, rand_vec, s, 0);     
+         filtered_polynomial_cycle_direct_2_doubleBuffer(bras, d_bras, rand_vec, s, 0);     
 
          auto csrmv_end_2 = std::chrono::steady_clock::now();
          Station(std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end_2 - csrmv_start_2).count()/1000, "           Bras cycle time:            ");
@@ -353,7 +365,7 @@ void Kubo_solver_filtered::compute_real(){
 	 
          auto csrmv_start = std::chrono::steady_clock::now();
 
-	 filtered_polynomial_cycle_direct_2(kets, rand_vec, s, 1);
+	 filtered_polynomial_cycle_direct_2_doubleBuffer(kets, d_kets, rand_vec, s, 1);
 	 
          auto csrmv_end = std::chrono::steady_clock::now();
          Station( std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end - csrmv_start).count()/1000, "           Kets cycle time:            ");
@@ -368,7 +380,7 @@ void Kubo_solver_filtered::compute_real(){
 
 	 //Greenwood_FFTs(bras, kets, r_data);
 
-	 Bastin_FFTs(E_points, bras, kets, r_data, 1);
+	 Bastin_FFTs_doubleBuffer(E_points, bras, d_bras, kets, d_kets, r_data, 1);
 	 
 	 auto FFT_end_2 = std::chrono::steady_clock::now();
          Station(std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000, "           FFT operations time:        ");
@@ -578,6 +590,63 @@ void Kubo_solver_filtered::filter_2( int m, type* new_vec, type** poly_buffer, t
 
 
 
+void Kubo_solver_filtered::filter_2_doubleBuffer( int m, type* new_vec, type** poly_buffer, type** d_poly_buffer, type* tmp, type* tmp_velOp, int s, int vel_op ){
+
+  
+  int M         = parameters_.M_,
+      M_ext     = filter_.parameters().M_ext_,
+      num_parts = parameters_.num_parts_,
+      SEC_SIZE  = parameters_.SECTION_SIZE_ ;
+
+  std::vector<int> list = filter_.decimated_list();
+  int M_dec = list.size();
+  
+  bool cyclic = true;
+  
+  int k_dis     = filter_.parameters().k_dis_,
+      L         = filter_.parameters().L_,
+      Np        = (L-1)/2;
+
+  
+  r_type KB_window[L];
+ 
+  for(int i=0; i < L; i++)
+    KB_window[i] = filter_.KB_window()[i];
+
+
+  
+  
+  type factor = ( 2 - ( m == 0 ) ) * kernel_->term(m,M) * std::polar( 1.0,  M_PI * m * (  - 2 * k_dis + initial_disp_ ) / M_ext );
+
+  
+  if( vel_op == 1 ){
+    device_.vel_op( tmp_velOp, new_vec );
+    device_.traceover(tmp, tmp_velOp, s, num_parts);
+  }
+  else
+    device_.traceover(tmp, new_vec, s, num_parts);
+
+
+      
+  for(int i = 0; i < M_dec; i++ ){
+    int dist = abs( m - list[i] );
+
+    if( cyclic ){
+      if( ( list[i] < Np && m > M_ext - Np - 1 ) )
+        dist = M_ext - m + list[i];
+      if( ( m < Np && list[i] > M_ext - Np - 1 ) )
+        dist = M_ext - list[i] + m ;
+    }
+    
+    if( dist < Np ){
+      plus_eq( poly_buffer[ i ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
+      plus_eq( d_poly_buffer[ i ], tmp,  m * factor * KB_window[ Np + dist  ], SEC_SIZE );
+    }
+  }
+};
+
+
+
 void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer, type rand_vec[],  int s, int vel_op){
   
   int M         = parameters_.M_,
@@ -631,6 +700,71 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2(type** poly_buffer
     device_.update_cheb( vec, p_vec, pp_vec );
 
     filter_2( m, vec, poly_buffer, tmp, tmp_velOp, s, vel_op );
+  }
+      
+    delete []vec;
+    delete []p_vec;
+    delete []pp_vec;
+    delete []tmp;
+    delete []tmp_velOp;
+  
+}
+
+
+
+void Kubo_solver_filtered::filtered_polynomial_cycle_direct_2_doubleBuffer(type** poly_buffer, type** d_poly_buffer, type rand_vec[],  int s, int vel_op){
+  
+  int M         = parameters_.M_,
+      DIM       = device_.parameters().DIM_,
+      SEC_SIZE  = parameters_.SECTION_SIZE_ ;
+
+
+    
+  type *vec      = new type [ DIM ],
+       *p_vec    = new type [ DIM ],
+       *pp_vec   = new type [ DIM ],
+       *tmp      = new type [ SEC_SIZE ];
+
+  type *tmp_velOp = new type [ DIM ];
+  
+
+  
+#pragma omp parallel for
+  for(int l=0;l<DIM;l++){
+    vec[l] = 0;
+    p_vec[l] = 0;
+    pp_vec[l] = 0;
+
+    tmp_velOp[l] = 0;
+
+    if( l < SEC_SIZE )
+      tmp[l] = 0;
+  }
+
+
+  
+  if( vel_op == 1 )
+    device_.vel_op( pp_vec, rand_vec );  
+  else
+#pragma omp parallel for
+    for(int l = 0; l < DIM; l++)
+      pp_vec[l] = - rand_vec[l]; //This minus sign is due to the CONJUGATION of applying both velocity operators to the KET side!!!!
+
+  
+ 
+  filter_2_doubleBuffer( 0, pp_vec, poly_buffer, d_poly_buffer, tmp, tmp_velOp, s, vel_op );  
+
+
+  
+  device_.H_ket ( p_vec, pp_vec );
+  filter_2_doubleBuffer( 1, p_vec, poly_buffer, d_poly_buffer, tmp, tmp_velOp, s, vel_op ); 
+
+
+  for( int m=2; m<M; m++ ){
+
+    device_.update_cheb( vec, p_vec, pp_vec );
+
+    filter_2_doubleBuffer( m, vec, poly_buffer, d_poly_buffer, tmp, tmp_velOp, s, vel_op );
   }
       
     delete []vec;
@@ -1327,7 +1461,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
   
   for( int e = 0; e < nump; e++ ){  
     //prev_partial_result[e] = final_data[e];
-    final_data[e] += ( final_data [e] * (r-1.0) + omega * r_data[e] ) / r;
+    final_data[e] += ( final_data [e] * (r-1.0) +  r_data[e] ) / r;
   }
 
 
@@ -1337,8 +1471,8 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
 
   //Keeping just the real part of E*p(E)+im*sqrt(1-E^2)*w(E) yields the Kubo-Bastin integrand:
   for(int k = 0; k < nump; k++){
-    integrand[k]  = E_points[k] * real( final_data[ k ] ) - ( sqrt(1.0 - E_points[ k ] * E_points[ k ] ) * imag( final_data[ k + nump ] ) );
-    integrand[k] *= 1.0 / pow( (1.0 - E_points[k]  * E_points[k] ), 2.0);
+    integrand[k]  = real( final_data[ k ] )/ pow( (1.0 - E_points[k]  * E_points[k] ), 2.0);//E_points[k] * real( final_data[ k ] ) - ( sqrt(1.0 - E_points[ k ] * E_points[ k ] ) * imag( final_data[ k + nump ] ) );
+    //integrand[k] *= 1.0 / pow( (1.0 - E_points[k]  * E_points[k] ), 2.0);
     integrand[k] *=  omega / ( M_PI ); 
 
     rvec_integrand[k]  = E_points[k] * real( r_data[ k ] ) - ( sqrt(1.0 - E_points[ k ] * E_points[ k ] ) * real( r_data[ k + nump ] ) );
@@ -1346,9 +1480,9 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
     rvec_integrand[k] *=  omega / ( M_PI ); 
   }
 
-  rearrange_crescent_order(rearranged_E_points);
-  rearrange_crescent_order(integrand);
-  rearrange_crescent_order(rvec_integrand);
+  //rearrange_crescent_order(rearranged_E_points);
+  //rearrange_crescent_order(integrand);
+  //rearrange_crescent_order(rvec_integrand);
 
   
 

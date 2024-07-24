@@ -82,6 +82,11 @@ public:
   void Greenwood_FFTs_imag( std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  r_type*);
   
 
+  
+  void Bastin_FFTs_doubleBuffer   ( r_type*, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, type*, int );
+  void filtered_polynomial_cycle_direct_2_doubleBuffer( type** , type**, type*, int , int );
+  void filter_2_doubleBuffer( int, type*, type**, type**, type*, type*, int, int);
+  
 inline
 void copy_vector(type vec_destination[], type vec_original[], int size){
 #pragma omp parallel for
