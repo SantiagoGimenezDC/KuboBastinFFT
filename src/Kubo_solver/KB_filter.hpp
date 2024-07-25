@@ -37,7 +37,7 @@ public:
     r_type adim_e_center = (parameters_.energy_center_ + b )/a;
     parameters_.k_dis_ =  int ( (  r_type(parameters_.M_ext_) * ( std::acos ( adim_e_center )  ) / ( 2.0 * M_PI ) - 0.25  ) );
 
-    parameters_.k_dis_=0;
+    //parameters_.k_dis_=0;
 
     int k_dis = parameters_.k_dis_,
         M_ext = parameters_.M_ext_,

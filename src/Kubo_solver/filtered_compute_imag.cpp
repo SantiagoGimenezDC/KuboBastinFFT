@@ -141,7 +141,7 @@ void Kubo_solver_filtered::compute_imag(){
          conv_R      [ 2 * D * R ],
          E_points    [ nump ];
 
-  r_type integrand   [ nump ] ;
+
 /*-----------------------------------------------*/  
 
 
@@ -167,7 +167,6 @@ void Kubo_solver_filtered::compute_imag(){
     E_points   [e] = filter_.E_points()[e];
     r_data     [e] = 0.0;
     final_data [e] = 0.0;
-    integrand  [e] = 0.0;
   }
 /*-----------------------------------------------*/  
 
@@ -237,7 +236,7 @@ void Kubo_solver_filtered::compute_imag(){
     
        for(int k=0; k<nump; k++ ){
          r_data    [k] = 0;
-         integrand [k] = 0;
+
        }
 
 
