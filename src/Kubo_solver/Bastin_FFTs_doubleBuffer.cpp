@@ -113,68 +113,28 @@ void Kubo_solver_filtered::Bastin_FFTs_doubleBuffer(r_type E_points[], std::comp
      D_kets_dft.execute();
 
 
-
+          
      for(int j = 0; j < nump; j++){
          
        //Here: p(k) += Re(G(k)) * G(k) + G(k) * Re(G(k)).
-       p[j] += real( bras_dft( j ) ) * real( kets_dft( j ) );
+       p[j] += //real( bras_dft( j ) ) * real( kets_dft( j ) );
 
-	 //real( bras_dft(j) ) * ( kets_dft(j)   ) + //Re(G(k)) * G(k)+
-	 //conj( bras_dft(j) )  *  real( kets_dft(j) );   //G(k) * Re(G(k))
+	 real( bras_dft(j) ) * ( kets_dft(j)   ) + //Re(G(k)) * G(k)+
+	 conj( bras_dft(j) ) * real( kets_dft(j) );   //G(k) * Re(G(k))
 	
 
        //Here: w(k) += (dG(k)) * Re(G(k)) - Re(G(k)) * (dG(k))
        w[j] +=  conj( D_bras_dft(j) )  *  real( kets_dft(j) ) - //dG(k) * Re(G(k))-	  
                 real( bras_dft(j) )  *  D_kets_dft(j) ; //Re(G(k)) * dG(k)
-     }
-
-   }      
-
+		}
+           
 
 
-
-   /*
-
-     //As mentioned previously, variable change as k=2j; This loop updates the partial results of the dot products p(E) and w(E);
-     //This also performs the conjugation from bra.cdot(ket) of the complex random vector dot product.
-     for(int j = 0; j < nump/2; j++){
-       //Here: p(k) += Re(G(k)) * G(k) + G(k) * Re(G(k)).
-       p[j] += ( real( re_bras(j) ) - im * real( im_bras(j) ) ) *  //Re(G(k)) *
-	         (       re_kets(j)   + im *       im_kets(j) ) + //G(k)+
- 	  
-	         ( conj( re_bras(j) ) - im * conj( im_bras(j) ) ) * //G(k)
-	         ( real( re_kets(j) ) + im * real( im_kets(j) ) );   //Re(G(k))
-	
-
-       //Here: w(k) += (dG(k)) * Re(G(k)) - Re(G(k)) * (dG(k))
-       w[j] += ( conj( re_D_bras(j) ) - im * conj( im_D_bras(j) ) )  * //dG(k)
-		 ( real( re_kets(j)   ) + im * real( im_kets(j) ) ) - //Re(G(k))
-	  
-		 ( real( re_bras(j) )   - im * real( im_bras(j) ) )  *  //Re(G(k))
-	         ( re_D_kets(j)         + im * im_D_kets(j) ); //dG(k)
-     }
 
      
-     for(int j = nump / 2; j < nump; j++){
-       //Here: p(k) += Re(G(k)) * G(k) + G(k) * Re(G(k)).
-       p[j] += ( real( re_bras(j) ) - im * real( im_bras(j) ) ) *  //Re(G(k)) *
+   }
 
-	       ( conj(re_kets(j) )   + im *       conj( im_kets(j) ) ) + //G(k)+
- 	  
-	         ( re_bras(j)   - im * im_bras(j)  ) * //G(k)
-	         ( real( re_kets(j) ) + im * real( im_kets(j) ) );   //Re(G(k))
-	
 
-         //Here: w(k) += (dG(k)) * Re(G(k)) - Re(G(k)) * (dG(k))
-         w[j] += (  re_D_bras(j)  - im *  im_D_bras(j)  )  * //dG(k)
-		 ( real( re_kets(j)   ) + im * real( im_kets(j) ) ) - //Re(G(k))
-	  
-		 ( real( re_bras(j) )   - im * real( im_bras(j) ) )  *  //Re(G(k))
-	         ( conj( re_D_kets(j) )         + im * conj ( im_D_kets(j) ) ); //dG(k)
-
-     }
-   }      
-   */    
 # pragma omp critical
    {
      for(int k = 0; k < nump; k++){

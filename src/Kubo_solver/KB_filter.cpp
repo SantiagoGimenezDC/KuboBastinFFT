@@ -107,7 +107,7 @@ void KB_filter::compute_filter(){
 
   
 
-
+  parameters_.L_eff_=L;
   double thresh = 1E-4;
   for(int i=3; i<Np;i++){
     if(abs(KB_window_(Np+i)) / KB_window_(Np)<thresh && abs(KB_window_(Np+i-1)) /KB_window_(Np)<thresh && abs(KB_window_(Np+i-2))/KB_window_(Np)<thresh && abs(KB_window_(Np+i-3))/KB_window_(Np)<thresh ){

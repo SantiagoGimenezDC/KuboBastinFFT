@@ -235,13 +235,6 @@ void Kubo_solver_filtered::compute_real(){
 
   
 /*----------------Initializations----------------*/
-
-#pragma omp parallel for  
-  for(int m = 0; m < M_dec; m++)
-    for(int l = 0; l < SEC_SIZE; l++){    
-      bras [m][l] = 0.0;
-      kets [m][l] = 0.0;
-    }
   
 #pragma omp parallel for  
   for(int k=0; k<DIM; k++){
@@ -264,8 +257,11 @@ void Kubo_solver_filtered::compute_real(){
 /*-----------------------------------------------*/  
 
   compute_E_points(E_points);  
-
- 
+  /*
+  for(int k=0; k<nump;k++){
+    E_points[k] = cos(M_PI * ( 2 * k + 0.5 ) / nump );
+    }
+  */
   cap_->create_CAP(W, C, LE,  dmp_op);
   device_.damp(dmp_op);
   
@@ -353,7 +349,8 @@ void Kubo_solver_filtered::compute_real(){
          auto csrmv_start_2 = std::chrono::steady_clock::now();
     
          filtered_polynomial_cycle_direct_2_doubleBuffer(bras, d_bras, rand_vec, s, 0);     
-
+         //filtered_polynomial_cycle_direct_2(bras, rand_vec, s, 0);
+	 
          auto csrmv_end_2 = std::chrono::steady_clock::now();
          Station(std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end_2 - csrmv_start_2).count()/1000, "           Bras cycle time:            ");
   
@@ -366,7 +363,8 @@ void Kubo_solver_filtered::compute_real(){
          auto csrmv_start = std::chrono::steady_clock::now();
 
 	 filtered_polynomial_cycle_direct_2_doubleBuffer(kets, d_kets, rand_vec, s, 1);
-	 
+         //filtered_polynomial_cycle_direct_2(kets, rand_vec, s, 1);
+ 
          auto csrmv_end = std::chrono::steady_clock::now();
          Station( std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end - csrmv_start).count()/1000, "           Kets cycle time:            ");
 
@@ -411,7 +409,7 @@ void Kubo_solver_filtered::compute_real(){
        auto plot_start = std::chrono::steady_clock::now();    
 
 
-       //update_data(E_points, integrand, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
+       //update_data(E_points,  r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
 
        update_data_Bastin(E_points, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
 
@@ -601,13 +599,12 @@ void Kubo_solver_filtered::filter_2_doubleBuffer( int m, type* new_vec, type** p
   std::vector<int> list = filter_.decimated_list();
   int M_dec = list.size();
   
-  bool cyclic = true;
+  bool cyclic = false;
   
   int k_dis     = filter_.parameters().k_dis_,
       L         = filter_.parameters().L_,
       Np        = (L-1)/2;
 
-  
   r_type KB_window[L];
  
   for(int i=0; i < L; i++)
@@ -638,7 +635,7 @@ void Kubo_solver_filtered::filter_2_doubleBuffer( int m, type* new_vec, type** p
         dist = M_ext - list[i] + m ;
     }
     
-    if( dist < Np ){
+    if( dist < Np || (Np==0 && dist==0) ){
       plus_eq( poly_buffer[ i ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
       plus_eq( d_poly_buffer[ i ], tmp,  m * factor * KB_window[ Np + dist  ], SEC_SIZE );
     }
@@ -1434,7 +1431,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
     b = parameters_.b_,
      sysSubLength = device_.sysSubLength();
   
-  r_type omega = -2.0 * SUBDIM/( a * a * sysSubLength * sysSubLength ) / ( 2 * M_PI );//Dimensional and normalizing constant
+  r_type omega = -2.0 * SUBDIM/( a * a * sysSubLength * sysSubLength ) / ( 2 * M_PI );//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.
   //DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
   
   //r_value_t tmp, max=0, av=0;
@@ -1459,7 +1456,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
 
 
   
-  for( int e = 0; e < nump; e++ ){  
+  for( int e = 0; e < 2*nump; e++ ){  
     //prev_partial_result[e] = final_data[e];
     final_data[e] += ( final_data [e] * (r-1.0) +  r_data[e] ) / r;
   }
@@ -1471,8 +1468,9 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
 
   //Keeping just the real part of E*p(E)+im*sqrt(1-E^2)*w(E) yields the Kubo-Bastin integrand:
   for(int k = 0; k < nump; k++){
-    integrand[k]  = real( final_data[ k ] )/ pow( (1.0 - E_points[k]  * E_points[k] ), 2.0);//E_points[k] * real( final_data[ k ] ) - ( sqrt(1.0 - E_points[ k ] * E_points[ k ] ) * imag( final_data[ k + nump ] ) );
-    //integrand[k] *= 1.0 / pow( (1.0 - E_points[k]  * E_points[k] ), 2.0);
+    
+    integrand[k]  = E_points[k] * real( final_data[ k ] ) - ( sqrt(1.0 - E_points[ k ] * E_points[ k ] ) * imag( final_data[ k + nump ] ) );
+    integrand[k] *= 1.0 / pow( (1.0 - E_points[k]  * E_points[k] ), 2.0);
     integrand[k] *=  omega / ( M_PI ); 
 
     rvec_integrand[k]  = E_points[k] * real( r_data[ k ] ) - ( sqrt(1.0 - E_points[ k ] * E_points[ k ] ) * real( r_data[ k + nump ] ) );
@@ -1578,7 +1576,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
 
 
 
-void Kubo_solver_filtered::update_data(r_type E_points[], r_type integrand[], r_type r_data[], r_type final_data[], r_type conv_R[], int r, std::string run_dir, std::string filename){
+void Kubo_solver_filtered::update_data(r_type E_points[],  r_type r_data[], r_type final_data[], r_type conv_R[], int r, std::string run_dir, std::string filename){
 
   int nump = parameters_.num_p_,
       R = parameters_.R_,
@@ -1668,16 +1666,6 @@ void Kubo_solver_filtered::update_data(r_type E_points[], r_type integrand[], r_
   data.close();
 
 
-  
-  
-  std::ofstream data2;
-  data2.open(run_dir+"integrand_"+filename);
-
-  for(int e=0;e<nump;e++)  
-    data2<< a * E_points[e] - b<<"  "<< omega * integrand[e] <<std::endl;
-
-  
-  data2.close();
 }
 
 

@@ -56,7 +56,7 @@ public:
 
   void integration ( r_type*, r_type*, r_type* );
   void eta_CAP_correct(r_type*, r_type* );
-  void update_data ( r_type*,r_type*, r_type*, r_type*, r_type*, int ,  std::string, std::string );
+  void update_data ( r_type*, r_type*, r_type*, r_type*, int ,  std::string, std::string );
   void update_data_Bastin ( r_type*, type*, type*, r_type*,  int ,  std::string, std::string );
   void plot_data   ( std::string, std::string );
 

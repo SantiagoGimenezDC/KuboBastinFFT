@@ -321,7 +321,7 @@ void Kubo_solver_filtered::compute_imag(){
          eta_CAP_correct(E_points, r_data);
 
 
-       update_data(E_points, integrand, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
+       update_data(E_points, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
        plot_data(run_dir,filename);
 
        
