@@ -41,7 +41,7 @@ public:
   solver_vars& parameters(){return parameters_;};
 
   void compute(){
-    if( parameters_.base_choice_ == 2 )
+    if( parameters_.base_choice_ == 1 )
       compute_imag();
     else
       compute_real();

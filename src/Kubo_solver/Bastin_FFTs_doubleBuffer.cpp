@@ -23,9 +23,26 @@ void Kubo_solver_filtered::Bastin_FFTs_doubleBuffer(r_type E_points[], std::comp
   int M_dec = filter_.M_dec(),
       M_ext = filter_.parameters().M_ext_,
       L = filter_.parameters().L_,
-      Np = (L-1)/2;
-  std::vector<int> list = filter_.decimated_list();  
+    Np = (L-1)/2;
+  
+  std::vector<int> list = filter_.decimated_list(),
+    sign(nump);  
 
+
+
+  for(int i =0; i<nump;i++){
+    double E_prev ;
+
+    if( i == 0 && nump == M_ext )
+       E_prev = E_points[ nump - 1 ];
+    else
+         E_prev = E_points[ i - 1 ];
+    
+    if( E_points[i] - E_prev < 0 )
+      sign[i] = 1;
+    else
+      sign[i] = -1;
+  }
 
 
   if( s != num_parts-1)
@@ -115,7 +132,8 @@ void Kubo_solver_filtered::Bastin_FFTs_doubleBuffer(r_type E_points[], std::comp
 
           
      for(int j = 0; j < nump; j++){
-         
+
+       if( sign[j] == 1 ){
        //Here: p(k) += Re(G(k)) * G(k) + G(k) * Re(G(k)).
        p[j] += //real( bras_dft( j ) ) * real( kets_dft( j ) );
 
@@ -126,11 +144,20 @@ void Kubo_solver_filtered::Bastin_FFTs_doubleBuffer(r_type E_points[], std::comp
        //Here: w(k) += (dG(k)) * Re(G(k)) - Re(G(k)) * (dG(k))
        w[j] +=  conj( D_bras_dft(j) )  *  real( kets_dft(j) ) - //dG(k) * Re(G(k))-	  
                 real( bras_dft(j) )  *  D_kets_dft(j) ; //Re(G(k)) * dG(k)
-		}
-           
+       }
 
+       if( sign[j] == -1 ){
+       //Here: p(k) += Re(G(k)) * G(k) + G(k) * Re(G(k)).
+       p[j] += ( real( bras_dft(j) )  ) * ( conj(kets_dft(j) )   ) + // //Re(G(k)) *G(k)+
+	         ( bras_dft(j)     ) * ( real( kets_dft(j) )  );   ////G(k)Re(G(k))
+	
 
+         //Here: w(k) += (dG(k)) * Re(G(k)) - Re(G(k)) * (dG(k))
+         w[j] += (  D_bras_dft(j)   )  * ( real( kets_dft(j)   )  ) - ////dG(k)Re(G(k))
+		 ( real( bras_dft(j) )    )  * ( conj( D_kets_dft(j) )  ); // //Re(G(k))dG(k)
 
+       }
+     }
      
    }
 

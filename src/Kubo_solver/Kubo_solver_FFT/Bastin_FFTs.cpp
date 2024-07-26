@@ -39,7 +39,7 @@ void Kubo_solver_FFT::Bastin_FFTs( storageType bras, storageType kets, std::vect
   type pre_factors [ nump ];      
       
   for(int m = 0; m < M; m++)
-    pre_factors[m]  = ( 2 - ( m == 0 ) ) * kernel_->term(m, M) * std::polar( 1.0, M_PI * m / ( 2.0 * M ) ) ;
+    pre_factors[m]  = ( 2 - ( m == 0 ) ) * kernel_->term(m, M) * std::polar( 1.0, M_PI * m * 0.5 /  nump  ) ;
 
 
 
@@ -167,7 +167,6 @@ void Kubo_solver_FFT::Bastin_FFTs( storageType bras, storageType kets, std::vect
      for(int j = nump / 2; j < nump; j++){
        //Here: p(k) += Re(G(k)) * G(k) + G(k) * Re(G(k)).
        p[j] += ( real( re_bras(j) ) - im * real( im_bras(j) ) ) *  //Re(G(k)) *
-
 	       ( conj(re_kets(j) )   + im *       conj( im_kets(j) ) ) + //G(k)+
  	  
 	         ( re_bras(j)   - im * im_bras(j)  ) * //G(k)

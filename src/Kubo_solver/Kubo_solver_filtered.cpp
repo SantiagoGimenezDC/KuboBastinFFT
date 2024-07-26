@@ -260,8 +260,8 @@ void Kubo_solver_filtered::compute_real(){
   /*
   for(int k=0; k<nump;k++){
     E_points[k] = cos(M_PI * ( 2 * k + 0.5 ) / nump );
-    }
-  */
+    }*/
+  
   cap_->create_CAP(W, C, LE,  dmp_op);
   device_.damp(dmp_op);
   
@@ -379,6 +379,7 @@ void Kubo_solver_filtered::compute_real(){
 	 //Greenwood_FFTs(bras, kets, r_data);
 
 	 Bastin_FFTs_doubleBuffer(E_points, bras, d_bras, kets, d_kets, r_data, 1);
+	 //Bastin_FFTs(E_points, bras,  kets, r_data, 1);
 	 
 	 auto FFT_end_2 = std::chrono::steady_clock::now();
          Station(std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000, "           FFT operations time:        ");
@@ -599,13 +600,15 @@ void Kubo_solver_filtered::filter_2_doubleBuffer( int m, type* new_vec, type** p
   std::vector<int> list = filter_.decimated_list();
   int M_dec = list.size();
   
-  bool cyclic = false;
+  bool cyclic = true;
   
   int k_dis     = filter_.parameters().k_dis_,
       L         = filter_.parameters().L_,
       Np        = (L-1)/2;
 
   r_type KB_window[L];
+
+  int m_ext=m;
  
   for(int i=0; i < L; i++)
     KB_window[i] = filter_.KB_window()[i];
@@ -629,15 +632,19 @@ void Kubo_solver_filtered::filter_2_doubleBuffer( int m, type* new_vec, type** p
     int dist = abs( m - list[i] );
 
     if( cyclic ){
-      if( ( list[i] < Np && m > M_ext - Np - 1 ) )
+      if( ( list[i] < Np && m > M_ext - Np - 1 ) ){
         dist = M_ext - m + list[i];
-      if( ( m < Np && list[i] > M_ext - Np - 1 ) )
+	m_ext=m;//i - dist;
+      }
+      if( ( m < Np && list[i] > M_ext - Np - 1 ) ){
         dist = M_ext - list[i] + m ;
+	m_ext= m;//i+dist;
+      }
     }
-    
+
     if( dist < Np || (Np==0 && dist==0) ){
       plus_eq( poly_buffer[ i ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
-      plus_eq( d_poly_buffer[ i ], tmp,  m * factor * KB_window[ Np + dist  ], SEC_SIZE );
+      plus_eq( d_poly_buffer[ i ], tmp,  m_ext * factor * KB_window[ Np + dist  ], SEC_SIZE );
     }
   }
 };
