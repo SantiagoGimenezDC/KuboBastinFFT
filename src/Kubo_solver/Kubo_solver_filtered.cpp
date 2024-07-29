@@ -378,8 +378,8 @@ void Kubo_solver_filtered::compute_real(){
 
 	 //Greenwood_FFTs(bras, kets, r_data);
 
-	 Bastin_FFTs_doubleBuffer(E_points, bras, d_bras, kets, d_kets, r_data, 1);
-	 //Bastin_FFTs(E_points, bras,  kets, r_data, 1);
+	 //Bastin_FFTs_doubleBuffer(E_points, bras, d_bras, kets, d_kets, r_data, 1);
+	 Bastin_FFTs(E_points, bras,  kets, r_data, 1);
 	 
 	 auto FFT_end_2 = std::chrono::steady_clock::now();
          Station(std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000, "           FFT operations time:        ");
@@ -485,7 +485,7 @@ void Kubo_solver_filtered::filter( int m, type* new_vec, type** poly_buffer, typ
       SEC_SIZE  = parameters_.SECTION_SIZE_ ;
 
   
-  bool cyclic = false;
+  bool cyclic = true;
   
   int k_dis     = filter_.parameters().k_dis_,
       L         = filter_.parameters().L_,
@@ -642,7 +642,7 @@ void Kubo_solver_filtered::filter_2_doubleBuffer( int m, type* new_vec, type** p
       }
     }
 
-    if( dist < Np || (Np==0 && dist==0) ){
+    if( dist < Np || ( Np == 0 && dist == 0 ) ){
       plus_eq( poly_buffer[ i ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
       plus_eq( d_poly_buffer[ i ], tmp,  m_ext * factor * KB_window[ Np + dist  ], SEC_SIZE );
     }

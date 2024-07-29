@@ -19,19 +19,27 @@
   //   only way I found of doing it.                                                                                                                //
   //================================================================================================================================================*/
 
-inline type derivate( r_type E_points[], out_of_place_dft& series, int j, int nump){
+inline type derivate( r_type E_points[], out_of_place_dft& series, int j, int nump, std::vector<int> sign){
   type delta = 1.0, der=0;
 
-  if(j==nump/2)
+  if( j == nump / 2 )
     der=0;
   else{
+      type j_v = series(j),
+	   jp1_v = series(j+1);
+      
+
+      if( sign[j] == -1) j_v = conj(j_v);
+      if( sign[j+1] == -1 ) jp1_v = conj(jp1_v);
+
+      
     if( j < nump - 1 ){
       delta = E_points[j+1]-E_points[j];
-      der = ( series(j+1)-series(j) ) / delta;
+      der = ( jp1_v - j_v ) / delta;
     }
     if( j == nump - 1 ){
-      delta = E_points[0]-E_points[j];
-      der = ( series(0)-series(j) ) / delta;
+      delta = E_points[0]-E_points[j];            
+      der = ( jp1_v - j_v ) / delta;
     }
   }
   /*
@@ -42,6 +50,81 @@ inline type derivate( r_type E_points[], out_of_place_dft& series, int j, int nu
   else // if( j == nump-1)
     der = 0;
       */
+  return der; 
+
+} 
+
+
+inline type derivate_2nd_order( r_type E_points[], out_of_place_dft& series, int j, int nump, std::vector<int> sign){
+  type der=0, x0=0, x1=0, x2=0, term1=0, term2=0, term3=0;
+
+  if( j == nump / 2 || j == nump/2 + 1 )
+    der=0;
+  else{    
+    /*if( j == 0 ){
+      type j_v = series(j),
+	   jp1_v = series(j+1),
+	   jm1_v = series(nump-1);
+
+      if( sign[j] == -1 ) j_v = conj(j_v);
+      if( sign[j+1] == -1 ) jp1_v = conj(jp1_v);
+      if( sign[nump-1] == -1 ) jm1_v = conj(jm1_v);
+
+
+      x0 = E_points[nump-1];
+      x1 = E_points[j];
+      x2 = E_points[j+1];
+        
+      term1 = jm1_v * ( (x1 - x2) / ((x0 - x1) * (x0 - x2)) );
+      term2 = j_v * (2 * x1 - x0 - x2) / ((x1 - x0) * (x1 - x2));
+      term3 = jp1_v * (x1 - x0) / ((x2 - x0) * (x2 - x1));
+      
+      der = term1 + term2 + term3;
+    } 
+    else*/
+      if( j < nump - 1 ){
+      type jm1_v = series(j-1),
+	   j_v = series(j),
+           jp1_v = series(j+1);
+
+      if( sign[j-1] == -1 ) jm1_v = conj(jm1_v);      
+      if( sign[j] == -1 ) j_v = conj(j_v);
+      if( sign[j+1] == -1 ) jp1_v = conj(jp1_v);
+
+
+
+      x0 = E_points[j-1];
+      x1 = E_points[j];
+      x2 = E_points[j+1];
+        
+      term1 = jm1_v * ( (x1 - x2) / ((x0 - x1) * (x0 - x2)) );
+      term2 = j_v * (2 * x1 - x0 - x2) / ((x1 - x0) * (x1 - x2));
+      term3 = jp1_v * (x1 - x0) / ((x2 - x0) * (x2 - x1));
+      
+      der = term1 + term2 + term3;
+    }/*
+    else if( j == nump - 1 ){
+      type j_v = series(j),
+	   jp1_v = series(0),
+	   jm1_v = series(j-1);
+
+      if( sign[j] == -1 ) j_v = conj(j_v);
+      if( sign[0] == -1 ) jp1_v = conj(jp1_v);
+      if( sign[j-1] == -1 ) jm1_v = conj(jm1_v);
+
+
+      x0 = E_points[j-1];
+      x1 = E_points[j];
+      x2 = E_points[0];
+        
+      term1 = jm1_v * ( (x1 - x2) / ((x0 - x1) * (x0 - x2)) );
+      term2 = j_v * (2 * x1 - x0 - x2) / ((x1 - x0) * (x1 - x2));
+      term3 = jp1_v * (x1 - x0) / ((x2 - x0) * (x2 - x1));
+      
+      der = term1 + term2 + term3;
+      }*/
+  }
+
   return der; 
 
 } 
@@ -149,8 +232,8 @@ void Kubo_solver_filtered::Bastin_FFTs  (r_type E_points[], std::complex<r_type>
 
      for(int j = 0; j < nump; j++){
 
-       D_bras = derivate( E_points, bras_dft, j, nump);
-       D_kets = derivate( E_points, kets_dft, j, nump);
+       D_bras = derivate_2nd_order( E_points, bras_dft, j, nump, sign);
+       D_kets = derivate_2nd_order( E_points, kets_dft, j, nump, sign);
 
        if( sign[j] == 1 ){
        //Here: p(k) += Re(G(k)) * G(k) + G(k) * Re(G(k)).
@@ -161,7 +244,7 @@ void Kubo_solver_filtered::Bastin_FFTs  (r_type E_points[], std::complex<r_type>
 	
 
        //Here: w(k) += (dG(k)) * Re(G(k)) - Re(G(k)) * (dG(k))
-       w[j] +=  conj( D_bras )  *  real( kets_dft(j) ) - //dG(k) * Re(G(k))-	  
+       w[j] +=   D_bras   *  real( kets_dft(j) ) - //dG(k) * Re(G(k))-	  
                 real( bras_dft(j) )  *  D_kets ; //Re(G(k)) * dG(k)
        }
 
@@ -173,7 +256,7 @@ void Kubo_solver_filtered::Bastin_FFTs  (r_type E_points[], std::complex<r_type>
 
          //Here: w(k) += (dG(k)) * Re(G(k)) - Re(G(k)) * (dG(k))
          w[j] += (  D_bras   )  * ( real( kets_dft(j)   )  ) - ////dG(k)Re(G(k))
-		 ( real( bras_dft(j) )    )  * ( conj( D_kets )  ); // //Re(G(k))dG(k)
+		 ( real( bras_dft(j) )    )  * (  D_kets   ); // //Re(G(k))dG(k)
 
        }
      }
