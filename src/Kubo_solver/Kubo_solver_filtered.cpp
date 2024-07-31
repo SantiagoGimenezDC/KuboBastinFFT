@@ -378,8 +378,8 @@ void Kubo_solver_filtered::compute_real(){
 
 	 //Greenwood_FFTs(bras, kets, r_data);
 
-	 //Bastin_FFTs_doubleBuffer(E_points, bras, d_bras, kets, d_kets, r_data, 1);
-	 Bastin_FFTs(E_points, bras,  kets, r_data, 1);
+	 Bastin_FFTs_doubleBuffer(E_points, bras, d_bras, kets, d_kets, r_data, 1);
+	 //Bastin_FFTs(E_points, bras,  kets, r_data, 1);
 	 
 	 auto FFT_end_2 = std::chrono::steady_clock::now();
          Station(std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000, "           FFT operations time:        ");

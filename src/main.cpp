@@ -137,7 +137,7 @@ int main(int , char **argv){
       f_vars.decRate_ = 1;
 
     
-    f_vars.M_ext_ = f_vars.M_ ;
+    f_vars.M_ext_ = 8*f_vars.M_ ;
     f_vars.k_dis_ = f_vars.M_ext_/4;
     f_vars.nump_  = f_vars.M_ext_/f_vars.decRate_;
 
