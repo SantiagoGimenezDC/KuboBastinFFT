@@ -22,8 +22,17 @@ build/src/main.o: src/main.cpp src/static_vars.hpp src/Device/Device.hpp \
  src/Kubo_solver/../Device/Device.hpp \
  src/Kubo_solver/../Device/Graphene.hpp src/Kubo_solver/../kernel.hpp \
  src/Kubo_solver/../vec_base.hpp src/Kubo_solver/solver_vars.hpp \
- src/Kubo_solver/SSD_buffer.hpp src/Kubo_solver/Kubo_solver_filtered.hpp \
- src/Kubo_solver/KB_filter.hpp src/Kubo_solver/../complex_op.hpp \
+ src/Kubo_solver/SSD_buffer.hpp \
+ src/Kubo_solver/Kubo_solver_filtered/Kubo_solver_filtered.hpp \
+ src/Kubo_solver/Kubo_solver_filtered/../../static_vars.hpp \
+ src/Kubo_solver/Kubo_solver_filtered/../../Device/Device.hpp \
+ src/Kubo_solver/Kubo_solver_filtered/../../Device/Graphene.hpp \
+ src/Kubo_solver/Kubo_solver_filtered/../../kernel.hpp \
+ src/Kubo_solver/Kubo_solver_filtered/../../vec_base.hpp \
+ src/Kubo_solver/Kubo_solver_filtered/../../CAP.hpp \
+ src/Kubo_solver/Kubo_solver_filtered/KB_filter.hpp \
+ src/Kubo_solver/Kubo_solver_filtered/../../complex_op.hpp \
+ src/Kubo_solver/Kubo_solver_filtered/../solver_vars.hpp \
  src/Kubo_solver/Kubo_solver_traditional/Kubo_solver_traditional.hpp \
  src/Kubo_solver/Kubo_solver_traditional/../../static_vars.hpp \
  src/Kubo_solver/Kubo_solver_traditional/../../Device/Device.hpp \
@@ -67,9 +76,16 @@ src/Kubo_solver/../kernel.hpp:
 src/Kubo_solver/../vec_base.hpp:
 src/Kubo_solver/solver_vars.hpp:
 src/Kubo_solver/SSD_buffer.hpp:
-src/Kubo_solver/Kubo_solver_filtered.hpp:
-src/Kubo_solver/KB_filter.hpp:
-src/Kubo_solver/../complex_op.hpp:
+src/Kubo_solver/Kubo_solver_filtered/Kubo_solver_filtered.hpp:
+src/Kubo_solver/Kubo_solver_filtered/../../static_vars.hpp:
+src/Kubo_solver/Kubo_solver_filtered/../../Device/Device.hpp:
+src/Kubo_solver/Kubo_solver_filtered/../../Device/Graphene.hpp:
+src/Kubo_solver/Kubo_solver_filtered/../../kernel.hpp:
+src/Kubo_solver/Kubo_solver_filtered/../../vec_base.hpp:
+src/Kubo_solver/Kubo_solver_filtered/../../CAP.hpp:
+src/Kubo_solver/Kubo_solver_filtered/KB_filter.hpp:
+src/Kubo_solver/Kubo_solver_filtered/../../complex_op.hpp:
+src/Kubo_solver/Kubo_solver_filtered/../solver_vars.hpp:
 src/Kubo_solver/Kubo_solver_traditional/Kubo_solver_traditional.hpp:
 src/Kubo_solver/Kubo_solver_traditional/../../static_vars.hpp:
 src/Kubo_solver/Kubo_solver_traditional/../../Device/Device.hpp:

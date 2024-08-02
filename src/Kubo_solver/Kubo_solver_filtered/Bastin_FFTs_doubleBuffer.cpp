@@ -7,7 +7,7 @@
 #include<fftw3.h>
 
 #include "Kubo_solver_filtered.hpp"
-#include "fftw_wrapper.hpp"
+#include "../fftw_wrapper.hpp"
 
 /*
 inline type derivate_2nd_order_2(  out_of_place_dft& series, int j, int nump,int M_ext, std::vector<int> sign){
@@ -199,12 +199,13 @@ void Kubo_solver_filtered::Bastin_FFTs_doubleBuffer(r_type E_points[], std::comp
      for(int j = 0; j < nump; j++){
 
        if( sign[j] == 1 ){
-	 
+
+	 /*
 	if(l == size/2+size/6-15){
 	  //	  dataP<<j<<" "<< real(bras_dft(j))<<" "<< imag(bras_dft(j))<<"     "<<real(conj(D_bras[j]))<<" "<< imag(conj(D_bras[j]))<<"      "<<real(conj( D_bras_dft(j) ))<<" "<< imag(conj( D_bras_dft(j) ))<<std::endl;
 	  dataP<<j<<" "<< real(kets_dft(j))<<" "<< imag(kets_dft(j))<<"     "<<real(conj(D_kets[j]))<<" "<< imag(conj(D_kets[j]))<<"      "<<real(conj( D_kets_dft(j) ))<<" "<< imag(conj( D_kets_dft(j) ))<<std::endl;	  
 	  //dataP<<j<<" "<< kets_dft(j)<<"     "<<D_kets<<"  "<< D_kets_dft(j) <<std::endl;
-	  }
+	  }*/
 
 	//Here: p(k) += Re(G(k)) * G(k) + G(k) * Re(G(k)).
          p[j] += 
@@ -219,11 +220,12 @@ void Kubo_solver_filtered::Bastin_FFTs_doubleBuffer(r_type E_points[], std::comp
 
        
        if( sign[j] == -1 ){
+	 /*
 	if(l == size/2+size/6-15){
 	  //	  dataP<<j<<" "<< real(bras_dft(j))<<" "<< imag(bras_dft(j))<<"     "<<real(D_bras[j])<<" "<< imag(D_bras[j])<<"      "<<real( D_bras_dft(j) )<<" "<< imag( D_bras_dft(j) )<<std::endl;
 	  dataP<<j<<" "<< real(kets_dft(j))<<" "<< imag(kets_dft(j))<<"     "<<real(conj(D_kets[j]))<<" "<< imag(conj(D_kets[j]))<<"      "<<real(conj( D_kets_dft(j) ))<<" "<< imag(conj( D_kets_dft(j) ))<<std::endl;	  
 	  //dataP<<j<<" "<< kets_dft(j)<<"     "<<D_kets<<"  "<< D_kets_dft(j) <<std::endl;
-	  }
+	  }*/
 
 
 	 

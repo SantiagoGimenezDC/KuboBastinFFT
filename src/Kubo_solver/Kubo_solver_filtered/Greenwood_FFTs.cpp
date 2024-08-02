@@ -5,11 +5,11 @@
 #include<complex>
 
 
-#include "fftw_wrapper.hpp"
+#include "../fftw_wrapper.hpp"
 #include "Kubo_solver_filtered.hpp"
     
 
-void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::complex<r_type>** kets, r_type r_data[]){  
+void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::complex<r_type>** kets, r_type r_data[], int s){  
 
   int  M    = parameters_.M_,
     nump    = parameters_.num_p_,
@@ -25,6 +25,11 @@ void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::comp
 
   
   const std::complex<double> im(0,1);  
+
+  
+  if( s != parameters_.num_parts_ - 1 )
+    size -= device_.parameters().SUBDIM_ % parameters_.num_parts_;
+
 
   
 #pragma omp parallel 
@@ -63,18 +68,13 @@ void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::comp
         
     for(int l = l_start; l < l_end;l++){      
       if( M_ext > M + Np ){
-        int m = 0;
-        while( list[m] < M + Np){
+        for(int m = 0; list[ m ] < M + Np; m++){
 	  bras_dft.input()[ m ] = bras[ m ][ l ];
 	  kets_dft.input()[ m ] = kets[ m ][ l ];
-          m++;
         }
-
-        m = 0;
-        while( list[M_dec - 1 - m ] > M_ext - 1 - Np ){
+        for(int m = 0; list[ M_dec - 1 - m ] > M_ext - 1 - Np; m++ ){
 	  bras_dft.input()[ nump - 1 - m ] = bras[ M_dec - 1 - m ][ l ];
 	  kets_dft.input()[ nump - 1 - m ] = kets[ M_dec - 1 - m ][ l ];
-          m++;
         }
       }
       else	
@@ -88,7 +88,6 @@ void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::comp
       
       for(int m = 0; m < nump; m++ )
         thread_data[ m ] += real( bras_dft( m ) ) * real( kets_dft( m ) );
-
 			
     }
 

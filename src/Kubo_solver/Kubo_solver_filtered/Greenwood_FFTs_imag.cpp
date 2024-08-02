@@ -5,11 +5,10 @@
 #include<complex>
 
 
-#include "fftw_wrapper.hpp"
+#include "../fftw_wrapper.hpp"
 #include "Kubo_solver_filtered.hpp"
     
-
-void Kubo_solver_filtered::Greenwood_FFTs_imag(std::complex<r_type>** bras_re, std::complex<r_type>** bras_im, std::complex<r_type>** kets_re, std::complex<r_type>** kets_im, r_type r_data[]){  
+void Kubo_solver_filtered::Greenwood_FFTs_imag(std::complex<r_type>** bras_re, std::complex<r_type>** bras_im, std::complex<r_type>** kets_re, std::complex<r_type>** kets_im, type r_data[], int s){  
 
   int M    = parameters_.M_,
       nump    = parameters_.num_p_,
@@ -20,7 +19,11 @@ void Kubo_solver_filtered::Greenwood_FFTs_imag(std::complex<r_type>** bras_re, s
       L = filter_.parameters().L_,
       Np = (L-1)/2;
   std::vector<int> list = filter_.decimated_list();
-  
+
+
+  if( s != parameters_.num_parts_ -1)
+    size -= device_.parameters().SUBDIM_ % parameters_.num_parts_;
+
 
   const std::complex<double> im(0,1);  
 
@@ -66,22 +69,17 @@ void Kubo_solver_filtered::Greenwood_FFTs_imag(std::complex<r_type>** bras_re, s
     for(int l = l_start; l < l_end;l++){      
 
       if( M_ext > M + Np ){
-        int m = 0;
-        while( list[m] < M + Np){
+        for(int m=0; list[m] < M + Np; m++){
 	  bras_re_dft.input()[ m ] = bras_re[ m ][ l ];
 	  kets_re_dft.input()[ m ] = kets_re[ m ][ l ];
 	  bras_im_dft.input()[ m ] = bras_im[ m ][ l ];
 	  kets_im_dft.input()[ m ] = kets_im[ m ][ l ];         
-          m++;
         }
-
-        m = 0;
-        while( list[M_dec - 1 - m ] > M_ext - 1 - Np ){
+        for(int m=0; list[M_dec - 1 - m ] > M_ext - 1 - Np; m++ ){
 	  bras_re_dft.input()[ nump - 1 - m ] = bras_re[ M_dec - 1 - m ][ l ];
 	  kets_re_dft.input()[ nump - 1 - m ] = kets_re[ M_dec - 1 - m ][ l ];
 	  bras_im_dft.input()[ nump - 1 - m ] = bras_im[ M_dec - 1 - m ][ l ];
 	  kets_im_dft.input()[ nump - 1 - m ] = kets_im[ M_dec - 1 - m ][ l ];         
-          m++;
         }
       }
       else	

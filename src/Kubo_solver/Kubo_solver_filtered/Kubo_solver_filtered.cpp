@@ -14,18 +14,11 @@
 #include<fftw3.h>
 
 
-#include "../static_vars.hpp"
 
-#include "../vec_base.hpp"
-#include "../CAP.hpp"
-#include "../kernel.hpp"
-#include "../Device/Device.hpp"
-#include "../Device/Graphene.hpp"
-
-#include "../complex_op.hpp"
+#include "../../complex_op.hpp"
 #include "Kubo_solver_filtered.hpp"
 
-#include "time_station.hpp"
+#include "../time_station.hpp"
 
 
 
@@ -83,27 +76,22 @@ void Kubo_solver_filtered::compute_E_points( r_type* E_points ){
       
   int k_dis = filter_.parameters().k_dis_,
       M_ext = filter_.parameters().M_ext_,
-      nump = filter_.parameters().nump_;
+      nump = filter_.parameters().nump_;	
 
-  //  for(int k = -nump/2; k < nump ; k++)
-  //	E_points[ k +nump/2]            = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
-	
-    
-  
-    if( nump % 2 == 1 ){
-       for(int k = 0; k < nump/2 ; k++){
-	 E_points[ k ]                = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
-	 E_points[ nump / 2 + k + 1 ] = cos( 2 * M_PI * ( nump / 2 - ( k - k_dis + 0.25 ) )  / M_ext );
-       }
-       E_points[ nump / 2 ]           = cos( 2 * M_PI * ( nump / 2 - ( - k_dis + 0.25 ) )  / M_ext );             
+
+  if( nump % 2 == 1 ){
+    for(int k = 0; k < ( nump - 1 ) / 2 ; k++){
+      E_points[ k ]                = cos( 2.0 * M_PI * ( k - k_dis + 0.25 ) / double(M_ext) );             
+      E_points[ ( nump - 1 ) / 2 + k + 1 ] = cos( 2.0 * M_PI * ( ( nump - 1 ) / 2 + 1 - ( k - k_dis + 0.25 ) )  / double(M_ext) );
     }
-    else
-      for(int k = 0; k < nump/2 ; k++){
-	E_points[ k ]            = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
-	E_points[ nump / 2 + k ] = cos( 2 * M_PI * ( nump / 2 - ( k - k_dis + 0.25 ) )  / M_ext );
-      }
+    E_points[ nump / 2 ]           = cos( 2 * M_PI * ( nump / 2 - ( - k_dis + 0.25 ) )  / double(M_ext) );             
+  }
+  else
+    for(int k = 0; k < nump/2 ; k++){
+      E_points[ k ]            = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
+      E_points[ nump / 2 + k ] = cos( 2 * M_PI * ( nump / 2 - ( k - k_dis + 0.25 ) )  / double(M_ext) );
+    }
   
-
 };
 
 
@@ -133,7 +121,7 @@ void Kubo_solver_filtered::compute_real(){
 
   }
 
-
+  filter_.compute_filter(); //Initialize filter and filter variables
   
   filter_.compute_k_dis(parameters_.a_,parameters_.b_);
 
@@ -152,7 +140,7 @@ void Kubo_solver_filtered::compute_real(){
   int num_parts = parameters_.num_parts_,
       SEC_SIZE    = 0;
 
-  SEC_SIZE = SUBDIM / num_parts;
+  SEC_SIZE = SUBDIM / num_parts + SUBDIM % num_parts; // Assuming always that % is much smaller than /, hopefully. Not true if num_parts \approx SUBDIM.
   parameters_.SECTION_SIZE_ = SEC_SIZE;
 
   
@@ -172,7 +160,7 @@ void Kubo_solver_filtered::compute_real(){
   E_min /= a;
   eta   /= a;
 
-  filter_.compute_filter(); //Initialize filter and filter variables
+
 
   int M_dec = filter_.M_dec();
 
@@ -248,7 +236,7 @@ void Kubo_solver_filtered::compute_real(){
 
   
   for(int e=0; e<nump;e++){
-    E_points   [e] = filter_.E_points()[e];
+    E_points   [e] = 0.0;
     r_data     [e] = 0.0;
     final_data [e] = 0.0;
     r_data     [nump+e] = 0.0;
@@ -257,17 +245,13 @@ void Kubo_solver_filtered::compute_real(){
 /*-----------------------------------------------*/  
 
   compute_E_points(E_points);  
-  /*
-  for(int k=0; k<nump;k++){
-    E_points[k] = cos(M_PI * ( 2 * k + 0.5 ) / nump );
-    }*/
   
   cap_->create_CAP(W, C, LE,  dmp_op);
   device_.damp(dmp_op);
   
   
 
-  r_type buffer_mem    = r_type( 2 * r_type(M_dec) * r_type( SEC_SIZE) * sizeof(type) ) / r_type( 1E9 ),
+  r_type buffer_mem    = r_type( 2.0 * r_type(M_dec) * r_type( SEC_SIZE) * sizeof(type) ) / r_type( 1E9 ),
          recursion_mem = r_type( ( 5 * r_type( DIM ) + 1 * r_type( SUBDIM ) ) * sizeof(type) )/ r_type( 1E9 ),
          FFT_mem       = 0.0,
          Ham_mem = device_.Hamiltonian_size()/ r_type( 1E9 ),
@@ -331,25 +315,16 @@ void Kubo_solver_filtered::compute_real(){
 
 
        
-       for(int s=0;s<=num_parts;s++){
+       for(int s = 0; s < num_parts; s++){
 
-	 if( s==num_parts && SUBDIM % num_parts==0  )
-	   break;
-
-	 if(SUBDIM % num_parts==0)
-           std::cout<< "    -Part: "<<s+1<<"/"<<num_parts<<std::endl;
-         else
-	   std::cout<< "    -Part: "<<s+1<<"/"<<num_parts+1<<std::endl;
-
-
-
+         std::cout<< "    -Part: "<<s+1<<"/"<<num_parts<<std::endl;
 
 	 
 
          auto csrmv_start_2 = std::chrono::steady_clock::now();
     
-         filtered_polynomial_cycle_direct_2_doubleBuffer(bras, d_bras, rand_vec, s, 0);     
-         //filtered_polynomial_cycle_direct_2(bras, rand_vec, s, 0);
+         //filtered_polynomial_cycle_direct_2_doubleBuffer(bras, d_bras, rand_vec, s, 0);     
+         filtered_polynomial_cycle_direct_2(bras, rand_vec, s, 0);
 	 
          auto csrmv_end_2 = std::chrono::steady_clock::now();
          Station(std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end_2 - csrmv_start_2).count()/1000, "           Bras cycle time:            ");
@@ -362,8 +337,8 @@ void Kubo_solver_filtered::compute_real(){
 	 
          auto csrmv_start = std::chrono::steady_clock::now();
 
-	 filtered_polynomial_cycle_direct_2_doubleBuffer(kets, d_kets, rand_vec, s, 1);
-         //filtered_polynomial_cycle_direct_2(kets, rand_vec, s, 1);
+	 //filtered_polynomial_cycle_direct_2_doubleBuffer(kets, d_kets, rand_vec, s, 1);
+         filtered_polynomial_cycle_direct_2(kets, rand_vec, s, 1);
  
          auto csrmv_end = std::chrono::steady_clock::now();
          Station( std::chrono::duration_cast<std::chrono::microseconds>(csrmv_end - csrmv_start).count()/1000, "           Kets cycle time:            ");
@@ -376,10 +351,10 @@ void Kubo_solver_filtered::compute_real(){
 	 
          auto FFT_start_2 = std::chrono::steady_clock::now();
 
-	 //Greenwood_FFTs(bras, kets, r_data);
+	 //Greenwood_FFTs(bras, kets, r_data, s);
 
-	 Bastin_FFTs_doubleBuffer(E_points, bras, d_bras, kets, d_kets, r_data, 1);
-	 //Bastin_FFTs(E_points, bras,  kets, r_data, 1);
+	 //Bastin_FFTs_doubleBuffer(E_points, bras, d_bras, kets, d_kets, r_data, 1);
+	 Bastin_FFTs(E_points, bras,  kets, r_data, 1);
 	 
 	 auto FFT_end_2 = std::chrono::steady_clock::now();
          Station(std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000, "           FFT operations time:        ");
@@ -395,15 +370,6 @@ void Kubo_solver_filtered::compute_real(){
        std::cout<<std::endl<<"       Total CSRMV time:           "<< total_csrmv<<" (ms)"<<std::endl;
        std::cout<<"       Total FFTs time:            "<< total_FFTs<<" (ms)"<<std::endl;
 
-
-       /*
-       auto start_pr = std::chrono::steady_clock::now();
-    
-       //integration(E_points, integrand, r_data);
-    
-       auto end_pr = std::chrono::steady_clock::now();
-       Station(std::chrono::duration_cast<std::chrono::microseconds>(end_pr - start_pr).count()/1000, "       Integration time:           ");
-       */
 
        
     
@@ -539,7 +505,8 @@ void Kubo_solver_filtered::filter_2( int m, type* new_vec, type** poly_buffer, t
   int M         = parameters_.M_,
       M_ext     = filter_.parameters().M_ext_,
       num_parts = parameters_.num_parts_,
-      SEC_SIZE  = parameters_.SECTION_SIZE_ ;
+      SEC_SIZE  = parameters_.SECTION_SIZE_ ,
+      size = SEC_SIZE;
 
   std::vector<int> list = filter_.decimated_list();
   int M_dec = list.size();
@@ -556,6 +523,8 @@ void Kubo_solver_filtered::filter_2( int m, type* new_vec, type** poly_buffer, t
   for(int i=0; i < L; i++)
     KB_window[i] = filter_.KB_window()[i];
 
+  if( s != parameters_.num_parts_ - 1 )
+    size -= device_.parameters().SUBDIM_ % parameters_.num_parts_;
 
   
   
@@ -581,8 +550,8 @@ void Kubo_solver_filtered::filter_2( int m, type* new_vec, type** poly_buffer, t
         dist = M_ext - list[i] + m ;
     }
     
-    if( dist < Np )
-      plus_eq( poly_buffer[ i ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
+    if( dist < Np || ( Np == 0 && dist == 0 ) )
+      plus_eq( poly_buffer[ i ], tmp,  factor * KB_window[ Np + dist  ], size );
   }
   
 };
@@ -595,7 +564,9 @@ void Kubo_solver_filtered::filter_2_doubleBuffer( int m, type* new_vec, type** p
   int M         = parameters_.M_,
       M_ext     = filter_.parameters().M_ext_,
       num_parts = parameters_.num_parts_,
-      SEC_SIZE  = parameters_.SECTION_SIZE_ ;
+      SEC_SIZE  = parameters_.SECTION_SIZE_ ,
+      size = SEC_SIZE;
+
 
   std::vector<int> list = filter_.decimated_list();
   int M_dec = list.size();
@@ -614,6 +585,8 @@ void Kubo_solver_filtered::filter_2_doubleBuffer( int m, type* new_vec, type** p
     KB_window[i] = filter_.KB_window()[i];
 
 
+  if( s != parameters_.num_parts_ - 1 )
+    size -= device_.parameters().SUBDIM_ % parameters_.num_parts_;
   
   
   type factor = ( 2 - ( m == 0 ) ) * kernel_->term(m,M) * std::polar( 1.0,  M_PI * m * (  - 2 * k_dis + initial_disp_ ) / M_ext );
@@ -643,8 +616,8 @@ void Kubo_solver_filtered::filter_2_doubleBuffer( int m, type* new_vec, type** p
     }
 
     if( dist < Np || ( Np == 0 && dist == 0 ) ){
-      plus_eq( poly_buffer[ i ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
-      plus_eq( d_poly_buffer[ i ], tmp,  m_ext * factor * KB_window[ Np + dist  ], SEC_SIZE );
+      plus_eq( poly_buffer[ i ], tmp,  factor * KB_window[ Np + dist  ], size );
+      plus_eq( d_poly_buffer[ i ], tmp,  m_ext * factor * KB_window[ Np + dist  ], size );
     }
   }
 };
@@ -803,7 +776,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle(type** poly_buffer, type ra
 
 
   
-  type disp_factor = std::polar(1.0,   M_PI * ( -2 * k_dis + initial_disp_ )  / M_ext );
+  type disp_factor = std::polar(1.0,   M_PI * ( - 2 * k_dis + initial_disp_ )  / M_ext );
   
   r_type KB_window[L];
 
@@ -1216,7 +1189,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct(type** poly_buffer, 
 
   type *tmp_velOp = new type [ DIM ];
   
-
+v
   
 #pragma omp parallel for
   for(int l=0;l<DIM;l++){
@@ -1338,7 +1311,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct(type** poly_buffer, 
 	  
 	  if( cyclic && (  ( M - 1 - m ) + i_dec * decRate + 1 ) <= Np )
 	    plus_eq( poly_buffer[ i_dec ], tmp,  factor * KB_window[ Np - ( ( M - 1 - m ) + i_dec * decRate + 1 )  ], SEC_SIZE );
-	  
+v	  
 	}
       }
 
@@ -1387,6 +1360,12 @@ void Kubo_solver_filtered::rearrange_crescent_order( r_type* rearranged){//The p
   for( int k = 0; k < nump; k++ )
     original[ k ] = rearranged[ k ];
 
+  for(int e = 0; e<nump/2; e++){
+
+    rearranged[e] = original[ nump / 2 + e ];
+    rearranged[ nump / 2 + e ] = original[e];
+  }
+  /*
   if(nump%2==0)
     for( int k = 0; k < nump / 2; k++ ){
       rearranged[ k ]   = original[ nump/2 + k  ]; 
@@ -1398,7 +1377,7 @@ void Kubo_solver_filtered::rearrange_crescent_order( r_type* rearranged){//The p
       rearranged[ k ]   = original[ nump/2 + k  ]; 
       rearranged[ nump/2 + k + 1] = original[ k ]; 
     }
-  }
+    }*/
   /*  for( int k=0; k < nump / 2; k++ ){
     r_type tmp = rearranged[ k ]; 
     rearranged[ k ]   = rearranged[ nump-k-1 ];
@@ -1436,9 +1415,11 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
 
   r_type a = parameters_.a_,
     b = parameters_.b_,
-     sysSubLength = device_.sysSubLength();
+    sysSubLength = device_.sysSubLength();
   
-  r_type omega = -2.0 * SUBDIM/( a * a * sysSubLength * sysSubLength ) / ( 2 * M_PI );//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.
+  int decRate = filter_.parameters().decRate_;   
+  
+  r_type omega = 2.0 * decRate * decRate * SUBDIM/( a * a * sysSubLength * sysSubLength ) / ( 2 * M_PI );//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.
   //DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
   
   //r_value_t tmp, max=0, av=0;
@@ -1485,9 +1466,9 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
     rvec_integrand[k] *=  omega / ( M_PI ); 
   }
 
-  //rearrange_crescent_order(rearranged_E_points);
-  //rearrange_crescent_order(integrand);
-  //rearrange_crescent_order(rvec_integrand);
+  rearrange_crescent_order(rearranged_E_points);
+  rearrange_crescent_order(integrand);
+  rearrange_crescent_order(rvec_integrand);
 
   
 
@@ -1583,7 +1564,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
 
 
 
-void Kubo_solver_filtered::update_data(r_type E_points[],  r_type r_data[], r_type final_data[], r_type conv_R[], int r, std::string run_dir, std::string filename){
+void Kubo_solver_filtered::update_data(r_type E_points[],  type r_data[], type final_data[], r_type conv_R[], int r, std::string run_dir, std::string filename){
 
   int nump = parameters_.num_p_,
       R = parameters_.R_,
@@ -1613,7 +1594,7 @@ void Kubo_solver_filtered::update_data(r_type E_points[],  r_type r_data[], r_ty
   
   for(int e=0;e<nump;e++){
 
-    tmp = final_data[e];
+    tmp = real (final_data[e]);
     final_data[e] = ( final_data [e] * (r-1.0) + omega * r_data[e] ) / r;
 
     if(r>1){
@@ -1724,8 +1705,7 @@ void Kubo_solver_filtered::eta_CAP_correct(r_type E_points[], r_type r_data[]){
 
 void Kubo_solver_filtered::integration(r_type E_points[], r_type integrand[], r_type data[]){
 
-  int M = parameters_.M_,
-    nump = parameters_.num_p_;
+  int M = parameters_.M_;
   r_type edge = parameters_.edge_;
   
 #pragma omp parallel for 

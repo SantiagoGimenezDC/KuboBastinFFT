@@ -2,14 +2,15 @@
 #define KUBO_BASTIN_FILTERED_SOLVER_HPP
 
 #include<string>
-#include"../static_vars.hpp"
-#include "../Device/Device.hpp"
-#include "../Device/Graphene.hpp"
-#include "../kernel.hpp"
-#include "../vec_base.hpp"
+#include"../../static_vars.hpp"
+#include "../../Device/Device.hpp"
+#include "../../Device/Graphene.hpp"
+#include "../../kernel.hpp"
+#include "../../vec_base.hpp"
+#include "../../CAP.hpp"
 
 #include "KB_filter.hpp"
-#include "solver_vars.hpp"
+#include "../solver_vars.hpp"
 
 /*
 struct solver_vars{  
@@ -41,7 +42,7 @@ public:
   solver_vars& parameters(){return parameters_;};
 
   void compute(){
-    if( parameters_.base_choice_ == 1 )
+    if( parameters_.base_choice_ == 1  )
       compute_imag();
     else
       compute_real();
@@ -56,7 +57,7 @@ public:
 
   void integration ( r_type*, r_type*, r_type* );
   void eta_CAP_correct(r_type*, r_type* );
-  void update_data ( r_type*, r_type*, r_type*, r_type*, int ,  std::string, std::string );
+  void update_data ( r_type*, type*, type*, r_type*, int ,  std::string, std::string );
   void update_data_Bastin ( r_type*, type*, type*, r_type*,  int ,  std::string, std::string );
   void plot_data   ( std::string, std::string );
 
@@ -71,16 +72,16 @@ public:
 
   
 
-  void Greenwood_FFTs( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
-  void Greenwood_FFTs_2( std::complex<r_type>**, std::complex<r_type>**,  r_type*);
+  void Greenwood_FFTs( std::complex<r_type>**, std::complex<r_type>**,  r_type*, int);
   void Bastin_FFTs   ( r_type*, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
-
+  
 
   void compute_imag();
   void filter_imag( int, type*, type**, type**, type*, type*, int, int);
   void filtered_polynomial_cycle_direct_imag( type** , type** , type*, int , int );
-  void Greenwood_FFTs_imag( std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  r_type*);
-  
+  void Greenwood_FFTs_imag( std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
+  void Bastin_FFTs_imag   ( r_type*, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
+
 
   
   void Bastin_FFTs_doubleBuffer   ( r_type*, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, type*, int );

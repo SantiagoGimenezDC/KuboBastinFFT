@@ -5,7 +5,7 @@
 #include<boost/math/special_functions/bessel.hpp> 
 
 #include "KB_filter.hpp"
-#include "../kernel.hpp"
+#include "../../kernel.hpp"
 
 KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
   
@@ -22,6 +22,7 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
 
     M_ext              += M_ext % decRate;
     parameters_.M_ext_ = M_ext;
+    parameters_.f_cutoff_ = 0.9 * parameters_.M_ext_/ ( 2 * parameters_.decRate_ ); //a default estimate of the cutoff. Verify.
 
   }
   
@@ -43,6 +44,10 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
         decimated_list_.push_back( m );
     }
 
+  //  for( int m = 0; m < decimated_list_.size(); m++)
+  //  std::cout<<decimated_list_[m]<<"  "<<M_ext - 1 - Np<<" "<<decimated_list_.size()<<std::endl;
+  
+  
   
   M_dec_ = decimated_list_.size();
   parameters_.nump_ = nump;
@@ -57,13 +62,7 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
   //nump = M_dec_;
 
   
-  r_type att = parameters.att_;
-
-    
-  E_points_.resize(parameters_.nump_);
-  E_points_.setZero();
-
-    
+  r_type att = parameters.att_;    
 
   if(att<21)
     beta_ = 0;
@@ -71,8 +70,6 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
     beta_ = 0.5842*pow(( att - 21.0),0.4)+0.07886 * ( att - 21.0);
   else 
     beta_ = 0.1102 * ( att - 8.7);
-
-
 
 }
   

@@ -2,8 +2,8 @@
 #define KB_FILTER_HPP
 
 
-#include "../static_vars.hpp"
-#include "../complex_op.hpp"
+#include "../../static_vars.hpp"
+#include "../../complex_op.hpp"
 
 #include<string>
 #include <eigen-3.4.0/Eigen/Core>
@@ -37,25 +37,6 @@ public:
     r_type adim_e_center = (parameters_.energy_center_ + b )/a;
     parameters_.k_dis_ =  int ( (  r_type(parameters_.M_ext_) * ( std::acos ( adim_e_center )  ) / ( 2.0 * M_PI ) - 0.25  ) );
 
-    //parameters_.k_dis_=0;
-
-    int k_dis = parameters_.k_dis_,
-        M_ext = parameters_.M_ext_,
-        nump = parameters_.nump_;
-
-    if( nump % 2 == 1 ){
-       for(int k = 0; k < nump/2 ; k++){
-	 E_points_( k )                = cos( 2.0 * M_PI * ( k - k_dis + 0.25 ) / double(M_ext) );             
-	 E_points_( nump / 2 + k + 1 ) = cos( 2.0 * M_PI * ( nump / 2 - ( k - k_dis + 0.25 ) )  / double(M_ext) );
-       }
-       E_points_( nump / 2 )           = cos( 2 * M_PI * ( nump / 2 - ( - k_dis + 0.25 ) )  / double(M_ext) );             
-    }
-    else
-      for(int k = 0; k < nump/2 ; k++){
-	E_points_( k )            = cos( 2 * M_PI * ( k - k_dis + 0.25 ) / M_ext );             
-	E_points_( nump / 2 + k ) = cos( 2 * M_PI * ( nump / 2 - ( k - k_dis + 0.25 ) )  / double(M_ext) );
-      }
-    
 
   };
   

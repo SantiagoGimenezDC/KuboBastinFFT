@@ -14,18 +14,9 @@
 #include<fftw3.h>
 
 
-#include "../static_vars.hpp"
-
-#include "../vec_base.hpp"
-#include "../CAP.hpp"
-#include "../kernel.hpp"
-#include "../Device/Device.hpp"
-#include "../Device/Graphene.hpp"
-
-#include "../complex_op.hpp"
 #include "Kubo_solver_filtered.hpp"
 
-#include "time_station.hpp"
+#include "../time_station.hpp"
 
 
 
@@ -54,7 +45,7 @@ void Kubo_solver_filtered::compute_imag(){
 
   }
 
-
+  filter_.compute_filter(); //Initialize filter and filter variables
   
   filter_.compute_k_dis(parameters_.a_,parameters_.b_);
 
@@ -93,7 +84,7 @@ void Kubo_solver_filtered::compute_imag(){
   E_min /= a;
   eta   /= a;
 
-  filter_.compute_filter(); //Initialize filter and filter variables
+
 
   int M_dec = filter_.M_dec();
 
@@ -136,9 +127,9 @@ void Kubo_solver_filtered::compute_imag(){
   
   
 /*---------------Dataset vectors----------------*/
-  r_type r_data      [ nump ],
-         final_data  [ nump ],
-         conv_R      [ 2 * D * R ],
+  type r_data      [ 2*nump ],
+         final_data  [ 2*nump ];
+  r_type conv_R      [ 2 * D * R ],
          E_points    [ nump ];
 
 
@@ -164,7 +155,7 @@ void Kubo_solver_filtered::compute_imag(){
 
   
   for(int e=0; e<nump;e++){
-    E_points   [e] = filter_.E_points()[e];
+    E_points   [e] = 0.0;
     r_data     [e] = 0.0;
     final_data [e] = 0.0;
   }
@@ -234,23 +225,16 @@ void Kubo_solver_filtered::compute_imag(){
   
 
     
-       for(int k=0; k<nump; k++ ){
+       for(int k=0; k<2*nump; k++ ){
          r_data    [k] = 0;
 
        }
 
 
        
-       for(int s=0;s<=num_parts;s++){
+       for(int s = 0 ; s < num_parts; s++){
 
-	 if( s==num_parts && SUBDIM % num_parts==0  )
-	   break;
-
-	 if(SUBDIM % num_parts==0)
-           std::cout<< "    -Part: "<<s+1<<"/"<<num_parts<<std::endl;
-         else
-	   std::cout<< "    -Part: "<<s+1<<"/"<<num_parts+1<<std::endl;
-
+	 std::cout<< "    -Part: "<<s+1<<"/"<<num_parts<<std::endl;
 
 
 
@@ -278,11 +262,13 @@ void Kubo_solver_filtered::compute_imag(){
 
 	 
 
-	 
+
 	 
          auto FFT_start_2 = std::chrono::steady_clock::now();
 
-	 Greenwood_FFTs_imag(bras_re, bras_im, kets_re, kets_im, r_data);
+	 //Greenwood_FFTs_imag(bras_re, bras_im, kets_re, kets_im, r_data, s);
+
+	 Bastin_FFTs(E_points, bras_re,  kets_re,  r_data, s);
 	 
 	 auto FFT_end_2 = std::chrono::steady_clock::now();
          Station(std::chrono::duration_cast<std::chrono::microseconds>(FFT_end_2 - FFT_start_2).count()/1000, "           FFT operations time:        ");
@@ -296,17 +282,7 @@ void Kubo_solver_filtered::compute_imag(){
 
   
        std::cout<<std::endl<<"       Total CSRMV time:           "<< total_csrmv<<" (ms)"<<std::endl;
-       std::cout<<"       Total FFTs time:            "<< total_FFTs<<" (ms)"<<std::endl;
-
-
-       
-       auto start_pr = std::chrono::steady_clock::now();
-    
-       //integration(E_points, integrand, r_data);
-    
-       auto end_pr = std::chrono::steady_clock::now();
-       Station(std::chrono::duration_cast<std::chrono::microseconds>(end_pr - start_pr).count()/1000, "       Integration time:           ");
-       
+       std::cout<<"       Total FFTs time:            "<< total_FFTs<<" (ms)"<<std::endl;       
 
        
     
@@ -316,11 +292,13 @@ void Kubo_solver_filtered::compute_imag(){
        simulation with regular polynomials and an variable eta_{var}=eta*sin(acos(E)). The following
        heuristical correction greatly improves the result far from the CNP to match that of the
        desired regular polys and const. eta.*/
-       if( parameters_.eta_!=0 )
-         eta_CAP_correct(E_points, r_data);
+       //if( parameters_.eta_!=0 )
+       // eta_CAP_correct(E_points, r_data);
 
 
-       update_data(E_points, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
+       //       update_data(E_points, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
+       update_data_Bastin(E_points, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
+
        plot_data(run_dir,filename);
 
        
@@ -370,7 +348,8 @@ void Kubo_solver_filtered::filter_imag( int m, type* new_vec, type** poly_buffer
   int M         = parameters_.M_,
       M_ext     = filter_.parameters().M_ext_,
       num_parts = parameters_.num_parts_,
-      SEC_SIZE  = parameters_.SECTION_SIZE_ ;
+      SEC_SIZE  = parameters_.SECTION_SIZE_ ,
+      size = SEC_SIZE;
 
   std::vector<int> list = filter_.decimated_list();
   int M_dec = list.size();
@@ -388,6 +367,9 @@ void Kubo_solver_filtered::filter_imag( int m, type* new_vec, type** poly_buffer
     KB_window[i] = filter_.KB_window()[i];
 
 
+  if( s != parameters_.num_parts_ - 1 )
+    size -= device_.parameters().SUBDIM_ % parameters_.num_parts_;
+  
   
   
   type factor = ( 2 - ( m == 0 ) ) * kernel_->term(m,M) * std::polar( 1.0,  M_PI * m * (  - 2 * k_dis + initial_disp_ ) / M_ext );
@@ -413,7 +395,7 @@ void Kubo_solver_filtered::filter_imag( int m, type* new_vec, type** poly_buffer
     }
 
     if( dist < Np )
-      plus_eq_imag( poly_buffer_re[ i ], poly_buffer_im[ i ], tmp,  factor * KB_window[ Np + dist  ], SEC_SIZE );
+      plus_eq_imag( poly_buffer_re[ i ], poly_buffer_im[ i ], tmp,  factor * KB_window[ Np + dist  ], size);
     
   }
   

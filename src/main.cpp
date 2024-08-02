@@ -12,7 +12,7 @@
 #include "Device/TBG/TBG.hpp"
 #include "Kubo_solver/Kubo_solver_FFT/Kubo_solver_FFT.hpp"
 #include "Kubo_solver/Kubo_solver_SSD.hpp"
-#include "Kubo_solver/Kubo_solver_filtered.hpp"
+#include "Kubo_solver/Kubo_solver_filtered/Kubo_solver_filtered.hpp"
 #include "Kubo_solver/Kubo_solver_traditional/Kubo_solver_traditional.hpp"
 
 int main(int , char **argv){
@@ -42,12 +42,15 @@ int main(int , char **argv){
   graphene_vars.DIM_    = graphene_vars.SUBDIM_ + 2 * graphene_vars.C_*graphene_vars.W_;
 
 
-
+  double nump_factor=1;
   //Reading simulation parameters
   Input>>s_vars.base_choice_;
   Input>>s_vars.kernel_choice_;
   Input>>s_vars.M_, Input>>s_vars.R_, Input>>s_vars.dis_real_, Input>>s_vars.seed_, Input>>s_vars.edge_,
-  Input>>s_vars.num_parts_,   Input>>s_vars.num_p_;
+  Input>>s_vars.num_parts_,   Input>>nump_factor;
+
+  s_vars.num_p_= s_vars.M_*nump_factor;
+  
   Input>>s_vars.E_start_,   Input>>s_vars.E_end_;
   Input>>s_vars.eta_;
   Input>>s_vars.E_min_;
@@ -137,10 +140,20 @@ int main(int , char **argv){
       f_vars.decRate_ = 1;
 
     
-    f_vars.M_ext_ = 8*f_vars.M_ ;
-    f_vars.k_dis_ = f_vars.M_ext_/4;
-    f_vars.nump_  = f_vars.M_ext_/f_vars.decRate_;
+    f_vars.M_ext_ = nump_factor * f_vars.M_ ;
+    //    f_vars.k_dis_ = f_vars.M_ext_/4;
 
+
+    if(f_vars.decRate_ == 1 ){
+      f_vars.L_= 1 ;
+      f_vars.f_cutoff_ = f_vars.M_ext_ * 2;
+    }
+    else{
+      f_vars.L_ = 40 * f_vars.decRate_ + 1;
+      f_vars.f_cutoff_ = 0.9 * f_vars.M_ext_/ ( 2 * f_vars.decRate_ ); //a default estimate of the cutoff. Verify. Could be greedier for Greenwood
+      f_vars.nump_  = f_vars.M_ext_/f_vars.decRate_;
+    }
+    
     s_vars.num_p_ = f_vars.nump_;
 
 
