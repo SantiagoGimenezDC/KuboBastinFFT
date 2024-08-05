@@ -192,8 +192,8 @@ void Kubo_solver_filtered::Bastin_FFTs_doubleBuffer(r_type E_points[], std::comp
      D_bras_dft.execute();
      D_kets_dft.execute();
 
-     derivate_4th_order_2(D_bras, bras_dft,  nump, M_ext);
-     derivate_4th_order_2(D_kets, kets_dft,  nump, M_ext);
+     //derivate_4th_order_2(D_bras, bras_dft,  nump, M_ext);
+     //derivate_4th_order_2(D_kets, kets_dft,  nump, M_ext);
      
           
      for(int j = 0; j < nump; j++){

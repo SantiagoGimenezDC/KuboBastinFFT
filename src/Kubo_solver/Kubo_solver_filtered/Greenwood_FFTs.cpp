@@ -9,7 +9,8 @@
 #include "Kubo_solver_filtered.hpp"
     
 
-void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::complex<r_type>** kets, r_type r_data[], int s){  
+
+void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::complex<r_type>** kets, type r_data[], int s){  
 
   int  M    = parameters_.M_,
     nump    = parameters_.num_p_,

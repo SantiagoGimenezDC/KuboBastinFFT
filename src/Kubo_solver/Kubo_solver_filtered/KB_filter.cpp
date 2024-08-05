@@ -18,9 +18,9 @@ KB_filter::KB_filter(filter_vars& parameters): parameters_(parameters){
 
 
   if( M_ext % decRate != 0 ){
-    std::cout<<"M_ext is being increased by "<< M_ext % decRate<<" to match divisibility by the decimation rate" <<std::endl;
+    std::cout<<"M_ext is being increased by "<< ( decRate - M_ext % decRate )<<" to match divisibility by the decimation rate" <<std::endl;
 
-    M_ext              += M_ext % decRate;
+    M_ext              += ( decRate - M_ext % decRate ) ;
     parameters_.M_ext_ = M_ext;
     parameters_.f_cutoff_ = 0.9 * parameters_.M_ext_/ ( 2 * parameters_.decRate_ ); //a default estimate of the cutoff. Verify.
 

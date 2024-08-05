@@ -99,7 +99,10 @@ void Kubo_solver_filtered::Greenwood_FFTs_imag(std::complex<r_type>** bras_re, s
       kets_im_dft.execute();
       
       for( int m = 0; m < nump; m++ )
-        thread_data[ m ] += real(     ( real( bras_re_dft( m ) ) - im * real( bras_im_dft( m ) ) ) * ( real( kets_re_dft( m ) ) + im * real( kets_im_dft( m ) ) )       );
+        thread_data[ m ] += real(
+				      ( real( bras_re_dft( m ) ) - im * real( bras_im_dft( m ) ) ) *
+				      ( real( kets_re_dft( m ) ) + im * real( kets_im_dft( m ) ) )
+				);
 
 			
     }

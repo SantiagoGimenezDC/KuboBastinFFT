@@ -27,7 +27,8 @@ private:
   solver_vars parameters_;
   Device&  device_;
   KB_filter& filter_;
-  
+  formula sym_formula_;
+
   Kernel*   kernel_;
   CAP*      cap_;
   Vec_Base* vec_base_;
@@ -41,6 +42,9 @@ public:
   
   solver_vars& parameters(){return parameters_;};
 
+
+  void reset_buffer(type**);
+  
   void compute(){
     if( parameters_.base_choice_ == 1  )
       compute_imag();
@@ -48,10 +52,47 @@ public:
       compute_real();
   };
 
+  //For REAL randVECs
+  void compute_real();  
+
+  void filter( int, type*, type**, type*, type*, int, int);
+  void filter_2( int, type*, type**, type*, type*, int, int);
+  void filter_2_doubleBuffer( int, type*, type**, type**, type*, type*, int, int);
+  
+  void filtered_polynomial_cycle_OTF( type** , type*,  r_type* , r_type* , int , int );
+  void filtered_polynomial_cycle_direct( type** , type*, int , int );
+  void filtered_polynomial_cycle_direct_doubleBuffer( type** , type**, type*, int , int );
+  
+  void Greenwood_FFTs( std::complex<r_type>**, std::complex<r_type>**,  type*, int);
+  void Bastin_FFTs   ( r_type*, std::complex<r_type>**, std::complex<r_type>**,  type*, int );  
+  void Bastin_FFTs_doubleBuffer   ( r_type*, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, type*, int );
+
+  
+
+
+  
+
+
+  //For IMAG randVECs  
+  void compute_imag();
+  
+  void filter_imag( int, type*, type**, type**, type*, type*, int, int);
+  void filter_doubleBuffer_imag( int, type*, type**, type**, type**, type**, type*, type*, int, int);
+  
+  void filtered_polynomial_cycle_direct_imag( type** , type** , type*, int , int );
+  void filtered_polynomial_cycle_direct_doubleBuffer_imag( type** , type**, type** , type** , type*, int , int );
+  
+  void Greenwood_FFTs_imag( std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
+  void Bastin_FFTs_imag   ( r_type*, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
+  void Bastin_FFTs_doubleBuffer_imag   ( r_type*, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
+
+  
+  
+
+  //*POST-PROCESSING------------------
 
   void rearrange_crescent_order( r_type* );
   void integration_linqt(const r_type* , const r_type* , r_type* );
-  void compute_real();
   
   void compute_E_points( r_type* );
 
@@ -60,33 +101,8 @@ public:
   void update_data ( r_type*, type*, type*, r_type*, int ,  std::string, std::string );
   void update_data_Bastin ( r_type*, type*, type*, r_type*,  int ,  std::string, std::string );
   void plot_data   ( std::string, std::string );
+  //*POST-PROCESSING------------------
 
-
-  void reset_buffer(type**);
-  void filter( int, type*, type**, type*, type*, int, int);
-  void filter_2( int, type*, type**, type*, type*, int, int);
-  
-  void filtered_polynomial_cycle( type** , type*,  r_type* , r_type* , int , int );
-  void filtered_polynomial_cycle_direct( type** , type*,  r_type* , r_type* , int , int );
-  void filtered_polynomial_cycle_direct_2( type** , type*, int , int );
-
-  
-
-  void Greenwood_FFTs( std::complex<r_type>**, std::complex<r_type>**,  r_type*, int);
-  void Bastin_FFTs   ( r_type*, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
-  
-
-  void compute_imag();
-  void filter_imag( int, type*, type**, type**, type*, type*, int, int);
-  void filtered_polynomial_cycle_direct_imag( type** , type** , type*, int , int );
-  void Greenwood_FFTs_imag( std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
-  void Bastin_FFTs_imag   ( r_type*, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
-
-
-  
-  void Bastin_FFTs_doubleBuffer   ( r_type*, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, type*, int );
-  void filtered_polynomial_cycle_direct_2_doubleBuffer( type** , type**, type*, int , int );
-  void filter_2_doubleBuffer( int, type*, type**, type**, type*, type*, int, int);
   
 inline
 void copy_vector(type vec_destination[], type vec_original[], int size){
