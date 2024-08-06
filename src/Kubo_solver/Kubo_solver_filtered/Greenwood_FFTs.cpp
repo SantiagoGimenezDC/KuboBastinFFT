@@ -69,7 +69,7 @@ void Kubo_solver_filtered::Greenwood_FFTs(std::complex<r_type>** bras, std::comp
         
     for(int l = l_start; l < l_end;l++){      
       if( M_ext > M + Np ){
-        for(int m = 0; list[ m ] < M + Np; m++){
+        for(int m = 0; ( list[ m ] < M + Np && m < M_dec ); m++){
 	  bras_dft.input()[ m ] = bras[ m ][ l ];
 	  kets_dft.input()[ m ] = kets[ m ][ l ];
         }

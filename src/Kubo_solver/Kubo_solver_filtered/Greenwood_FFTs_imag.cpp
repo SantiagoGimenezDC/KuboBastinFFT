@@ -68,13 +68,14 @@ void Kubo_solver_filtered::Greenwood_FFTs_imag(std::complex<r_type>** bras_re, s
         
     for(int l = l_start; l < l_end;l++){      
 
-      if( M_ext > M + Np ){
-        for(int m=0; list[m] < M + Np; m++){
+      if( M_ext > M + Np ){	
+        for(int m=0; ( list[m] < M + Np && m < M_dec ); m++){
 	  bras_re_dft.input()[ m ] = bras_re[ m ][ l ];
 	  kets_re_dft.input()[ m ] = kets_re[ m ][ l ];
 	  bras_im_dft.input()[ m ] = bras_im[ m ][ l ];
 	  kets_im_dft.input()[ m ] = kets_im[ m ][ l ];         
         }
+
         for(int m=0; list[M_dec - 1 - m ] > M_ext - 1 - Np; m++ ){
 	  bras_re_dft.input()[ nump - 1 - m ] = bras_re[ M_dec - 1 - m ][ l ];
 	  kets_re_dft.input()[ nump - 1 - m ] = kets_re[ M_dec - 1 - m ][ l ];
@@ -104,7 +105,7 @@ void Kubo_solver_filtered::Greenwood_FFTs_imag(std::complex<r_type>** bras_re, s
 				      ( real( kets_re_dft( m ) ) + im * real( kets_im_dft( m ) ) )
 				);
 
-			
+      		
     }
 
 

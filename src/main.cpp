@@ -150,7 +150,7 @@ int main(int , char **argv){
     }
     else{
       f_vars.L_ = 40 * f_vars.decRate_ + 1;
-      f_vars.f_cutoff_ = 0.9 * f_vars.M_ext_/ ( 2 * f_vars.decRate_ ); //a default estimate of the cutoff. Verify. Could be greedier for Greenwood
+      f_vars.f_cutoff_ = 1.0 * f_vars.M_ext_/ ( 2 * f_vars.decRate_ ); //a default estimate of the cutoff. Verify. Could be greedier for Greenwood
       f_vars.nump_  = f_vars.M_ext_/f_vars.decRate_;
     }
     

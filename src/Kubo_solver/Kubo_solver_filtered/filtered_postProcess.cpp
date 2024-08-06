@@ -253,7 +253,7 @@ void Kubo_solver_filtered::update_data(r_type E_points[],  type r_data[], type f
 
   
   for(int e=0;e<nump;e++)  
-    dataR<< a * E_points[e] - b<<"  "<< omega * r_data [e]<<"  "<< final_data [e] <<std::endl;
+    dataR<< a * E_points[e] - b<<"  "<< omega * r_data [e]<<"  "<< real(final_data [e]) <<std::endl;
     //  dataP<<  e <<"  "<< final_data [e] <<std::endl;
 
   

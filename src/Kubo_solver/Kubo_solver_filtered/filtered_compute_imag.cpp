@@ -106,7 +106,7 @@ void Kubo_solver_filtered::compute_imag(){
 
 /*------------Big memory allocation--------------*/
 
-  bool double_buffer = true;
+  bool double_buffer = false;
 
   
   //Single Shot vectors
@@ -254,21 +254,6 @@ void Kubo_solver_filtered::compute_imag(){
       std::cout<<std::endl<< std::to_string( ( d - 1 ) * R + r)+"/"+std::to_string( D * R )+"-Vector/disorder realization;"<<std::endl;
        
       
-
-      reset_buffer(bras_re);
-      reset_buffer(bras_im);
-      reset_buffer(kets_re);
-      reset_buffer(kets_im);
-
-
-
-      if(sym_formula_ == KUBO_BASTIN && double_buffer){
-        reset_buffer(d_bras_re);
-        reset_buffer(d_kets_re);
-        reset_buffer(d_bras_im);
-        reset_buffer(d_kets_im);
-      }
-      
        vec_base_->generate_vec_im( rand_vec, r);       
        device_.rearrange_initial_vec(rand_vec); //very hacky
   
@@ -286,7 +271,21 @@ void Kubo_solver_filtered::compute_imag(){
          std::cout<< "    -Part: "<<s+1<<"/"<<num_parts<<std::endl;
 
 	 
+         reset_buffer(bras_re);
+         reset_buffer(bras_im);
+         reset_buffer(kets_re);
+         reset_buffer(kets_im);
 
+         if(sym_formula_ == KUBO_BASTIN && double_buffer){
+           reset_buffer(d_bras_re);
+           reset_buffer(d_kets_re);
+           reset_buffer(d_bras_im);
+           reset_buffer(d_kets_im);
+         }
+      
+
+	 
+	 
          time_station_2 csrmv_time_kets;
          csrmv_time_kets.start();
 
@@ -302,20 +301,23 @@ void Kubo_solver_filtered::compute_imag(){
 
 
 
+	 
 
 	 
 	 time_station_2 csrmv_time_bras;
          csrmv_time_bras.start();
 
 	 if(sym_formula_ == KUBO_BASTIN && double_buffer)	   
-           filtered_polynomial_cycle_direct_doubleBuffer_imag(kets_re, kets_im, d_kets_re, d_kets_im, rand_vec, s, 0);     
+           filtered_polynomial_cycle_direct_doubleBuffer_imag(kets_re, kets_im, d_kets_re, d_kets_im, rand_vec, s, 1);     
 	 else
-	   filtered_polynomial_cycle_direct_imag(kets_re, kets_im, rand_vec, s, 0);     
+	   filtered_polynomial_cycle_direct_imag(kets_re, kets_im, rand_vec, s, 1);     
 
 	 csrmv_time_bras.stop("           Bras cycle time:            ");
          total_csrmv_time += csrmv_time_bras;
 	 
 
+
+	 
 
 	 time_station_2 FFTs_time;
 	 FFTs_time.start();
@@ -333,7 +335,10 @@ void Kubo_solver_filtered::compute_imag(){
 	 FFTs_time.stop("           FFT operations time:        ");
 	 total_FFTs_time += FFTs_time;
  
-	
+
+
+
+	 
        }
 
 
@@ -466,7 +471,7 @@ void Kubo_solver_filtered::filter_imag( int m, type* new_vec, type** poly_buffer
     if( dist < Np || ( Np == 0 && dist == 0 ))
       plus_eq_imag( poly_buffer_re[ i ], poly_buffer_im[ i ], tmp,  factor * KB_window[ Np + dist  ], size);
     
-  }
+    }
   
 };
 
