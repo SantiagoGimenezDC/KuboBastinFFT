@@ -222,9 +222,12 @@ void Kubo_solver_SSD::compute(){
   }
 /*-----------------------------------------------*/  
 
-   
 
-  cap_->create_CAP(W, C, LE,  dmp_op);
+  int W_dummy = W;
+  if(typeid(device_) == typeid(ArmchairGraph_RashbaSOC))
+    W_dummy = W/2;
+
+  cap_->create_CAP(W_dummy, C, LE,  dmp_op);
   device_.damp(dmp_op);
   
 

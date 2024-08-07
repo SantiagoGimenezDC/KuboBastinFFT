@@ -173,6 +173,8 @@ void Kubo_solver_filtered::compute_real(){
 
   compute_E_points(E_points);  
 
+  
+  
   cap_->create_CAP(W, C, LE,  dmp_op);
   device_.damp(dmp_op);
 

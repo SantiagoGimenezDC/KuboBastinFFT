@@ -5,6 +5,7 @@
 #include"../static_vars.hpp"
 #include "../Device/Device.hpp"
 #include "../Device/Graphene.hpp"
+#include "../Device/ArmchairGraph_RashbaSOC.hpp"
 #include "../kernel.hpp"
 #include "../vec_base.hpp"
 

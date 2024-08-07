@@ -11,6 +11,8 @@ build/src/Kubo_solver/Kubo_solver_traditional/compute.o: \
  src/Kubo_solver/Kubo_solver_traditional/../../Device/Graphene.hpp \
  src/Kubo_solver/Kubo_solver_traditional/../../Device/Device.hpp \
  src/Kubo_solver/Kubo_solver_traditional/../../Device/Coordinates.hpp \
+ src/Kubo_solver/Kubo_solver_traditional/../../Device/ArmchairGraph_RashbaSOC.hpp \
+ src/Kubo_solver/Kubo_solver_traditional/../../Device/Graphene.hpp \
  src/Kubo_solver/Kubo_solver_traditional/../../kernel.hpp \
  src/Kubo_solver/Kubo_solver_traditional/../../static_vars.hpp \
  src/Kubo_solver/Kubo_solver_traditional/../../vec_base.hpp \
@@ -30,6 +32,8 @@ src/Kubo_solver/Kubo_solver_traditional/../../Device/../Random.hpp:
 src/Kubo_solver/Kubo_solver_traditional/../../Device/Graphene.hpp:
 src/Kubo_solver/Kubo_solver_traditional/../../Device/Device.hpp:
 src/Kubo_solver/Kubo_solver_traditional/../../Device/Coordinates.hpp:
+src/Kubo_solver/Kubo_solver_traditional/../../Device/ArmchairGraph_RashbaSOC.hpp:
+src/Kubo_solver/Kubo_solver_traditional/../../Device/Graphene.hpp:
 src/Kubo_solver/Kubo_solver_traditional/../../kernel.hpp:
 src/Kubo_solver/Kubo_solver_traditional/../../static_vars.hpp:
 src/Kubo_solver/Kubo_solver_traditional/../../vec_base.hpp:

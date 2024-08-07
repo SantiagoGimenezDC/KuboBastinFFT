@@ -32,19 +32,26 @@ class ArmchairGraph_RashbaSOC: public Graphene{
     virtual ~ArmchairGraph_RashbaSOC(){};
     ArmchairGraph_RashbaSOC();
     ArmchairGraph_RashbaSOC(r_type m_str, r_type rashba_str, device_vars& parameters): Graphene(parameters), m_str_(m_str), rashba_str_(rashba_str){
-      this->parameters().W_*=2;
+      this->parameters().DIM_*=2;
+      this->parameters().SUBDIM_*=2;
     };
+
+  virtual void rearrange_initial_vec(type*);
+  virtual void traceover(type* , type* , int , int);
+
+
   
+  virtual void build_Hamiltonian(){};
+  virtual void RashbaSOC_Hamiltonian (SpMatrixXpc&);
 
-  virtual void RashbaSOC_Hamiltonian (SpMatrixXpc& ,  r_type*);
-
-
+  //Rashba coupling Hamiltonian
+  virtual void H_ket  ( type* ket , type* p_ket ){ H_ket(this->a(),this->b(), ket, p_ket); }
+  virtual void H_ket  ( type* ket , type* p_ket, r_type*, r_type* ){ H_ket(this->a(),this->b(), ket, p_ket); }
   
-  //Rashba coupling Hamiltonian  
-  virtual void H_ket  (r_type, r_type, r_type, type*, type* ,  r_type*);
-  virtual void update ( r_type, r_type, type*, type*,  type*);
+  virtual void H_ket  (r_type, r_type,  type*, type* );
+  virtual void update_cheb ( type*, type*,  type*);
 
-  virtual void vx_OTF (r_type, r_type, r_type, r_type, type*, type*);
+  virtual void vel_op ( type*, type*);
 };
 
 

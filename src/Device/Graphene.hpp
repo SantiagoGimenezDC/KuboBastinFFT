@@ -57,6 +57,9 @@ public:
   };
   
 
+  r_type a(){ return a_; };
+  r_type b(){ return b_; };
+  
   //Setting up
   virtual void damp( r_type* new_damp){
     set_damp_op(new_damp);

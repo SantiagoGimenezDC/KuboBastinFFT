@@ -87,6 +87,7 @@ void Kubo_solver_FFT::compute(){
   
   reset_Chebyshev_buffers();
 
+  
   cap_->create_CAP(W, C, LE,  dmp_op_);
   device_.damp(dmp_op_);
 

@@ -68,8 +68,6 @@ int main(int , char **argv){
   //  double Eedge = 8.09852;
   //s_vars.a_ = 2*Eedge/(2.0-s_vars.edge_);
 
-  if(s_vars.num_p_<s_vars.M_)
-    s_vars.num_p_=s_vars.M_;
 
 
   
@@ -78,7 +76,9 @@ int main(int , char **argv){
   Input>>graphene_vars.filename_;
   graphene_vars.run_dir_ = s_vars.run_dir_;
 
-  
+  r_type m_str, rashba_str;
+  Input>>m_str;
+  Input>>rashba_str;
   /*  
   Read_ConTable test_con(graphene_vars);
   Read_Hamiltonian test_ham(graphene_vars);
@@ -107,6 +107,9 @@ int main(int , char **argv){
     device = new Read_Hamiltonian(graphene_vars);
   if(device_choice==3)
     device = new Read_ConTable(graphene_vars);
+  if(device_choice==4)
+    device = new ArmchairGraph_RashbaSOC(m_str,rashba_str, graphene_vars);
+
 
 
   if(sim_type == "SSD"){
@@ -129,11 +132,13 @@ int main(int , char **argv){
 
     filter_vars f_vars;
 
+    double L_fact, cutoff_fact;
+    
     f_vars.M_ = s_vars.M_;
     Input>>f_vars.post_filter_;
     Input>>f_vars.filter_;
-    Input>>f_vars.L_,   Input>>f_vars.decRate_;
-    Input>>f_vars.energy_center_, Input>>f_vars.f_cutoff_;
+    Input>>L_fact,   Input>>f_vars.decRate_;
+    Input>>f_vars.energy_center_, Input>>cutoff_fact;
     Input>>f_vars.att_;
 
     if(!f_vars.post_filter_ && !f_vars.filter_)
@@ -149,8 +154,8 @@ int main(int , char **argv){
       f_vars.f_cutoff_ = f_vars.M_ext_ * 2;
     }
     else{
-      f_vars.L_ = 40 * f_vars.decRate_ + 1;
-      f_vars.f_cutoff_ = 1.0 * f_vars.M_ext_/ ( 2 * f_vars.decRate_ ); //a default estimate of the cutoff. Verify. Could be greedier for Greenwood
+      f_vars.L_ = L_fact * f_vars.decRate_ + 1; //L_fact=40 is a good default
+      f_vars.f_cutoff_ = cutoff_fact * f_vars.M_ext_/ ( 2.0 * f_vars.decRate_ ); //a default estimate of the cutoff. Verify. Could be greedier for Greenwood
       f_vars.nump_  = f_vars.M_ext_/f_vars.decRate_;
     }
     
