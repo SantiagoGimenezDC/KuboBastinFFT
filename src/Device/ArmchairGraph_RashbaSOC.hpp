@@ -51,7 +51,15 @@ class ArmchairGraph_RashbaSOC: public Graphene{
   virtual void H_ket  (r_type, r_type,  type*, type* );
   virtual void update_cheb ( type*, type*,  type*);
 
-  virtual void vel_op ( type*, type*);
+  virtual void vel_op   ( type* ket, type* p_ket, int dir){
+    if( dir == 0 )
+      vel_op( ket, p_ket);
+    if( dir == 1 )
+      vel_op_y( ket, p_ket);
+  };
+  
+  virtual void vel_op   ( type*, type*);
+  virtual void vel_op_y ( type*, type*);  
 };
 
 

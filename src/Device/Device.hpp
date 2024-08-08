@@ -40,6 +40,7 @@ public:
       damp_[i] = 1.0;
   };
 
+  virtual void vel_op( type*, type*, int ){};
 
   void set_sysLength(r_type sysLength){sysLength_=sysLength;};
   r_type sysLength(){return sysLength_;};

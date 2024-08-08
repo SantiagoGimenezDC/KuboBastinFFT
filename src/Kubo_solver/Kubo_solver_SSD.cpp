@@ -72,13 +72,14 @@ Kubo_solver_SSD::Kubo_solver_SSD(solver_vars& parameters, double RAM_size, Devic
     cap_      = new Mandelshtam(parameters_.E_min_, parameters_.eta_/parameters_.a_);
 
 
-  
-  if(parameters_.base_choice_==0)
+  if(parameters_.base_choice_ == 0 )
     vec_base_ = new Direct(device_.parameters(), parameters_.seed_);
-  else if(parameters_.base_choice_==1)
+  else if(parameters_.base_choice_ == 1 )
     vec_base_ = new Complex_Phase(device_.parameters(), parameters_.seed_);
-  else
-    vec_base_ = new Direct(device_.parameters(), parameters_.seed_);
+  else if(parameters_.base_choice_ == 2 )
+    vec_base_ = new Complex_Phase_real(device_.parameters(), parameters_.seed_);
+  else if(parameters_.base_choice_ == 3 )
+    vec_base_ = new FullTrace(device_.parameters(), parameters_.seed_);
 
   if(parameters_.kernel_choice_==0)
     kernel_   = new None();

@@ -62,7 +62,7 @@ int main(int , char **argv){
   s_vars.SECTION_SIZE_ = graphene_vars.SUBDIM_/s_vars.num_parts_;
 
 
-  s_vars.a_ = 1.0;
+  s_vars.a_ =1.0;
   s_vars.b_ = 0.0;
 
   //  double Eedge = 8.09852;

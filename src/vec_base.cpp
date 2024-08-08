@@ -134,3 +134,44 @@ void Direct::generate_vec_re( r_type rand_vec[], int ){
   
 }
 
+
+
+
+
+
+void FullTrace::generate_vec_im( std::complex<r_type> rand_vec[], int r){
+
+  int DIM = this->parameters().DIM_,
+    SUBDIM = this->parameters().SUBDIM_    ;
+  
+#pragma omp parallel for
+  for(int m=0; m < DIM; m++)
+    rand_vec[m] = 0;
+
+
+  rand_vec[r+SUBDIM/2] = 1.0;
+  
+}
+
+
+
+void FullTrace::generate_vec_re( r_type rand_vec[], int r){
+
+  int DIM = this->parameters().DIM_;
+
+
+  
+#pragma omp parallel for
+  for(int m=0; m < DIM; m++)
+    rand_vec[m] = 0;
+
+
+  rand_vec[r] = 1.0;
+  
+}
+
+
+
+
+
+

@@ -130,7 +130,6 @@ void Kubo_solver_FFT::compute(){
       reset_data(r_data_);
       
 
-
     
       for(int s = 0; s < num_parts; s++){
 

@@ -40,9 +40,10 @@ Kubo_solver_filtered::Kubo_solver_filtered(solver_vars& parameters, Device& devi
     vec_base_ = new Complex_Phase(device_.parameters(), parameters_.seed_);
   else if(parameters_.base_choice_ == 2 )
     vec_base_ = new Complex_Phase_real(device_.parameters(), parameters_.seed_);
-  else
-    vec_base_ = new Direct(device_.parameters(), parameters_.seed_);
+  else if(parameters_.base_choice_ == 3 )
+    vec_base_ = new FullTrace(device_.parameters(), parameters_.seed_);
 
+  
   if(parameters_.kernel_choice_==0)
     kernel_   = new None();
   else if(parameters_.kernel_choice_==1)
@@ -91,7 +92,13 @@ void Kubo_solver_filtered::compute_E_points( r_type* E_points ){
 };
 
 
+void Kubo_solver_filtered::batch_vel_op(std::complex<r_type>** buffer, int M , int SEC_SIZE){
 
+  for(int m=0; m<M; m++ ){
+    // device_.vel_op( tmp_velOp, new_vec );
+  }
+
+};
 
 
 

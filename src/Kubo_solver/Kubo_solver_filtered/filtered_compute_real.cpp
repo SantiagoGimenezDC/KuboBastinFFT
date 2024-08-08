@@ -233,7 +233,7 @@ void Kubo_solver_filtered::compute_real(){
             
        vec_base_->generate_vec_im( rand_vec, r);       
        device_.rearrange_initial_vec(rand_vec); //very hacky
-  
+
 
     
        for(int k=0; k<nump; k++ ){

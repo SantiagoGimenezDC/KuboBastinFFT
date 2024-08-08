@@ -57,4 +57,15 @@ public:
   virtual void generate_vec_im( std::complex<r_type>*, int );  
 };
 
+
+class FullTrace: public Vec_Base{
+public:
+  virtual ~FullTrace(){};
+  FullTrace(device_vars& parameters, int seed) : Vec_Base(parameters, seed){};
+  
+  virtual void generate_vec_re(r_type*, int );
+  virtual void generate_vec_im( std::complex<r_type>*, int );  
+};
+
+
 #endif //RAND_BASE_HPP

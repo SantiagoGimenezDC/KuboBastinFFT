@@ -11,7 +11,7 @@ void ArmchairGraph_RashbaSOC::traceover(type* traced, type* full_vec, int s, int
   if( s == num_reps-1 )
       buffer_length += subDim % num_reps;
 
-      
+
 #pragma omp parallel for 
       for(int i=0;i<buffer_length;i++)
         traced[i] = full_vec[s*sec_size + i+2*C*W];
@@ -131,7 +131,7 @@ void ArmchairGraph_RashbaSOC::RashbaSOC_Hamiltonian (SpMatrixXpc& H ){
  }  
 
  if(disorder_potential != NULL){
-   for(int i = W*C; i < W * C + W * LE ; i+=2){
+   for(int i = W*C; i < W * C + W * LE ; i++){
      tripletList.push_back( Tc( i,i,disorder_potential[ i - W*C ] ) );
      tripletList.push_back( Tc( i+1,i+1,disorder_potential[ i - W*C ] ) );
    }
@@ -174,19 +174,21 @@ void ArmchairGraph_RashbaSOC::update_cheb ( type* ket, type* p_ket, type* pp_ket
   r_type * disorder_potential = dis();
   
 
+
+  std::complex<r_type> ImUnit(0,1);
   //  f_x*=ImUnit;
   // f_x2*=ImUnit;
 
-  std::complex<r_type> ImUnit(0,1);
   f_y *= ImUnit;
- 
+
+
 #pragma omp parallel for 
  for(int j=0; j<fullLe; j++){
     for(int i=0; i<W; i++){
       int n = j * W + i;
 
-      ket[ 2 * n ]     =  2.0 * ( (b_a - m_str ) * p_ket[ 2 * n ] )    - sFilter[ n ] * pp_ket[ 2 * n ];
-      ket[ 2 * n + 1 ] =  2.0 * ( (b_a + m_str ) * p_ket[ 2 * n + 1] ) - sFilter[ n ] * pp_ket[ 2 * n + 1 ];
+      ket[ 2 * n ]     =  2.0 * ( ( b_a - m_str ) * p_ket[ 2 * n ] )    - sFilter[ n ] * pp_ket[ 2 * n ];
+      ket[ 2 * n + 1 ] =  2.0 * ( ( b_a + m_str ) * p_ket[ 2 * n + 1] ) - sFilter[ n ] * pp_ket[ 2 * n + 1 ];
 
       
       if( i!=0 ){
@@ -212,14 +214,14 @@ void ArmchairGraph_RashbaSOC::update_cheb ( type* ket, type* p_ket, type* pp_ket
  }
 
 
-
+ 
    if( disorder_potential != NULL ){
      for( int i = W * C; i < W * C + W * LE ; i ++ ){
        ket[ 2 * i ]      +=  2 * sFilter[ i ] * disorder_potential[ i - W * C ] * p_ket[ 2 * i ] / a;
        ket[ 2 * i + 1 ]  +=  2 * sFilter[ i ] * disorder_potential[ i - W * C ] * p_ket[ 2 * i +1 ] / a;
      }    
    }
-
+ 
 
  
  bool vertical_cbc=false;
@@ -284,9 +286,9 @@ void ArmchairGraph_RashbaSOC::vel_op ( type* ket, type* p_ket){
       W      = this->parameters().W_,
       C      = this->parameters().C_;
 
-  r_type a = this->a();
+
   
-  r_type t = t_standard_/a;
+  r_type t = t_standard_  ;
  
   if(this->parameters().C_%2==1)
     std::cout<<"BEWARE VX OP ONLY WORKS FOR EVEN C!!!!!!!!!!"<<std::endl;
@@ -387,7 +389,77 @@ void ArmchairGraph_RashbaSOC::vel_op ( type* ket, type* p_ket){
 
 
 
-  //   ket*=-im;
+
+ 
+}; 
+
+
+
+void ArmchairGraph_RashbaSOC::vel_op_y ( type* ket, type* p_ket){
+
+  int Le = this->parameters().LE_,
+      W      = this->parameters().W_,
+      C      = this->parameters().C_;
+
+
+  
+  r_type t = t_standard_  ;
+ 
+  if(this->parameters().C_%2==1)
+    std::cout<<"BEWARE VX OP ONLY WORKS FOR EVEN C!!!!!!!!!!"<<std::endl;
+
+
+      
+  std::complex<r_type>
+    rashba_str = rashba_str_ * t,
+    d_y2 = a0_ * cos( M_PI / 6.0 ),
+    f_y  = 2.0 * rashba_str * cos( M_PI / 6.0 ) / 3.0,
+    f_x2 = 2.0 * rashba_str * sin( M_PI / 6.0 ) / 3.0;
+
+
+  std::complex<r_type> ImUnit(0,1);
+
+  //  f_x*=ImUnit;
+  // f_x2*=ImUnit;
+
+  f_y *= ImUnit;
+ 
+#pragma omp parallel for 
+ for(int j=0; j<Le; j++){
+    for(int i=0; i<W; i++){
+      int n = C*W + j * W + i;
+	
+      ket[ 2 * n ]     = 0;
+      ket[ 2 * n + 1 ] = 0;
+        
+      if( i!=0 ){
+	ket[ 2 * n ]     += d_y2 * std::complex<r_type> (((j+i)%2)==0? -1:1) * ( -t * p_ket[ 2 * n - 2 ] + ( f_x2 * std::complex<r_type>(((j+i)%2)==0? 1:-1) + f_y ) * p_ket[ 2 * n - 1 ] );
+	ket[ 2 * n + 1 ] += d_y2 * std::complex<r_type>(((j+i)%2)==0? -1:1) * ( -t * p_ket[ 2 * n - 1] + ( -f_x2 * std::complex<r_type>(((j+i)%2)==0? 1:-1)  + f_y ) * p_ket[ 2 * n - 2 ]  );
+      }
+      if(i != (W-1) ){
+	ket[ 2 * n ]     += d_y2 * std::complex<r_type>(((j+i)%2)==0? -1:1) * ( -t * p_ket[ 2 * n + 2 ] + ( f_x2 * std::complex<r_type>(((j+i)%2)==0? 1:-1) - f_y ) * p_ket[ 2 * n + 3 ]   );
+	ket[ 2 * n + 1 ] += d_y2 * std::complex<r_type>(((j+i)%2)==0? -1:1) * ( -t * p_ket[ 2 * n + 3 ] + ( -f_x2 * std::complex<r_type>(((j+i)%2)==0? 1:-1) - f_y ) * p_ket[ 2 * n + 2 ]   );
+      }
+    }
+ } 
+
+
+
+ bool vertical_cbc=false;
+
+ if( (W/2)%2 !=0 && vertical_cbc)
+   std::cout<<"BEWARE VERTICAL CBC ONLY WORKS FOR EVEN M!!!!"<<std::endl;
+ 
+ if(vertical_cbc)
+  for(int j=0; j<Le; j++){
+
+    int n_up = j * W + W-1;
+    int n_down = j * W;
+      
+    ket[ 2 * n_down ]     +=  -d_y2 * std::complex<r_type>(((j+W)%2)==0? 1:-1) * ( -t * p_ket[ 2 * n_up ]     + ( -f_x2 * std::complex<r_type>(((j+W-1)%2)==0? 1:-1) + f_y ) * p_ket[ 2 * n_up + 1 ]   );
+    ket[ 2 * n_down + 1 ] +=  -d_y2 * std::complex<r_type>(((j+W)%2)==0? 1:-1) * ( -t * p_ket[ 2 * n_up + 1 ] + (  f_x2 * std::complex<r_type>(((j+W-1)%2)==0? 1:-1) + f_y ) * p_ket[ 2 * n_up ]   );
+      
+ } 
  
 }; 
 
@@ -402,7 +474,7 @@ void ArmchairGraph_RashbaSOC::H_ket (r_type a, r_type b, type* ket, type* p_ket)
       LE = parameters().LE_;
 
  
- r_type t = t_standard_/a,
+  r_type t = t_standard_/a,
          b_a = b/a,
          m_str = m_str_ * t,
          rashba_str = rashba_str_ * t;
@@ -427,8 +499,8 @@ void ArmchairGraph_RashbaSOC::H_ket (r_type a, r_type b, type* ket, type* p_ket)
     for(int i=0; i<W; i++){
       int n = j * W + i;
 
-      ket[ 2 * n ]     =   ( (b_a - m_str ) * p_ket[ 2 * n ] );
-      ket[ 2 * n + 1 ] =   ( (b_a + m_str ) * p_ket[ 2 * n + 1] );
+      ket[ 2 * n ]     = ( b_a - m_str ) * p_ket[ 2 * n ] ;
+      ket[ 2 * n + 1 ] = ( b_a + m_str ) * p_ket[ 2 * n + 1] ;
 
       
       if( i!=0 ){

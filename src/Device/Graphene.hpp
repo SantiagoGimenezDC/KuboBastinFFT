@@ -114,6 +114,13 @@ public:
       vel_op_otf( vec,  p_vec);
   };
 
+  virtual void vel_op   ( type* ket, type* p_ket, int dir){
+    if( dir == 0 )
+      vel_op( ket, p_ket);
+    if( dir == 1 )
+      vel_op_y( ket, p_ket);
+  };
+  virtual void vel_op_y (type* , type* );
   
   
 

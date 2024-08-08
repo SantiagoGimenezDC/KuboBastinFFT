@@ -53,6 +53,10 @@ public:
       compute_real();
   };
 
+
+  void batch_vel_op(std::complex<r_type>**, int, int );
+
+  
   //For REAL randVECs
   void compute_real();  
 

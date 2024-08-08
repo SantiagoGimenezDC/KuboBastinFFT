@@ -371,5 +371,37 @@ void Graphene::vel_op_otf (type vec[], type p_vec[] ){
 
 
 
+void Graphene::vel_op_y (type vec[], type p_vec[] ){
+  
+  int W   = this->parameters().W_,
+      LE  = this->parameters().LE_,
+      C  = this->parameters().C_;    
+  
+  r_type dx1 = 0,
+         dx2 = cos(M_PI/6.0),
+         tx1 = dx1 * t_standard_,
+         tx2 = dx2 * t_standard_;
+  
+ 
+#pragma omp parallel for 
+  for(int j=0; j<LE; j++){
+    for(int i=0; i<W; i++){
+      int n = C * W + j * W + i;
+      
+      vec[n] = 0;
+
+      if( i!=0 )
+	vec[n] += tx2 * (((j+i)%2)==0? -1:1) * p_vec[n-1];
+      
+      if( i != (W-1) )
+	vec[n] += tx2 * (((j+i)%2)==0? -1:1) * p_vec[n+1];
+      		     
+
+    }
+  } 
+};
+
+
+
 
 
