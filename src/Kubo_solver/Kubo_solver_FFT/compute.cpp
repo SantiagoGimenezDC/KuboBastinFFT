@@ -225,10 +225,11 @@ void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states< St
 
 //=================================KPM Step 0======================================//
   
-  if(vel){
-    device_.vel_op( cheb_vectors(0).data(), rand_vec_ );
+  if(vel)
+    device_.vel_op( cheb_vectors(0).data(), rand_vec_, parameters_.vel_dir_1_ );
 
-    device_.vel_op( tmp_, cheb_vectors(0).data() );
+  if(vel){
+    device_.vel_op( tmp_, cheb_vectors(0).data(), parameters_.vel_dir_2_ );
     device_.traceover(polys[0].data(), tmp_, s, num_parts);  
   }
   else
@@ -242,7 +243,7 @@ void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states< St
 
 
   if(vel){
-    device_.vel_op( tmp_, cheb_vectors(1).data() );
+    device_.vel_op( tmp_, cheb_vectors(1).data(), parameters_.vel_dir_2_ );
     device_.traceover(polys[1].data(), tmp_, s, num_parts);  
   }
   else
@@ -257,7 +258,7 @@ void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states< St
     cheb_vectors.update();
 
     if(vel){
-      device_.vel_op( tmp_, cheb_vectors(2).data() );
+      device_.vel_op( tmp_, cheb_vectors(2).data() , parameters_.vel_dir_2_);
       device_.traceover(polys[m].data(), tmp_, s, num_parts);
     }
     else

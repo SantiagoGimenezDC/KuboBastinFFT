@@ -40,7 +40,6 @@ public:
       damp_[i] = 1.0;
   };
 
-  virtual void vel_op( type*, type*, int ){};
 
   void set_sysLength(r_type sysLength){sysLength_=sysLength;};
   r_type sysLength(){return sysLength_;};
@@ -80,7 +79,9 @@ public:
   virtual void H_ket ( type*, type*) = 0;
   virtual void H_ket ( type*, type*, r_type*, r_type*) = 0;  
 
-  virtual void vel_op (type*, type*)=0;
+  virtual void vel_op (type*, type*){};
+  virtual void vel_op (type*, type*, int){};
+
   virtual void setup_velOp() = 0;
   
   void Anderson_disorder();

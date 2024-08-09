@@ -79,6 +79,9 @@ int main(int , char **argv){
   r_type m_str, rashba_str;
   Input>>m_str;
   Input>>rashba_str;
+
+  Input>>s_vars.vel_dir_1_;
+  Input>>s_vars.vel_dir_2_;
   /*  
   Read_ConTable test_con(graphene_vars);
   Read_Hamiltonian test_ham(graphene_vars);
@@ -111,7 +114,10 @@ int main(int , char **argv){
     device = new ArmchairGraph_RashbaSOC(m_str,rashba_str, graphene_vars);
 
 
+  //  Graphene test(graphene_vars);
+  // test.print_hamiltonian();
 
+  
   if(sim_type == "SSD"){
     Kubo_solver_SSD solver( s_vars, RAM_size,  *device);
     solver.compute();

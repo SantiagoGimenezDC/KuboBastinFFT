@@ -26,6 +26,9 @@ private:
   Coordinates coordinates_;
 
   int fullLe_;
+  r_type Bx_=0, By_=0, Bz_=0.0001; //A=(-Bz*y, 0, 0)  
+
+  r_type peierls_d_ = 2.0 * M_PI * Bz_/( 2.0 * std::tan(M_PI/6)); //this should be -(2 * ImUnit * pi/2) * B * (a0*cos(pi/6))^2/(h*e). The minus is from Landau gauge A=(-By,0,0)
   
   r_type a_ = 1.0,
     b_ = 0.0,
@@ -40,6 +43,7 @@ public:
   ~Graphene(){};
   Graphene(device_vars&);
 
+  void print_hamiltonian();
   virtual r_type Hamiltonian_size(){ return ( H_.innerSize() + H_.nonZeros() + H_.outerSize() ) * sizeof(r_type); };
   
   virtual void adimensionalize(r_type a, r_type b){
@@ -133,8 +137,8 @@ public:
   void vel_op_otf (type*, type*);
 
   
-  void vertical_BC(type*, type*, r_type*);
-  void horizontal_BC(type*, type*, r_type* );
+  void vertical_BC(r_type, type*, type*, r_type*);
+  void horizontal_BC(r_type, type*, type*, r_type* );
 
 
   
@@ -167,7 +171,19 @@ public:
 
   virtual void set_coordinates();
 
+  inline r_type y(int i, int ){  return -i*a0_*cos(M_PI/6.0); };
 
+  
+  inline r_type x(int i, int j){
+    r_type x=0;
+
+    if( i % 2 == 1 )
+      x = 1 * ( sin(M_PI/6.0)  +  (j/2)*(1.0+2.0*sin(M_PI/6.0))  +  ((j+1)/2)   );	//The 1 * should be an a0_;                          	                            
+    else
+      x = 1 * (  ((j+1)/2)*(1.0+2.0*sin(M_PI/6.0)) + (j/2)  );	                       
+
+    return x;
+  };
   
   inline
   r_type SlaterCoster_intralayer_coefficient( r_type d_ij){
