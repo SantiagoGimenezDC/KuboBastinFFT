@@ -82,6 +82,8 @@ int main(int , char **argv){
 
   Input>>s_vars.vel_dir_1_;
   Input>>s_vars.vel_dir_2_;
+  Input>>graphene_vars.Bz_;
+
   /*  
   Read_ConTable test_con(graphene_vars);
   Read_Hamiltonian test_ham(graphene_vars);

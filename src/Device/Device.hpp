@@ -8,7 +8,7 @@
 
 struct device_vars{
   int W_, LE_, C_, DIM_, SUBDIM_,  dis_seed_;
-  r_type dis_str_, theta_, d_min_;
+  r_type dis_str_, theta_, d_min_, Bz_;
 
   std::string run_dir_, filename_;
 };

@@ -54,6 +54,9 @@ Graphene::Graphene(device_vars& parameters) : Device(parameters),   coordinates_
   this->set_sysSubLength( (Le-1)*(1.0+sin(M_PI/6)) );
 
 
+
+  peierls_d_ = 2.0 * M_PI * this->parameters().Bz_/( 2.0 * std::tan(M_PI/6)); //this should be -(2 * ImUnit * pi/2) * B * (a0*cos(pi/6))^2/(h*e). The minus is from Landau gauge A=(-By,0,0)
+
   this->set_coordinates();
   
 }
@@ -190,10 +193,10 @@ void Graphene::update_cheb_otf ( type vec[], type p_vec[], type pp_vec[], r_type
       vec[n] = b_a * p_vec[n] - damp_op[n] * pp_vec[n];
 
       if( i != 0 )
-	vec[n] += t * p_vec[n-1] * std::polar(1.0, - (i%2==0?-1:1) * peierls_d_ * ( x(i-1,j) * x(i-1,j) - x(i,j) * x(i,j) ) );
+	vec[n] += t * p_vec[n-1] * std::polar(1.0, - (i%2==0?-1:1) * peierls_d_ * ( y(i-1,j) * y(i-1,j) - y(i,j) * y(i,j) ) );
       
       if( i != ( W - 1 ) )
-	vec[n] += t * p_vec[n+1] * std::polar(1.0, (i%2==0?-1:1) * peierls_d_ * ( x(i+1,j) * x(i+1,j) - x(i,j) * x(i,j) ) );
+	vec[n] += t * p_vec[n+1] * std::polar(1.0, (i%2==0?-1:1) * peierls_d_ * ( y(i+1,j) * y(i+1,j) - y(i,j) * y(i,j) ) );
       
       if( j != ( fullLe - 1 ) && ( j + i ) % 2 != 0 )
 	vec[n] += t * p_vec[ n + W ] ;
@@ -249,9 +252,9 @@ void Graphene::vertical_BC(r_type a2, type vec[], type p_vec[], r_type damp_op[]
     int n_up = j * W +W-1;
     int n_down = j * W;
 
-    vec[n_up]     += damp_op[n_up]   * t * p_vec[n_down] * std::polar(1.0, - ((W-1)%2==0?-1:1) * peierls_d_ * ( x(0,j) * x(0,j) - x(W-1,j) * x(W-1,j) ) );
+    vec[n_up]     += damp_op[n_up]   * t * p_vec[n_down] * std::polar(1.0,  -((W-1)%2==0?-1:1) * peierls_d_ * ( y(0,j) * y(0,j) - y(W-1,j) * y(W-1,j) ) );
      
-    vec[n_down]   += damp_op[n_down] * t * p_vec[n_up] * std::polar(1.0,  - peierls_d_ *  ( x(W-1,j) * x(W-1,j) - x(0,j) * x(0,j) ) );
+    vec[n_down]   += damp_op[n_down] * t * p_vec[n_up] * std::polar(1.0,  - peierls_d_ *  ( y(W-1,j) * y(W-1,j) - y(0,j) * y(0,j) ) );
             
   } 
 }
@@ -277,9 +280,9 @@ void Graphene::horizontal_BC(r_type a2, type vec[], type p_vec[], r_type damp_op
     for(int i=0; i<W; i++){
       int n_front = i;
       int n_back = (fullLe-1) * W + i;
-      vec[n_front]   +=  damp_op[n_front] * ( (n_front)%2 ) * t * p_vec[n_back];
+      vec[n_front]   +=  damp_op[n_front] * ( ( n_front )%2 ) * t * p_vec[n_back];
   
-      vec[n_back]    +=  damp_op[n_back]  * ( (n_front)%2 ) * t * p_vec[n_front];
+      vec[n_back]    +=  damp_op[n_back]  * ( ( n_back )%2 ) * t * p_vec[n_front];
     }
 }
 
@@ -307,10 +310,10 @@ void Graphene::H_ket_otf ( type vec[], type p_vec[], r_type damp_op[], r_type di
       vec[n] = b_a * p_vec[n];
 
       if( i != 0 )
-	vec[n] += t * p_vec[n-1] * std::polar(1.0,  -(i%2==0?-1:1) * peierls_d_ * ( x(i-1,j) * x(i-1,j) - x(i,j) * x(i,j) ) );
+	vec[n] += t * p_vec[n-1] * std::polar(1.0,  -(i%2==0?-1:1) * peierls_d_ * ( y(i-1,j) * y(i-1,j) - y(i,j) * y(i,j) ) );
       
       if( i != ( W - 1 ) )
-	vec[n] += t * p_vec[n+1] * std::polar(1.0, (i%2==0?-1:1) * peierls_d_ * ( x(i+1,j) * x(i+1,j) - x(i,j) * x(i,j) ) );
+	vec[n] += t * p_vec[n+1] * std::polar(1.0, (i%2==0?-1:1) * peierls_d_ * ( y(i+1,j) * y(i+1,j) - y(i,j) * y(i,j) ) );
       
       if( j != ( fullLe - 1 ) && ( j + i ) % 2 != 0 )
 	vec[n] += t * p_vec[ n + W ] ;
@@ -359,10 +362,10 @@ void Graphene::vel_op_otf (type vec[], type p_vec[] ){
 
       if( n > C * W ){
         if( i!=0 )
-	  vec[n] += tx2 * (((j+i)%2)==0? -1:1) * p_vec[n-1]  * std::polar(1.0, (i%2==0?-1:1) * peierls_d_ * ( x(i-1,j) * x(i-1,j) - x(i,j) * x(i,j) ) );
+	  vec[n] += tx2 * (((j+i)%2)==0? -1:1) * p_vec[n-1]  * std::polar(1.0, -(i%2==0?-1:1) * peierls_d_ * ( y(i-1,j) * y(i-1,j) - y(i,j) * y(i,j) ) );
       
         if( i != (W-1) )
-	  vec[n] += tx2 * (((j+i)%2)==0? -1:1) * p_vec[n+1] * std::polar(1.0, (i%2==0?-1:1) * peierls_d_ * ( x(i+1,j) * x(i+1,j) - x(i,j) * x(i,j) ) );
+	  vec[n] += tx2 * (((j+i)%2)==0? -1:1) * p_vec[n+1] * std::polar(1.0, (i%2==0?-1:1) * peierls_d_ * ( y(i+1,j) * y(i+1,j) - y(i,j) * y(i,j) ) );
       
         if( j != (LE-1) && (j+i)%2!=0 )
 	  vec[n] += - tx1 * p_vec[n+W];
@@ -380,8 +383,8 @@ void Graphene::vel_op_otf (type vec[], type p_vec[] ){
       int n_up = j * W + W-1;
       int n_down = j * W;
 
-      vec[n_up]     +=  tx2 * (((j+W-1)%2)==0? -1:1) * p_vec[n_down] * std::polar(1.0, ((W-1)%2==0?-1:1) * peierls_d_ * ( x(0,j) * x(0,j) - x(W-1,j) * x(W-1,j) ) );      
-      vec[n_down]   +=  tx2 * (((j+W-1)%2)==0? -1:1) * p_vec[n_up] * std::polar(1.0,  - peierls_d_ *  ( x(W-1,j) * x(W-1,j) - x(0,j) * x(0,j) ) );      
+      vec[n_up]     +=  tx2 * (((j+W-1)%2)==0? -1:1) * p_vec[n_down] * std::polar(1.0,  -((W-1)%2==0?-1:1) * peierls_d_ * ( y(0,j) * y(0,j) - y(W-1,j) * y(W-1,j) ) );      
+      vec[n_down]   +=  tx2 * (((j+W-1)%2)==0? -1:1) * p_vec[n_up] * std::polar(1.0,   -peierls_d_ *  ( y(W-1,j) * y(W-1,j) - y(0,j) * y(0,j) ) );      
     }
 
  
@@ -421,10 +424,10 @@ void Graphene::vel_op_y (type vec[], type p_vec[] ){
 
       if( n > C * W ){
         if( i!=0 )
-	  vec[n] += - ty2 * p_vec[n-1] * std::polar(1.0, ((W-1)%2==0?-1:1) * peierls_d_ * ( x(0,j) * x(0,j) - x(W-1,j) * x(W-1,j) ) );
+	  vec[n] += - ty2 * p_vec[n-1] * std::polar(1.0, - (i%2==0?-1:1) * peierls_d_ * ( y(i-1,j) * y(i-1,j) - y(i,j) * y(i,j) ) );
       
         if( i != (W-1) )
-	  vec[n] += ty2 * p_vec[n+1]  * std::polar(1.0, peierls_d_ * ( y( i+1, j) * x(i+1,j) - y(i,j) * x(i,j) ) );
+	  vec[n] += ty2 * p_vec[n+1]  * std::polar(1.0, (i%2==0?-1:1) * peierls_d_ * ( y(i+1,j) * y(i+1,j) - y(i,j) * y(i,j) ) );
       }
     }
   } 
@@ -435,8 +438,8 @@ void Graphene::vel_op_y (type vec[], type p_vec[] ){
       int n_up = j * W + W-1;
       int n_down = j * W;
 
-      vec[n_up]     +=  ty2 * (((j+W-1)%2)==0? -1:1) * p_vec[n_down]  * std::polar(1.0, ((W-1)%2==0?-1:1) * peierls_d_ * ( x(0,j) * x(0,j) - x(W-1,j) * x(W-1,j) ) );      
-      vec[n_down]   +=  ty2 * (((j+W-1)%2)==0? -1:1) * p_vec[n_up] * std::polar(1.0,  - peierls_d_ *  ( x(W-1,j) * x(W-1,j) - x(0,j) * x(0,j) ) );      
+      vec[n_up]     +=  - ty2 * (((j+W-1)%2)==0? -1:1) * p_vec[n_down]  * std::polar(1.0, -((W-1)%2==0?-1:1) * peierls_d_ * ( y(0,j) * y(0,j) - y(W-1,j) * y(W-1,j) ) );      
+      vec[n_down]   +=  + ty2 * (((j+W-1)%2)==0? -1:1) * p_vec[n_up]  * std::polar(1.0,  - peierls_d_ *  ( y(W-1,j) * y(W-1,j) - y(0,j) * y(0,j) ) );      
     }
 
   }

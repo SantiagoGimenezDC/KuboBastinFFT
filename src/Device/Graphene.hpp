@@ -26,9 +26,8 @@ private:
   Coordinates coordinates_;
 
   int fullLe_;
-  r_type Bx_=0, By_=0, Bz_=0.0001; //A=(-Bz*y, 0, 0)  
 
-  r_type peierls_d_ = 2.0 * M_PI * Bz_/( 2.0 * std::tan(M_PI/6)); //this should be -(2 * ImUnit * pi/2) * B * (a0*cos(pi/6))^2/(h*e). The minus is from Landau gauge A=(-By,0,0)
+  r_type peierls_d_;
   
   r_type a_ = 1.0,
     b_ = 0.0,
@@ -171,7 +170,7 @@ public:
 
   virtual void set_coordinates();
 
-  inline r_type y(int i, int ){  return -i*a0_*cos(M_PI/6.0); };
+  inline r_type y(int i, int ){  return -i*cos(M_PI/6.0); };
 
   
   inline r_type x(int i, int j){
