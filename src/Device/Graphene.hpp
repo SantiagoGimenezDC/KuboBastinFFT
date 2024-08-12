@@ -27,7 +27,7 @@ private:
 
   int fullLe_;
 
-  r_type peierls_d_;
+  r_type peierls_d_=0;
   
   r_type a_ = 1.0,
     b_ = 0.0,
