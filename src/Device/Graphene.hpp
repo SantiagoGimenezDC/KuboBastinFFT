@@ -125,7 +125,9 @@ public:
   };
   virtual void vel_op_y (type* , type* );
   
-  
+  type peierls(int i1, int sign){
+    return  std::polar(1.0, sign * ( i1 % 2 == 0 ? -1 : 1 ) * peierls_d_ * ( - 2 * i1 + 1  ) );
+  };
 
   //----On the fly implementations
   virtual  void update_cheb_filtered ( type*, type*, type*, r_type*, r_type*, type);
@@ -174,14 +176,14 @@ public:
 
   
   inline r_type x(int i, int j){
-    r_type x=0;
+    r_type x_p=0;
 
     if( i % 2 == 1 )
-      x = 1 * ( sin(M_PI/6.0)  +  (j/2)*(1.0+2.0*sin(M_PI/6.0))  +  ((j+1)/2)   );	//The 1 * should be an a0_;                          	                            
+      x_p = 1 * ( sin(M_PI/6.0)  +  (j/2)*(1.0+2.0*sin(M_PI/6.0))  +  ((j+1)/2)   );	//The 1 * should be an a0_;                          	                            
     else
-      x = 1 * (  ((j+1)/2)*(1.0+2.0*sin(M_PI/6.0)) + (j/2)  );	                       
+      x_p = 1 * (  ((j+1)/2)*(1.0+2.0*sin(M_PI/6.0)) + (j/2)  );	                       
 
-    return x;
+    return x_p;
   };
   
   inline

@@ -27,7 +27,8 @@ void Graphene::print_hamiltonian(){
 	term_j(j)=1;
 
 
-        update_cheb(tmp.data(),term_j.data(),null.data());
+        //update_cheb(tmp.data(),term_j.data(),null.data());
+        vel_op_otf(tmp.data(),term_j.data());
 
 	std::complex<double> termy = term_i.dot(tmp);
 
@@ -42,7 +43,8 @@ void Graphene::print_hamiltonian(){
 }
 
 Graphene::Graphene(device_vars& parameters) : Device(parameters),   coordinates_(parameters.W_,parameters.LE_,parameters.C_){
-    int Le     = this->parameters().LE_,
+    int W     = this->parameters().W_,
+        Le     = this->parameters().LE_,
         C      = this->parameters().C_,
         fullLe = (2*C+Le);
 
@@ -51,13 +53,13 @@ Graphene::Graphene(device_vars& parameters) : Device(parameters),   coordinates_
   if(this->parameters().C_==0)
     CYCLIC_BCs_=true;
 
-  CYCLIC_BCs_=false;
+  CYCLIC_BCs_=true;
   this->set_sysLength( (fullLe-1) * (1.0+sin(M_PI/6)) ); 
   this->set_sysSubLength( (Le-1)*(1.0+sin(M_PI/6)) );
 
+  //Bz here will be trated as the ratio between phi/phi_0;
+  peierls_d_ = 2.0 * M_PI * this->parameters().Bz_ / double(2*W+1);
   
-  peierls_d_ = 2.0 * M_PI * this->parameters().Bz_ * ( std::tan(M_PI/6.0) * std::cos(M_PI/6.0) * std::cos(M_PI/6.0))/2;
-
   print_hamiltonian();
 
   this->set_coordinates();
@@ -196,16 +198,16 @@ void Graphene::update_cheb_otf ( type vec[], type p_vec[], type pp_vec[], r_type
       vec[n] = b_a * p_vec[n] - damp_op[n] * pp_vec[n];
 
       if( i != 0 )
-	vec[n] += t * p_vec[n-1] * std::polar(1.0, peierls_d_ * ( x(i+1,j) * x(i+1,j) - x(i,j) * x(i,j) ) );// Bx gauge* std::polar(1.0,  (i%2==0?-1:1) * peierls_d_ * ( - 2 * i + 1  ) );
+	vec[n] += t * p_vec[n-1] * peierls(i,-1);// std::polar(1.0,  - ( i % 2 == 0 ? -1 : 1 ) * peierls_d_ * ( - 2 * i + 1  ) );
       
       if( i != ( W - 1 ) )
-	vec[n] += t * p_vec[n+1] * std::polar(1.0,  peierls_d_ * ( x(i+1,j) * x(i+1,j) - x(i,j) * x(i,j) ) );
+	vec[n] += t * p_vec[n+1] * peierls(i,1);// * std::polar(1.0,   ( i % 2 == 0 ? -1 : 1 ) * peierls_d_ * (  2 * i + 1  ) );
       
       if( j != ( fullLe - 1 ) && ( j + i ) % 2 != 0 )
-	vec[n] += t * p_vec[ n + W ] * std::polar(1.0, -peierls_d_ * y(i,j) * (x(i+W,j) -  x(i,j) ) );
+	vec[n] += t * p_vec[ n + W ];
       
       if( j != 0 && ( j + i ) %2 == 0 )
-	vec[n] += t * p_vec[ n - W ] * std::polar(1.0,  peierls_d_ * y(i,j) * (x(i-W,j) -  x(i,j) ) );;
+	vec[n] += t * p_vec[ n - W ];
 
       
       vec[n] *= damp_op[n];
@@ -255,9 +257,9 @@ void Graphene::vertical_BC(r_type a2, type vec[], type p_vec[], r_type damp_op[]
     int n_up = j * W +W-1;
     int n_down = j * W;
 
-    vec[n_up]     += damp_op[n_up]   * t * p_vec[n_down] * std::polar(1.0,   ((W-1)%2==0?-1:1) * peierls_d_ * ( y(0,j) * y(0,j) - y(W-1,j) * y(W-1,j) ) );
+    vec[n_up]     += damp_op[n_up] * t * p_vec[n_down] * peierls(W-1,1); //* std::polar(1.0,   ( ( W - 1 ) % 2 == 0 ? -1 : 1 ) * peierls_d_ * ( - 2 * (W - 1) + 1  ) );
      
-    vec[n_down]   += damp_op[n_down] * t * p_vec[n_up] * std::polar(1.0,  peierls_d_ *  ( y(W-1,j) * y(W-1,j) - y(0,j) * y(0,j) ) );
+    vec[n_down]   += damp_op[n_down] * t * p_vec[n_up] * peierls(0,-1); //* std::polar(1.0,  - ( 0 % 2 == 0 ? -1 : 1 ) * peierls_d_ * (  2 * 0 + 1  ) );
             
   } 
 }
@@ -312,18 +314,17 @@ void Graphene::H_ket_otf ( type vec[], type p_vec[], r_type damp_op[], r_type di
       
       vec[n] = b_a * p_vec[n];
 
-
       if( i != 0 )
-	vec[n] += t * p_vec[n-1] * std::polar(1.0, peierls_d_ * ( x(i+1,j) * x(i+1,j) - x(i,j) * x(i,j) ) );// Bx gauge* std::polar(1.0,  (i%2==0?-1:1) * peierls_d_ * ( - 2 * i + 1  ) );
+	vec[n] += t * p_vec[n-1] * peierls(i,-1);//* std::polar(1.0,  - ( i % 2 == 0 ? -1 : 1 ) * peierls_d_ * ( - 2 * i + 1  ) );
       
       if( i != ( W - 1 ) )
-	vec[n] += t * p_vec[n+1] * std::polar(1.0,  peierls_d_ * ( x(i+1,j) * x(i+1,j) - x(i,j) * x(i,j) ) );
+	vec[n] += t * p_vec[n+1] * peierls(i,1);
       
       if( j != ( fullLe - 1 ) && ( j + i ) % 2 != 0 )
-	vec[n] += t * p_vec[ n + W ] * std::polar(1.0, -peierls_d_ * y(i,j) * (x(i+W,j) -  x(i,j) ) );
+	vec[n] += t * p_vec[ n + W ];
       
       if( j != 0 && ( j + i ) %2 == 0 )
-	vec[n] += t * p_vec[ n - W ] * std::polar(1.0,  peierls_d_ * y(i,j) * (x(i-W,j) -  x(i,j) ) );
+	vec[n] += t * p_vec[ n - W ];
 
       
       vec[n] *= damp_op[n];      
@@ -364,31 +365,33 @@ void Graphene::vel_op_otf (type vec[], type p_vec[] ){
       
       vec[n] = 0;
 
-      if( n > C * W ){
+      if( n >= C * W ){
         if( i!=0 )
-	  vec[n] += tx2 * (((j+i)%2)==0? -1:1) * p_vec[n-1]  * std::polar(1.0,  peierls_d_ * ( x(i+1,j) * x(i+1,j) - x(i,j) * x(i,j) ) );// Bx gauge* std::polar(1.0,  (i%2==0?-1:1) * peierls_d_ * ( - 2 * i + 1  ) );
+	  vec[n] += tx2 * (((j+i)%2)==0? -1:1) * p_vec[n-1] * peierls(i,-1);
       
         if( i != (W-1) )
-	  vec[n] += tx2 * (((j+i)%2)==0? -1:1) * std::polar(1.0, peierls_d_ * ( x(i+1,j) * x(i+1,j) - x(i,j) * x(i,j) ) );
+	  vec[n] += tx2 * (((j+i)%2)==0? -1:1) * p_vec[n+1] * peierls(i,1);
       
         if( j != (LE-1) && (j+i)%2!=0 )
-	  vec[n] += - tx1 * p_vec[n+W] * std::polar(1.0, peierls_d_ * y(i,j) * (x(i+W,j) -  x(i,j) ) );
+	  vec[n] += - tx1 * p_vec[n+W];
       
         if( j != 0 && (j+i)%2==0 )
-	  vec[n] +=  tx1 * p_vec[n-W] * std::polar(1.0, - peierls_d_ * y(i,j) * (x(i-W,j) -  x(i,j) ) );
+	  vec[n] +=  tx1 * p_vec[n-W];
       }
     }
   }
 
+  
 
+    
   if(CYCLIC_BCs_){
 #pragma omp parallel for 
     for(int j=0; j< ( LE + 2 * C ); j++){
       int n_up = j * W + W-1;
       int n_down = j * W;
 
-      vec[n_up]     +=  tx2 * (((j+W-1)%2)==0? -1:1) * p_vec[n_down] * std::polar(1.0,   (0%2==0?-1:1) * peierls_d_ * ( - 2 * (W-1) + 1  ) );
-      vec[n_down]   +=  tx2 * (((j+W-1)%2)==0? -1:1) * p_vec[n_up] * std::polar(1.0,   ((W-1)%2==0?-1:1) * peierls_d_ * ( - 2 * (W-1) + 1  ) );
+      vec[n_up]     +=  tx2 * (((j+W-1)%2)==0? -1:1) * p_vec[n_down] * peierls(W-1,1);
+      vec[n_down]   +=  tx2 * (((j+W-1)%2)==0? -1:1) * p_vec[n_up]   * peierls(0,-1);
     }
 
  
@@ -416,9 +419,9 @@ void Graphene::vel_op_y (type vec[], type p_vec[] ){
   r_type dy2 = cos(M_PI/6.0),
          ty2 = dy2 * t_standard_;
   
-  
+  std::complex<r_type> Im(0,1.0);
 
-  
+
 #pragma omp parallel for 
   for(int j=0; j<(LE+2*C); j++){
     for(int i=0; i<W; i++){
@@ -426,15 +429,16 @@ void Graphene::vel_op_y (type vec[], type p_vec[] ){
       
       vec[n] = 0;
 
-      if( n > C * W ){
+      if( n >= C * W ){
         if( i!=0 )
-	  vec[n] +=  ty2 * p_vec[n-1] * std::polar(1.0,   (i%2==0?-1:1) * peierls_d_ * ( - 2 * i + 1  ) );
+	  vec[n] +=  ty2 * p_vec[n-1] * peierls(i,-1);
       
         if( i != (W-1) )
-	  vec[n] += -  ty2 * p_vec[n+1] * std::polar(1.0,   - (i%2==0?-1:1) * peierls_d_ * ( 2 * i + 1  ) );
+	  vec[n] += - ty2 * p_vec[n+1] * peierls(i,1);
       }
     }
   } 
+
 
   if(CYCLIC_BCs_){
 #pragma omp parallel for 
@@ -442,8 +446,8 @@ void Graphene::vel_op_y (type vec[], type p_vec[] ){
       int n_up = j * W + W-1;
       int n_down = j * W;
 
-      vec[n_up]     +=  - ty2 * (((j+W-1)%2)==0? -1:1) * p_vec[n_down]  * std::polar(1.0, ((W-1)%2==0?-1:1) * peierls_d_ * ( y(0,j) * y(0,j) - y(W-1,j) * y(W-1,j) ) );      
-      vec[n_down]   +=  + ty2 * (((j+W-1)%2)==0? -1:1) * p_vec[n_up]  * std::polar(1.0,   peierls_d_ *  ( y(W-1,j) * y(W-1,j) - y(0,j) * y(0,j) ) );      
+      vec[n_up]     +=  - ty2 * p_vec[n_down]  * peierls(W-1,1);
+      vec[n_down]   +=  + ty2 * p_vec[n_up]    * peierls(0,-1);
     }
 
   }

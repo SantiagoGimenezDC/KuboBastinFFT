@@ -142,7 +142,7 @@ void Kubo_solver_FFT::compute(){
         time_station_2 csrmv_time_kets;
         csrmv_time_kets.start();
 	
-        polynomial_cycle( kets, cheb_vectors, s, false );
+        polynomial_cycle( kets, cheb_vectors, s, true );
 
 	csrmv_time_kets.stop("           Kets cycle time:            ");
         total_csrmv_time += csrmv_time_kets;
@@ -153,7 +153,7 @@ void Kubo_solver_FFT::compute(){
 	time_station_2 csrmv_time_bras;
         csrmv_time_bras.start();
 	
-	polynomial_cycle( bras, cheb_vectors, s , true );	
+	polynomial_cycle( bras, cheb_vectors, s , false );	
 
 	csrmv_time_bras.stop("           Bras cycle time:            ");
         total_csrmv_time += csrmv_time_bras;
