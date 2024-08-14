@@ -1,0 +1,117 @@
+#ifndef GRAPHENE_SUPERCELL_HPP
+#define GRAPHENE_SUPERCELL_HPP
+
+#include "../static_vars.hpp"
+#include "../CAP.hpp"
+#include "../Random.hpp"
+#include "Device.hpp"
+#include "Graphene.hpp"
+#include <eigen-3.4.0/Eigen/Sparse>
+#include "Coordinates.hpp"
+#include <iostream>
+
+class Graphene_supercell: public Graphene{
+
+private:
+  const r_type t_standard_ = -2.7;
+  bool CYCLIC_BCs_ = false;
+  int fullLe_=0;
+
+  r_type peierls_d_=0;
+  
+  r_type a_ = 1.0,
+    b_ = 0.0,
+    t_a_= t_standard_;
+
+public:
+  ~Graphene_supercell(){};
+  //  Graphene_supercell(device_vars&);
+
+  Graphene_supercell(device_vars& parameters) : Graphene(parameters){
+    int W     = parameters.W_,
+        Le     = parameters.LE_,
+        C      = parameters.C_,
+        fullLe = (2*C+Le);
+
+    fullLe_ = fullLe;
+    
+    //if(this->parameters().C_==0)
+    //CYCLIC_BCs_=true;
+
+    CYCLIC_BCs_=false;
+    this->set_sysLength( (fullLe-1) * (1.0+sin(M_PI/6)) ); 
+    this->set_sysSubLength( (Le-1)*(1.0+sin(M_PI/6)) );
+
+    //Bz here will be trated as the ratio between phi/phi_0;
+    peierls_d_ = 2.0 * M_PI * this->parameters().Bz_ / double(2*W+1);
+  
+    print_hamiltonian();
+
+    this->set_coordinates();
+  
+  }
+
+  void print_hamiltonian();
+    
+  virtual void adimensionalize(r_type a, r_type b){ a_ = a, b_ = b; t_a_=t_standard_/a; };
+
+  virtual r_type a(){ return a_; };
+  virtual r_type b(){ return b_; };
+  
+  //Generic interfaces
+
+  virtual void update_cheb ( type* , type* , type* );
+  
+  virtual void H_ket (  type*, type* );
+
+
+
+  virtual void vel_op   ( type* ket, type* p_ket, int dir){
+    if( dir == 0 )
+      vel_op_x( ket, p_ket);
+    if( dir == 1 )
+      vel_op_y( ket, p_ket);
+  };
+  virtual void vel_op_y (type* , type* );
+  virtual void vel_op_x (type* , type* );
+  
+  type peierls(int i1, int sign){
+    return  std::polar(1.0, sign * ( i1 % 2 == 0 ? -1 : 1 ) * peierls_d_ * ( - 2 * i1 + 1  ) );
+  };
+
+  //----On the fly implementations
+  
+  
+  void vertical_BC(r_type, type*, type*, r_type*);
+  void horizontal_BC(r_type, type*, type*, r_type* );
+
+
+  
+
+
+  
+
+
+
+  //----Sparse matrix representation
+
+  inline r_type y(int i, int ){  return -i*cos(M_PI/6.0); };
+
+  
+  inline r_type x(int i, int j){
+    r_type x_p=0;
+
+    if( i % 2 == 1 )
+      x_p = 1 * ( sin(M_PI/6.0)  +  (j/2)*(1.0+2.0*sin(M_PI/6.0))  +  ((j+1)/2)   );	//The 1 * should be an a0_;                          	                            
+    else
+      x_p = 1 * (  ((j+1)/2)*(1.0+2.0*sin(M_PI/6.0)) + (j/2)  );	                       
+
+    return x_p;
+  };
+};
+
+
+
+
+
+#endif //GRAPHENE_SUPERCELL_H
