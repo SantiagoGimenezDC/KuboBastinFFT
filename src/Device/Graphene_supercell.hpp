@@ -27,32 +27,11 @@ public:
   ~Graphene_supercell(){};
   //  Graphene_supercell(device_vars&);
 
-  Graphene_supercell(device_vars& parameters) : Graphene(parameters){
-    int W     = parameters.W_,
-        Le     = parameters.LE_,
-        C      = parameters.C_,
-        fullLe = (2*C+Le);
-
-    fullLe_ = fullLe;
-    
-    //if(this->parameters().C_==0)
-    //CYCLIC_BCs_=true;
-
-    CYCLIC_BCs_=false;
-    this->set_sysLength( (fullLe-1) * (1.0+sin(M_PI/6)) ); 
-    this->set_sysSubLength( (Le-1)*(1.0+sin(M_PI/6)) );
-
-    //Bz here will be trated as the ratio between phi/phi_0;
-    peierls_d_ = 2.0 * M_PI * this->parameters().Bz_ / double(2*W+1);
-  
-    print_hamiltonian();
-
-    this->set_coordinates();
-  
-  }
+  Graphene_supercell(device_vars& ) ;
 
   void print_hamiltonian();
-    
+
+  
   virtual void adimensionalize(r_type a, r_type b){ a_ = a, b_ = b; t_a_=t_standard_/a; };
 
   virtual r_type a(){ return a_; };
@@ -76,7 +55,7 @@ public:
   virtual void vel_op_x (type* , type* );
   
   type peierls(int i1, int sign){
-    return  std::polar(1.0, sign * ( i1 % 2 == 0 ? -1 : 1 ) * peierls_d_ * ( - 2 * i1 + 1  ) );
+    return  std::polar(1.0, sign * ( i1 % 2 == 0 ? -1 : 1 ) * peierls_d_ * ( sign * 2 * i1 + 1  ) );
   };
 
   //----On the fly implementations

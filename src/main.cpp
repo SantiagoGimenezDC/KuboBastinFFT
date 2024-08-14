@@ -6,6 +6,7 @@
 #include "static_vars.hpp"
 #include "Device/Device.hpp"
 #include "Device/Graphene.hpp"
+#include "Device/Graphene_supercell.hpp"
 #include "Device/Read_Hamiltonian.hpp"
 #include "Device/Read_ConTable.hpp"
 
@@ -62,7 +63,7 @@ int main(int , char **argv){
   s_vars.SECTION_SIZE_ = graphene_vars.SUBDIM_/s_vars.num_parts_;
 
 
-  s_vars.a_ =1.0;
+  s_vars.a_ =8.5;
   s_vars.b_ = 0.0;
 
   //  double Eedge = 8.09852;
@@ -117,6 +118,8 @@ int main(int , char **argv){
     device = new Read_ConTable(graphene_vars);
   if(device_choice==4)
     device = new ArmchairGraph_RashbaSOC(m_str,rashba_str, graphene_vars);
+  if(device_choice==5)
+    device = new Graphene_supercell(graphene_vars);
 
 
   //  Graphene test(graphene_vars);
