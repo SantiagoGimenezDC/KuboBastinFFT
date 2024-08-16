@@ -53,12 +53,13 @@ Graphene::Graphene(device_vars& parameters) : Device(parameters),   coordinates_
   if(this->parameters().C_==0)
     CYCLIC_BCs_=true;
 
+
   CYCLIC_BCs_=true;
   this->set_sysLength( (fullLe-1) * (1.0+sin(M_PI/6)) ); 
   this->set_sysSubLength( (Le-1)*(1.0+sin(M_PI/6)) );
 
   //Bz here will be trated as the ratio between phi/phi_0;
-  peierls_d_ = 2.0 * M_PI * this->parameters().Bz_ / double(2*W+1);
+  peierls_d_ = 2.0 * M_PI * this->parameters().Bz_ / double(2*(W-1));
   
   //print_hamiltonian();
 
@@ -431,10 +432,10 @@ void Graphene::vel_op_y (type vec[], type p_vec[] ){
 
       if( n >= C * W ){
         if( i!=0 )
-	  vec[n] +=  ty2 * p_vec[n-1] * peierls(i,-1);
+	  vec[n] +=  - ty2 * p_vec[n-1] * peierls(i,-1);
       
         if( i != (W-1) )
-	  vec[n] += - ty2 * p_vec[n+1] * peierls(i,1);
+	  vec[n] += ty2 * p_vec[n+1] * peierls(i,1);
       }
     }
   } 

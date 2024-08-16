@@ -7,6 +7,7 @@
 #include "Device/Device.hpp"
 #include "Device/Graphene.hpp"
 #include "Device/Graphene_supercell.hpp"
+#include "Device/SupercellGraph_RashbaSOC.hpp"
 #include "Device/Read_Hamiltonian.hpp"
 #include "Device/Read_ConTable.hpp"
 
@@ -120,6 +121,8 @@ int main(int , char **argv){
     device = new ArmchairGraph_RashbaSOC(m_str,rashba_str, graphene_vars);
   if(device_choice==5)
     device = new Graphene_supercell(graphene_vars);
+  if(device_choice==6)
+    device = new SupercellGraph_RashbaSOC(m_str,rashba_str,graphene_vars);
 
 
   //  Graphene test(graphene_vars);
