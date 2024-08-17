@@ -30,7 +30,7 @@ Graphene_supercell::Graphene_supercell(device_vars& parameters) : Graphene(param
     //Bz here will be trated as the ratio between phi/phi_0;
     peierls_d_ = 2.0 * M_PI * this->parameters().Bz_ / double(2*(W-1));
   
-    //print_hamiltonian();
+    print_hamiltonian();
 
     this->set_coordinates();
     
@@ -44,7 +44,7 @@ void Graphene_supercell::print_hamiltonian(){
   Eigen::MatrixXcd H_r(dim,dim), S(dim,dim);
 
   std::ofstream dataP;
-  dataP.open("Hamiltonian.txt");
+  dataP.open("update_spc.txt");
         
     for(int j=0;j<dim;j++){
       for(int i=0;i<dim;i++){
@@ -55,9 +55,9 @@ void Graphene_supercell::print_hamiltonian(){
 	term_j(j)=1;
 
 
-        //this->update_cheb(tmp.data(),term_j.data(),null.data());
+        this->update_cheb(tmp.data(),term_j.data(),null.data());
 	//this->H_ket(tmp.data(),term_j.data());
-        vel_op_x(tmp.data(),term_j.data());
+        //vel_op_x(tmp.data(),term_j.data());
         //vel_op_y(tmp.data(),term_j.data());
 	std::complex<double> termy = term_i.dot(tmp);
 

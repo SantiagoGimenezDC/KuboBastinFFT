@@ -21,11 +21,11 @@ class SupercellGraph_RashbaSOC: public Graphene{
     
   private:
 
-    bool CYCLIC_BCs_ = true;
+    bool CYCLIC_BCs_ = false;
     r_type peierls_d_=0;
 
     const r_type e_standard_ = 0.0;
-    const r_type t_standard_ = -2.7;
+    const r_type t_standard_ = 2.7;
     const r_type  a0_        = 0.142;
     r_type m_str_            = 0.0;
     r_type rashba_str_       = 0.0;  
@@ -52,7 +52,6 @@ class SupercellGraph_RashbaSOC: public Graphene{
 
   
   virtual void build_Hamiltonian(){};
-  virtual void RashbaSOC_Hamiltonian (SpMatrixXpc&);
 
   //Rashba coupling Hamiltonian
   virtual void H_ket  ( type* ket , type* p_ket ){ H_ket(this->a(),this->b(), ket, p_ket); }
