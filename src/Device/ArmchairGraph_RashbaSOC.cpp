@@ -508,12 +508,12 @@ void ArmchairGraph_RashbaSOC::H_ket (r_type a, r_type b, type* ket, type* p_ket)
 
       
       if( i!=0 ){
-	ket[ 2 * n ]     +=  ( -t * p_ket[ 2 * n - 2 ] + (  f_x2 * std::complex<r_type>(((j+i)%2)==0? 1:-1) + f_y ) * p_ket[ 2 * n - 1 ] );
-	ket[ 2 * n + 1 ] +=  ( -t * p_ket[ 2 * n - 1 ] + ( -f_x2 * std::complex<r_type>(((j+i)%2)==0? 1:-1) + f_y ) * p_ket[ 2 * n - 2 ] );
+	ket[ 2 * n ]     +=  ( -t * p_ket[ 2 * n - 2 ] + (  f_x2 * (((j+i)%2)==0? 1.0:-1.0) + f_y ) * p_ket[ 2 * n - 1 ] );
+	ket[ 2 * n + 1 ] +=  ( -t * p_ket[ 2 * n - 1 ] + ( -f_x2 * (((j+i)%2)==0? 1.0:-1.0) + f_y ) * p_ket[ 2 * n - 2 ] );
       }
       if(i != (W-1) ){
-	ket[ 2 * n ]     +=  ( -t * p_ket[ 2 * n + 2 ] + (  f_x2 * std::complex<r_type>(((j+i)%2)==0? 1:-1) - f_y ) * p_ket[ 2 * n + 3 ]   );
-	ket[ 2 * n + 1 ] +=  ( -t * p_ket[ 2 * n + 3 ] + ( -f_x2 * std::complex<r_type>(((j+i)%2)==0? 1:-1) - f_y ) * p_ket[ 2 * n + 2 ]   );
+	ket[ 2 * n ]     +=  ( -t * p_ket[ 2 * n + 2 ] + (  f_x2 * (((j+i)%2)==0? 1.0:-1.0) - f_y ) * p_ket[ 2 * n + 3 ]   );
+	ket[ 2 * n + 1 ] +=  ( -t * p_ket[ 2 * n + 3 ] + ( -f_x2 * (((j+i)%2)==0? 1.0:-1.0) - f_y ) * p_ket[ 2 * n + 2 ]   );
       }
       if(j != (fullLe-1)){
 	ket[ 2 * n ]     +=  std::complex<r_type> ((j+i)%2) * ( -t * p_ket[ 2*n+2*W ]           +  f_x * p_ket[ 2 * n + 2 * W + 1 ] ) ;

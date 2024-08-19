@@ -30,7 +30,7 @@ Graphene_supercell::Graphene_supercell(device_vars& parameters) : Graphene(param
     //Bz here will be trated as the ratio between phi/phi_0;
     peierls_d_ = 2.0 * M_PI * this->parameters().Bz_ / double(2*(W-1));
   
-    print_hamiltonian();
+    //print_hamiltonian();
 
     this->set_coordinates();
     
