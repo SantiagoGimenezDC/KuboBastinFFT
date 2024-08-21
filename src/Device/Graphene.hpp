@@ -60,8 +60,8 @@ public:
   };
   
 
-  r_type a(){ return a_; };
-  r_type b(){ return b_; };
+  virtual r_type a(){ return a_; };
+  virtual r_type b(){ return b_; };
   
   //Setting up
   virtual void damp( r_type* new_damp){

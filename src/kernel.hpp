@@ -38,7 +38,7 @@ class Jackson : public Kernel{
 
 
     virtual r_type term(const int m, const int M){
-      return 1/(M+1.0) *
+      return 1.0/(M+1.0) *
            (
    	     (M-m+1.0) *
              cos( M_PI * m / (M + 1.0)) +

@@ -34,6 +34,8 @@ class ArmchairGraph_RashbaSOC: public Graphene{
     ArmchairGraph_RashbaSOC(r_type m_str, r_type rashba_str, device_vars& parameters): Graphene(parameters), m_str_(m_str), rashba_str_(rashba_str){
       this->parameters().DIM_*=2;
       this->parameters().SUBDIM_*=2;
+     
+      
     };
 
   virtual void rearrange_initial_vec(type*);

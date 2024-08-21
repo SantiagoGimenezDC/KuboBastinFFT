@@ -25,7 +25,7 @@ class SupercellGraph_RashbaSOC: public Graphene{
     r_type peierls_d_=0;
 
     const r_type e_standard_ = 0.0;
-    const r_type t_standard_ = 2.7;
+    const r_type t_standard_ = - 2.7;
     const r_type  a0_        = 0.142;
     r_type m_str_            = 0.0;
     r_type rashba_str_       = 0.0;  
@@ -39,7 +39,12 @@ class SupercellGraph_RashbaSOC: public Graphene{
       this->parameters().SUBDIM_*=2;
       peierls_d_ = 2.0 * M_PI * this->parameters().Bz_ / double( 2 * (parameters.W_-1) );
 
-      //print_hamiltonian();
+      if(this->parameters().C_==0)
+	CYCLIC_BCs_=true;
+
+
+      if(this->parameters().W_%2!=0 || this->parameters().LE_%2==0 )
+	std::cout<<"Graphene supercell oly valid for EVEN W and ODD LE!!"<<std::endl;
     };
 
   void print_hamiltonian();

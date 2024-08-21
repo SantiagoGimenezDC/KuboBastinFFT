@@ -19,9 +19,7 @@ private:
 
   r_type peierls_d_=0;
   
-  r_type a_ = 1.0,
-    b_ = 0.0,
-    t_a_= t_standard_;
+  r_type t_a_= t_standard_;
 
 public:
   ~Graphene_supercell(){};
@@ -31,11 +29,6 @@ public:
 
   void print_hamiltonian();
 
-  
-  virtual void adimensionalize(r_type a, r_type b){ a_ = a, b_ = b; t_a_=t_standard_/a; };
-
-  virtual r_type a(){ return a_; };
-  virtual r_type b(){ return b_; };
   
   //Generic interfaces
 

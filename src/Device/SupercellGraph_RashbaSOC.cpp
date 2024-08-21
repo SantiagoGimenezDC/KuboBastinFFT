@@ -9,7 +9,7 @@ void SupercellGraph_RashbaSOC::print_hamiltonian(){
   Eigen::MatrixXcd H_r(dim,dim), S(dim,dim);
 
   std::ofstream dataP;
-  dataP.open("update.txt");
+  dataP.open("velopx.txt");
         
     for(int j=0;j<dim;j++){
       for(int i=0;i<dim;i++){
@@ -20,9 +20,9 @@ void SupercellGraph_RashbaSOC::print_hamiltonian(){
 	term_j(j)=1;
 
 
-        //this->update_cheb(tmp.data(),term_j.data(),null.data());
+        this->update_cheb(tmp.data(),term_j.data(),null.data());
 	//this->H_ket(tmp.data(),term_j.data());
-        vel_op_x(tmp.data(),term_j.data());
+        //vel_op_x(tmp.data(),term_j.data());
         //vel_op_y(tmp.data(),term_j.data());
 	std::complex<double> termy = term_i.dot(tmp);
 
@@ -177,18 +177,17 @@ void SupercellGraph_RashbaSOC::H_ket (r_type a, r_type b, type* ket, type* p_ket
      //if(fullLe%2!=0)
      //std::cout<<"BEWARE HORIZONTAL CBC ONLY WORKS FOR EVEN LE+C!!!!"<<std::endl;
 
- 
    for(int i=0; i<W; i++){
      int n_front = i;
      int n_back = (fullLe-1) * W + i;
 
       
-     ket[ 2 * n_front ]     +=  sFilter[ n_front ] * ((n_front)%2 !=0 ) * ( -t * p_ket[ 2 * (n_back-1) ]    + ( -f_x * (((n_front)%2)==0? -1.0:1.0) ) * p_ket[ 2 * (n_back-1)  + 1 ] );
-     ket[ 2 * n_front + 1 ] +=  sFilter[ n_front ] * ((n_front)%2 !=0 ) *( -t * p_ket[ 2 * (n_back-1) + 1 ] + ( f_x * (((n_front)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * (n_back-1)  ]  );
+     ket[ 2 * n_front ]     +=  sFilter[ n_front ] * ((n_front)%2 ==0 ) * ( -t * p_ket[ 2 * (n_back+1) ]    + ( -f_x * (((n_front)%2)==0? -1.0:1.0) ) * p_ket[ 2 * (n_back+1)  + 1 ] );
+     ket[ 2 * n_front + 1 ] +=  sFilter[ n_front ] * ((n_front)%2 ==0 ) *( -t * p_ket[ 2 * (n_back+1) + 1 ] + ( f_x * (((n_front)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * (n_back+1)  ]  );
 
 
-     ket[ 2 * n_back ]     +=  sFilter[ n_back ] * ((n_back)%2 == 0) * ( -t * p_ket[ 2 * (n_front+1) ]     + ( f_x * (((n_back)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * ( n_front + 1 ) + 1 ]   );
-     ket[ 2 * n_back + 1 ] +=  sFilter[ n_back ] * ((n_back)%2 == 0) * ( -t * p_ket[ 2 * (n_front+1) + 1 ] + ( -f_x * (((n_back)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * ( n_front + 1 ) ]   );
+     ket[ 2 * n_back ]     +=  sFilter[ n_back ] * ((n_back)%2 != 0) * ( -t * p_ket[ 2 * (n_front-1) ]     + ( f_x * (((n_back)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * ( n_front - 1 ) + 1 ]   );
+     ket[ 2 * n_back + 1 ] +=  sFilter[ n_back ] * ((n_back)%2 != 0) * ( -t * p_ket[ 2 * (n_front-1) + 1 ] + ( -f_x * (((n_back)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * ( n_front - 1 ) ]   );
     }
  }
  
@@ -274,6 +273,7 @@ void SupercellGraph_RashbaSOC::update_cheb ( type ket[], type p_ket[], type pp_k
  
 
 
+ 
  if(CYCLIC_BCs_){
    //if(W%2!=0)
    // std::cout<<"BEWARE VERTICAL CBC ONLY WORKS FOR EVEN M!!!!"<<std::endl;
@@ -304,12 +304,12 @@ void SupercellGraph_RashbaSOC::update_cheb ( type ket[], type p_ket[], type pp_k
      int n_back = (fullLe-1) * W + i;
 
       
-     ket[ 2 * n_front ]     += 2.0 * sFilter[ n_front ] * ((n_front)%2 != 0) * ( -t * p_ket[ 2 * (n_back-1) ]    + ( -f_x * (((n_front)%2)==0? -1.0:1.0) ) * p_ket[ 2 * (n_back-1) + 1 ] );
-     ket[ 2 * n_front + 1 ] += 2.0 * sFilter[ n_front ] * ((n_front)%2 != 0) *( -t * p_ket[ 2 * (n_back-1) + 1 ] + ( f_x * (((n_front)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * (n_back-1) ]  );
+     ket[ 2 * n_front ]     += 2.0 * sFilter[ n_front ] * ((n_front)%2 == 0) * ( -t * p_ket[ 2 * (n_back+1) ]    + ( -f_x * (((n_front)%2)==0? -1.0:1.0) ) * p_ket[ 2 * (n_back+1) + 1 ] );
+     ket[ 2 * n_front + 1 ] += 2.0 * sFilter[ n_front ] * ((n_front)%2 == 0) *( -t * p_ket[ 2 * (n_back+1) + 1 ] + ( f_x * (((n_front)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * (n_back+1) ]  );
 
 
-     ket[ 2 * n_back ]     += 2.0 * sFilter[ n_back ] * ((n_back)%2 == 0) * ( -t * p_ket[ 2 * (n_front+1) ]     + ( f_x * (((n_back)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * (n_front+1) + 1 ]   );
-     ket[ 2 * n_back + 1 ] += 2.0 * sFilter[ n_back ] * ((n_back)%2 == 0) * ( -t * p_ket[ 2 * (n_front+1) + 1 ] + ( -f_x * (((n_back)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * (n_front+1) ]   );
+     ket[ 2 * n_back ]     += 2.0 * sFilter[ n_back ] * ((n_back)%2 != 0) * ( -t * p_ket[ 2 * (n_front-1) ]     + ( f_x * (((n_back)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * (n_front-1) + 1 ]   );
+     ket[ 2 * n_back + 1 ] += 2.0 * sFilter[ n_back ] * ((n_back)%2 != 0) * ( -t * p_ket[ 2 * (n_front-1) + 1 ] + ( -f_x * (((n_back)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * (n_front-1) ]   );
     }
 
  }
@@ -329,7 +329,8 @@ void SupercellGraph_RashbaSOC::vel_op_x ( type* ket, type* p_ket){
 
   int Le = this->parameters().LE_,
       W      = this->parameters().W_,
-      C      = this->parameters().C_;
+    C      = this->parameters().C_,
+    fullLe = Le+2*C;
 
 
   
@@ -354,7 +355,7 @@ void SupercellGraph_RashbaSOC::vel_op_x ( type* ket, type* p_ket){
   f_y *= ImUnit;
  
 #pragma omp parallel for 
- for(int j=0; j<Le; j++){
+ for(int j=0; j<fullLe; j++){
     for(int i=0; i<W; i++){
       int n = j * W + i;
 
@@ -374,12 +375,12 @@ void SupercellGraph_RashbaSOC::vel_op_x ( type* ket, type* p_ket){
 	  ket[ 2 * n + 1 ] += d_x2 * ((i%2)==0? -1.0:1.0) * ( -t * p_ket[ 2 * n + 3 ] + ( -f_x2 * ((i%2)==0? -1.0:1.0) - f_y ) * p_ket[ 2 * n + 2 ]   ) * peierls(i,1);
         }
         if(j != (Le-1)  && !(j == C && i == W-1) && i%2==0 ){
-	  ket[ 2 * n ]     +=   d_x * ( t * p_ket[ 2 * n + 2 * ( W + 1 ) ]    -  f_x * p_ket[ 2 * n + 2 * ( W + 1 ) + 1 ]) ;
-	  ket[ 2 * n + 1 ] +=   d_x * ( t * p_ket[ 2 * n + 2 * ( W + 1 ) + 1 ]  +  f_x * p_ket[ 2 * n + 2 * ( W + 1 ) ]);
+	  ket[ 2 * n ]     +=   d_x * ( -t * p_ket[ 2 * n + 2 * ( W + 1 ) ]    -  f_x * p_ket[ 2 * n + 2 * ( W + 1 ) + 1 ]) ;
+	  ket[ 2 * n + 1 ] +=   d_x * ( -t * p_ket[ 2 * n + 2 * ( W + 1 ) + 1 ]  +  f_x * p_ket[ 2 * n + 2 * ( W + 1 ) ]);
         }
         if(j != 0 && i%2!=0 ){
-	  ket[ 2 * n ]     += -d_x * (  t * p_ket[ 2 * n - 2 * ( W + 1 ) ]   +  f_x * p_ket[ 2 * n - 2 * ( W + 1 ) + 1 ]);
-	  ket[ 2 * n + 1 ] += -d_x * (  t * p_ket[ 2 * n - 2 * ( W + 1 ) + 1 ] -  f_x * p_ket[ 2 * n - 2 * ( W + 1 ) ] );
+	  ket[ 2 * n ]     += -d_x * (  -t * p_ket[ 2 * n - 2 * ( W + 1 ) ]   +  f_x * p_ket[ 2 * n - 2 * ( W + 1 ) + 1 ]);
+	  ket[ 2 * n + 1 ] += -d_x * (  -t * p_ket[ 2 * n - 2 * ( W + 1 ) + 1 ] -  f_x * p_ket[ 2 * n - 2 * ( W + 1 ) ] );
         }
       }
     }
@@ -397,18 +398,19 @@ void SupercellGraph_RashbaSOC::vel_op_x ( type* ket, type* p_ket){
      int n_down = j * W;
 
 
-     ket[ 2 * n_up ]     +=   d_x2 * ( -t * p_ket[ 2 * n_down ]    + ( -f_x2 * (((0)%2)==0? -1.0:1.0) - f_y ) * p_ket[ 2 * n_down + 1 ] ) * peierls(W-1,1);
-     ket[ 2 * n_up + 1 ] +=   d_x2 * ( -t * p_ket[ 2 * n_down + 1 ] + ( f_x2 * (((0)%2)==0? -1.0:1.0)  - f_y ) * p_ket[ 2 * n_down ]  ) * peierls(W-1,1);
+     ket[ 2 * n_up ]     +=   d_x2 * (((W-1)%2)==0? -1.0:1.0) * ( -t * p_ket[ 2 * n_down ]    + ( -f_x2 * (((W-1)%2)==0? -1.0:1.0) - f_y ) * p_ket[ 2 * n_down + 1 ] ) * peierls(W-1,1);
+     ket[ 2 * n_up + 1 ] +=   d_x2 * (((W-1)%2)==0? -1.0:1.0) *( -t * p_ket[ 2 * n_down + 1 ] + ( f_x2 * (((W-1)%2)==0? -1.0:1.0)  - f_y ) * p_ket[ 2 * n_down ]  ) * peierls(W-1,1);
       
       
-     ket[ 2 * n_down ]     +=  -d_x2 * ( -t * p_ket[ 2 * n_up ]     + ( -f_x2 * (((W-1)%2)==0? -1.0:1.0) + f_y ) * p_ket[ 2 * n_up + 1 ]   ) * peierls(0,-1);
-     ket[ 2 * n_down + 1 ] +=  -d_x2 * ( -t * p_ket[ 2 * n_up + 1 ] + (  f_x2 * (((W-1)%2)==0? -1.0:1.0) + f_y ) * p_ket[ 2 * n_up ]   ) * peierls(0,-1);
+     ket[ 2 * n_down ]     +=  -d_x2 * ((0%2)==0? -1.0:1.0) * ( -t * p_ket[ 2 * n_up ]     + ( -f_x2 * ((0%2)==0? -1.0:1.0) + f_y ) * p_ket[ 2 * n_up + 1 ]   ) * peierls(0,-1);
+     ket[ 2 * n_down + 1 ] +=  -d_x2 * ((0%2)==0? -1.0:1.0) * ( -t * p_ket[ 2 * n_up + 1 ] + (  f_x2 * ((0%2)==0? -1.0:1.0) + f_y ) * p_ket[ 2 * n_up ]   ) * peierls(0,-1);
       
    } 
 
 
    //if(Le%2!=0)
    // std::cout<<"BEWARE HORIZONTAL CBC ONLY WORKS FOR EVEN LE+C!!!!"<<std::endl;
+
  
 
    for(int i=0; i<W; i++){
@@ -416,12 +418,12 @@ void SupercellGraph_RashbaSOC::vel_op_x ( type* ket, type* p_ket){
      int n_back = (Le-1) * W + i;
 
       
-     ket[ 2 * n_front ]     +=  - d_x * std::complex<r_type>((n_front)%2 ==0) * ( -t * p_ket[ 2 * (n_back-1) ]     + ( f_x * (((n_front)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * (n_back-1) + 1 ] );
-     ket[ 2 * n_front + 1 ] +=  - d_x * std::complex<r_type>((n_front)%2 ==0) * ( -t * p_ket[ 2 * (n_back-1) + 1 ] + ( -f_x * (((n_front)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * (n_back-1) ] );
+     ket[ 2 * n_front ]     +=  -d_x * std::complex<r_type>((n_front)%2 ==0) * ( -t * p_ket[ 2 * (n_back+1) ]     + ( f_x * (((n_front)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * (n_back+1) + 1 ] );
+     ket[ 2 * n_front + 1 ] +=  -d_x * std::complex<r_type>((n_front)%2 ==0) * ( -t * p_ket[ 2 * (n_back+1) + 1 ] + ( -f_x * (((n_front)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * (n_back+1) ] );
 
 
-     ket[ 2 * n_back ]     +=  d_x * std::complex<r_type>((n_front)%2 !=0) * ( -t * p_ket[ 2 * (n_front+1) ] + ( -f_x * (((n_back)%2)==0? -1.0:1.0) ) * p_ket[ 2 * (n_front+1) + 1 ]   );
-     ket[ 2 * n_back + 1 ] +=  d_x * std::complex<r_type>((n_front)%2 !=0) * ( -t * p_ket[ 2 * (n_front+1) + 1 ] + ( f_x * (((n_back)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * (n_front+1) ]   );
+     ket[ 2 * n_back ]     +=  d_x * std::complex<r_type>((n_back)%2 !=0) * ( -t * p_ket[ 2 * (n_front-1) ] + ( -f_x * (((n_back)%2)==0? -1.0:1.0) ) * p_ket[ 2 * (n_front-1) + 1 ]   );
+     ket[ 2 * n_back + 1 ] +=  d_x * std::complex<r_type>((n_back)%2 !=0) * ( -t * p_ket[ 2 * (n_front-1) + 1 ] + ( f_x * (((n_back)%2)==0? -1.0:1.0)  ) * p_ket[ 2 * (n_front-1) ]   );
     }
  }
 

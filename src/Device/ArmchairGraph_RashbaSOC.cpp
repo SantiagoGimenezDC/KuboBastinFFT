@@ -284,7 +284,8 @@ void ArmchairGraph_RashbaSOC::vel_op ( type* ket, type* p_ket){
 
   int Le = this->parameters().LE_,
       W      = this->parameters().W_,
-      C      = this->parameters().C_;
+    C      = this->parameters().C_,
+    fullLe = Le+2*C;
 
 
   
@@ -312,7 +313,7 @@ void ArmchairGraph_RashbaSOC::vel_op ( type* ket, type* p_ket){
   f_y *= ImUnit;
  
 #pragma omp parallel for 
- for(int j=0; j<Le; j++){
+ for(int j=0; j<fullLe; j++){
     for(int i=0; i<W; i++){
       int n = j * W + i;
 
@@ -322,22 +323,22 @@ void ArmchairGraph_RashbaSOC::vel_op ( type* ket, type* p_ket){
 
 	
 
-      if( n > C * W ){
+      if( n >= C * W ){
         if( i!=0 ){
-	  ket[ 2 * n ]     += d_x2 * std::complex<r_type> (((j+i)%2)==0? -1:1) * ( -t * p_ket[ 2 * n - 2 ] + ( f_x2 * std::complex<r_type>(((j+i)%2)==0? 1:-1) + f_y ) * p_ket[ 2 * n - 1 ] );
-	  ket[ 2 * n + 1 ] += d_x2 * std::complex<r_type>(((j+i)%2)==0? -1:1) * ( -t * p_ket[ 2 * n - 1] + ( -f_x2 * std::complex<r_type>(((j+i)%2)==0? 1:-1)  + f_y ) * p_ket[ 2 * n - 2 ]  );
+	  ket[ 2 * n ]     += d_x2 *  (((j+i)%2)==0? -1.0:1.0) * ( -t * p_ket[ 2 * n - 2 ] + ( f_x2 * (((j+i)%2)==0? 1.0:-1.0) + f_y ) * p_ket[ 2 * n - 1 ] );
+	  ket[ 2 * n + 1 ] += d_x2 * (((j+i)%2)==0? -1.0:1.0) * ( -t * p_ket[ 2 * n - 1] + ( -f_x2 * (((j+i)%2)==0? 1.0:-1.0)  + f_y ) * p_ket[ 2 * n - 2 ]  );
         }
         if(i != (W-1) ){
-	  ket[ 2 * n ]     += d_x2 * std::complex<r_type>(((j+i)%2)==0? -1:1) * ( -t * p_ket[ 2 * n + 2 ] + ( f_x2 * std::complex<r_type>(((j+i)%2)==0? 1:-1) - f_y ) * p_ket[ 2 * n + 3 ]   );
-	  ket[ 2 * n + 1 ] += d_x2 * std::complex<r_type>(((j+i)%2)==0? -1:1) * ( -t * p_ket[ 2 * n + 3 ] + ( -f_x2 * std::complex<r_type>(((j+i)%2)==0? 1:-1) - f_y ) * p_ket[ 2 * n + 2 ]   );
+	  ket[ 2 * n ]     += d_x2 * (((j+i)%2)==0? -1.0:1.0) * ( -t * p_ket[ 2 * n + 2 ] + ( f_x2 * (((j+i)%2)==0? 1.0:-1.0) - f_y ) * p_ket[ 2 * n + 3 ]   );
+	  ket[ 2 * n + 1 ] += d_x2 * (((j+i)%2)==0? -1.0:1.0) * ( -t * p_ket[ 2 * n + 3 ] + ( -f_x2 *(((j+i)%2)==0? 1.0:-1.0) - f_y ) * p_ket[ 2 * n + 2 ]   );
         }
         if(j != (Le-1)){
-	  ket[ 2 * n ]     +=   std::complex<r_type>((j+i)%2) * d_x * ( t * p_ket[ 2 * n + 2 * W ]    -  f_x * p_ket[ 2 * n + 2 * W + 1 ]) ;
-	  ket[ 2 * n + 1 ] +=   std::complex<r_type>((j+i)%2) * d_x * ( t * p_ket[ 2 * n + 2 * W + 1 ]  +  f_x * p_ket[ 2 * n + 2 * W ]);
+	  ket[ 2 * n ]     +=   -std::complex<r_type>((j+i)%2) * d_x * ( -t * p_ket[ 2 * n + 2 * W ]    +  f_x * p_ket[ 2 * n + 2 * W + 1 ]) ;
+	  ket[ 2 * n + 1 ] +=   -std::complex<r_type>((j+i)%2) * d_x * ( -t * p_ket[ 2 * n + 2 * W + 1 ]  -  f_x * p_ket[ 2 * n + 2 * W ]);
         }
         if(j != 0){
-	  ket[ 2 * n ]     +=  - std::complex<r_type>((j+i+1)%2) * d_x * (  t * p_ket[ 2 * n - 2 * W ]   +  f_x * p_ket[ 2 * n - 2 * W + 1 ]);
-	  ket[ 2 * n + 1 ] +=  - std::complex<r_type>((j+i+1)%2) * d_x * (  t * p_ket[ 2 * n - 2 * W + 1 ] -  f_x * p_ket[ 2 * n - 2 * W ] );
+	  ket[ 2 * n ]     +=  std::complex<r_type>((j+i+1)%2) * d_x * ( - t * p_ket[ 2 * n - 2 * W ]   -  f_x * p_ket[ 2 * n - 2 * W + 1 ]);
+	  ket[ 2 * n + 1 ] +=  std::complex<r_type>((j+i+1)%2) * d_x * ( - t * p_ket[ 2 * n - 2 * W + 1 ] +  f_x * p_ket[ 2 * n - 2 * W ] );
         }
       }
     }
