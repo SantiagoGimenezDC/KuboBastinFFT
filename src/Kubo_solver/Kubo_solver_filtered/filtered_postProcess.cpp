@@ -156,7 +156,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
   dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
 
   for(int e=0;e<nump;e++)  
-    dataR<< a * rearranged_E_points[e] - b<<"  "<< rvec_partial_result [e] <<std::endl;
+    dataR<< a * rearranged_E_points[e] - b<<"  "<< rvec_partial_result [e] << partial_result [e]  <<std::endl;
 
   dataR.close();
   
@@ -253,7 +253,7 @@ void Kubo_solver_filtered::update_data(r_type E_points[],  type r_data[], type f
 
   
   for(int e=0;e<nump;e++)  
-    dataR<< a * E_points[e] - b<<"  "<< omega * r_data [e]<<"  "<< real(final_data [e]) <<std::endl;
+    dataR<< a * E_points[e] - b<<"  "<< real( omega * r_data [e] )<<"  "<< real(final_data [e]) <<std::endl;
     //  dataP<<  e <<"  "<< final_data [e] <<std::endl;
 
   

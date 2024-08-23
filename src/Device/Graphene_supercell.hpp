@@ -48,7 +48,7 @@ public:
   virtual void vel_op_x (type* , type* );
   
   type peierls(int i1, int sign){
-    return  std::polar(1.0, sign * ( i1 % 2 == 0 ? -1 : 1 ) * peierls_d_ * ( sign * 2 * i1 + 1  ) );
+    return  std::polar(1.0,  ( i1 % 2 == 0 ? -1 : 1 ) * peierls_d_ * ( 2 * i1 + sign * 1  ) );
   };
 
   //----On the fly implementations
