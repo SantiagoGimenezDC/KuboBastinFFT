@@ -76,6 +76,7 @@ class TBG: public Device{
     virtual void update_cheb ( type*, type*, type*, r_type*, r_type* );
     virtual void update_cheb ( type vec[], type p_vec[], type pp_vec[] ){ update_cheb(vec, p_vec, pp_vec, damp_op(), NULL); };  
     virtual void vel_op (type*, type*);
+    virtual void vel_op (type* vec, type* p_vec, int){vel_op (vec, p_vec);};
     virtual void setup_velOp();
   
     void naiveHamiltonian (SpMatrixXp&);

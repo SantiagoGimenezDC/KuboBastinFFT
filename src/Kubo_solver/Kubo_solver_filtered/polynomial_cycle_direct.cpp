@@ -35,7 +35,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct(type** poly_buffer, 
 
   
   if( vel_op == 1 )
-    device_.vel_op( pp_vec, rand_vec );  
+    device_.vel_op( pp_vec, rand_vec, parameters_.vel_dir_1_ );  
   else
 #pragma omp parallel for
     for(int l = 0; l < DIM; l++)
@@ -100,7 +100,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_doubleBuffer(type** 
 
   
   if( vel_op == 1 )
-    device_.vel_op( pp_vec, rand_vec );  
+    device_.vel_op( pp_vec, rand_vec, parameters_.vel_dir_1_);  
   else
 #pragma omp parallel for
     for(int l = 0; l < DIM; l++)

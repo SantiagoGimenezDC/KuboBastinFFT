@@ -64,7 +64,7 @@ int main(int , char **argv){
   s_vars.SECTION_SIZE_ = graphene_vars.SUBDIM_/s_vars.num_parts_;
 
 
-  s_vars.a_ =10.0;
+  s_vars.a_ =1.0;
   s_vars.b_ = 0.0;
 
   //  double Eedge = 8.09852;
@@ -152,8 +152,6 @@ int main(int , char **argv){
     double L_fact, cutoff_fact;
     
     f_vars.M_ = s_vars.M_;
-    Input>>f_vars.post_filter_;
-    Input>>f_vars.filter_;
     Input>>L_fact,   Input>>f_vars.decRate_;
     Input>>f_vars.energy_center_, Input>>cutoff_fact;
     Input>>f_vars.att_;
@@ -171,7 +169,7 @@ int main(int , char **argv){
       f_vars.f_cutoff_ = f_vars.M_ext_ * 2;
     }
     else{
-      f_vars.L_ = L_fact * f_vars.decRate_ + 1; //L_fact=40 is a good default
+      f_vars.L_ = L_fact * f_vars.decRate_ + ( int(L_fact * f_vars.decRate_)%2==0? 1:0 ); //L_fact=40 is a good default
       f_vars.f_cutoff_ = cutoff_fact * f_vars.M_ext_/ ( 2.0 * f_vars.decRate_ ); //a default estimate of the cutoff. Verify. Could be greedier for Greenwood
       f_vars.nump_  = f_vars.M_ext_/f_vars.decRate_;
     }

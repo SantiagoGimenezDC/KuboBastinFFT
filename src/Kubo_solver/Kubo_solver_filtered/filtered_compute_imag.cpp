@@ -451,7 +451,7 @@ void Kubo_solver_filtered::filter_imag( int m, type* new_vec, type** poly_buffer
 
   
   if( vel_op == 1 ){
-    device_.vel_op( tmp_velOp, new_vec );
+    device_.vel_op( tmp_velOp, new_vec, parameters_.vel_dir_2_ );
     device_.traceover(tmp, tmp_velOp, s, num_parts);
   }
   else
@@ -510,7 +510,7 @@ void Kubo_solver_filtered::filter_doubleBuffer_imag( int m, type* new_vec, type*
 
   
   if( vel_op == 1 ){
-    device_.vel_op( tmp_velOp, new_vec );
+    device_.vel_op( tmp_velOp, new_vec, parameters_.vel_dir_2_ );
     device_.traceover(tmp, tmp_velOp, s, num_parts);
   }
   else
@@ -569,7 +569,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_imag(type** poly_buf
 
   
   if( vel_op == 1 )
-    device_.vel_op( pp_vec, rand_vec );  
+    device_.vel_op( pp_vec, rand_vec, parameters_.vel_dir_1_ );  
   else
 #pragma omp parallel for
     for(int l = 0; l < DIM; l++)
@@ -633,7 +633,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_doubleBuffer_imag(ty
 
   
   if( vel_op == 1 )
-    device_.vel_op( pp_vec, rand_vec );  
+    device_.vel_op( pp_vec, rand_vec, parameters_.vel_dir_1_ );  
   else
 #pragma omp parallel for
     for(int l = 0; l < DIM; l++)

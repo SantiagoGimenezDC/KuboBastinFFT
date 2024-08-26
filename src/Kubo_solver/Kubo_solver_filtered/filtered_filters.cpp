@@ -36,7 +36,7 @@ void Kubo_solver_filtered::filter( int m, type* new_vec, type** poly_buffer, typ
 
   
   if( vel_op == 1 ){
-    device_.vel_op( tmp_velOp, new_vec );
+    device_.vel_op( tmp_velOp, new_vec, parameters_.vel_dir_2_ );
     device_.traceover(tmp, tmp_velOp, s, num_parts);
   }
   else
@@ -97,7 +97,7 @@ void Kubo_solver_filtered::filter_2( int m, type* new_vec, type** poly_buffer, t
 
   
   if( vel_op == 1 ){
-    device_.vel_op( tmp_velOp, new_vec );
+    device_.vel_op( tmp_velOp, new_vec, parameters_.vel_dir_2_ );
     device_.traceover(tmp, tmp_velOp, s, num_parts);
   }
   else
@@ -158,7 +158,7 @@ void Kubo_solver_filtered::filter_2_doubleBuffer( int m, type* new_vec, type** p
 
   
   if( vel_op == 1 ){
-    device_.vel_op( tmp_velOp, new_vec );
+    device_.vel_op( tmp_velOp, new_vec, parameters_.vel_dir_2_ );
     device_.traceover(tmp, tmp_velOp, s, num_parts);
   }
   else

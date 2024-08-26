@@ -33,7 +33,7 @@ Graphene_supercell::Graphene_supercell(device_vars& parameters) : Graphene(param
     int bc_phase = CYCLIC_BCs_?0:-1;
     //    return  std::polar(1.0,  ( i1 % 2 == 0 ? -1 : 1 ) * peierls_d_ * ( 2 * i1 + sign * 1  ) );
 
-    peierls_d_ = 2.0 * M_PI * this->parameters().Bz_ / double(2.0*(W-bc_phase));
+    peierls_d_ = 2.0 * M_PI * this->parameters().Bz_ / double(2.0*(W+bc_phase));
 
 
     print_hamiltonian();
@@ -71,7 +71,7 @@ void Graphene_supercell::print_hamiltonian(){
       }
     }
 
-    dataP<<H_r.imag();
+    dataP<<H_r;
 
     std::cout<<(H_r-H_r.adjoint()).norm()<<std::endl;
   dataP.close();
@@ -175,8 +175,8 @@ void Graphene_supercell::vertical_BC(r_type a2, type vec[], type p_vec[], r_type
     int n_down = j * W;
 
 
-    vec[n_up]     += damp_op[n_up] * t * p_vec[n_down] * peierls(W,-1);
-    vec[n_down]   += damp_op[n_down] * t * p_vec[n_up] * conj(peierls(W,-1));
+    vec[n_up]     += damp_op[n_up] * t * p_vec[n_down] * conj(peierls(W,-1));
+    vec[n_down]   += damp_op[n_down] * t * p_vec[n_up] * peierls(W,-1);
     
   } 
 }
@@ -334,8 +334,8 @@ void Graphene_supercell::vel_op_x (type vec[], type p_vec[] ){
       int n_up = j * W + W-1;
       int n_down = j * W;
 
-      vec[n_up]     +=  tx2 * (((W-1)%2)==0? -1:1) * p_vec[n_down] * peierls(W,-1);
-      vec[n_down]   +=  tx2 * ((0%2)==0? -1:1) * p_vec[n_up]   * conj(peierls(W,-1));
+      vec[n_up]     +=  tx2 * (((W-1)%2)==0? -1:1) * p_vec[n_down] * conj(peierls(W,-1));
+      vec[n_down]   +=  tx2 * ((0%2)==0? -1:1) * p_vec[n_up]   * peierls(W,-1);
     }
  
 #pragma omp parallel for 
@@ -400,8 +400,8 @@ void Graphene_supercell::vel_op_y (type vec[], type p_vec[] ){
       int n_up = j * W + W-1;
       int n_down = j * W;
 
-      vec[n_up]     +=  - ty2 * p_vec[n_down]  * peierls(W,-1);
-      vec[n_down]   +=  + ty2 * p_vec[n_up]    * conj(peierls(W,-1));
+      vec[n_up]     +=  - ty2 * p_vec[n_down]  * conj(peierls(W,-1));
+      vec[n_down]   +=  + ty2 * p_vec[n_up]    * peierls(W,-1);
     }
 
   }

@@ -1,0 +1,66 @@
+nohup: ignoring input
+  Reading the connectivity table and xyz at: ./tests/VietMATBG_75x75/operators/VIET_MATBG_75x75.nntable and ./tests/VietMATBG_75x75/operators/VIET_MATBG_75x75_supercell.carbon
+
+  Finished Reading the connectivity table and xyz files;
+
+  Generating VX from Hamiltonian
+  Finished Generating VX from Hamiltonian
+
+   Calculating Energy band bounds:    
+   Time to perform Lanczos Recursion:    14 min, 8 secs; (848334ms) 
+
+    Highest absolute energy bound:    6.87007
+    Lower absolute energy bound:      -11.4851
+
+
+    Time to setup the Hamiltonian:            18 mins, 48 secs;
+
+ Effective filter length: 2190
+
+Expected memory cost breakdown:
+   Chebyshev buffers:    103.49 GBs
+   Hamiltonian size:     24.9898 GBs
+   Recursion vectors:    6.02856 GBs
+   FFT auxiliary lines:  0.0002 GBs
+
+TOTAL:  134.509 GBs
+
+
+1/8-Vector/disorder realization;
+    -Part: 1/2
+           Kets cycle time:            5 hrs, 35 mins;
+           Bras cycle time:            7 hrs, 54 mins;
+           FFT operations time:        46 secs;
+    -Part: 2/2
+           Kets cycle time:            5 hrs, 36 mins;
+           Bras cycle time:            7 hrs, 57 mins;
+           FFT operations time:        46 secs;
+
+       Total CSRMV time:           27 hrs, 4 mins;
+       Total FFTs time:            1 mins, 33 secs;
+       Post-processing time:       111.917 ms 
+       Total RandVec time:         27 hrs, 6 mins;
+
+
+2/8-Vector/disorder realization;
+    -Part: 1/2
+           Kets cycle time:            5 hrs, 36 mins;
+           Bras cycle time:            7 hrs, 54 mins;
+           FFT operations time:        46 secs;
+    -Part: 2/2
+           Kets cycle time:            5 hrs, 37 mins;
+           Bras cycle time:            7 hrs, 54 mins;
+           FFT operations time:        46 secs;
+
+       Total CSRMV time:           27 hrs, 3 mins;
+       Total FFTs time:            1 mins, 32 secs;
+       Post-processing time:       65.287 ms 
+       Total RandVec time:         27 hrs, 4 mins;
+
+
+3/8-Vector/disorder realization;
+    -Part: 1/2
+           Kets cycle time:            5 hrs, 36 mins;
+           Bras cycle time:            7 hrs, 57 mins;
+           FFT operations time:        45 secs;
+    -Part: 2/2

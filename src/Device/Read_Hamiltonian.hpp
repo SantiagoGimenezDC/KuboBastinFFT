@@ -56,6 +56,7 @@ public:
   virtual void H_ket ( type*, type*) ;
   virtual void H_ket ( type*, type*, r_type*, r_type*) ;
   virtual void vel_op (type*, type*) ;
+  virtual void vel_op (type* vec, type* p_vec, int){vel_op (vec, p_vec);};
 
 
 
