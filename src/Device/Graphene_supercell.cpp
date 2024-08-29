@@ -36,7 +36,7 @@ Graphene_supercell::Graphene_supercell(device_vars& parameters) : Graphene(param
     peierls_d_ = 2.0 * M_PI * this->parameters().Bz_ / double(2.0*(W+bc_phase));
 
 
-    print_hamiltonian();
+    //print_hamiltonian();
 
     this->set_coordinates();
     

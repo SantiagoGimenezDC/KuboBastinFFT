@@ -29,7 +29,7 @@ void Kubo_solver_filtered::integration_linqt(const r_type* E_points, const r_typ
   int nump = parameters_.num_p_;
 
   double acc = 0;
-  for( int i=0; i < nump-1; i++)
+  for( int i=0; i < nump; i++)
   {
      const double denerg = E_points[i+1]-E_points[i];
      acc +=integrand[i]*denerg;

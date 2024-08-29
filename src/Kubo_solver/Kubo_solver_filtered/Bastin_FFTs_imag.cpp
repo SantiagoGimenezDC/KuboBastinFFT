@@ -42,6 +42,64 @@ inline void derivate_4th_order_imag(std::vector<type>& derivative, out_of_place_
 } 
 
 
+inline void derivate_8th_order_imag(std::vector<type>& derivative, out_of_place_dft& series, int nump, int M_ext) {
+    type jm4_v, jm3_v, jm2_v, jm1_v, j_v, jp1_v, jp2_v, jp3_v, jp4_v; 
+
+    for(int j = 0; j < nump; j++) { 
+        jm4_v = series(j-4);
+        jm3_v = series(j-3);
+        jm2_v = series(j-2);
+        jm1_v = series(j-1);
+        j_v = series(j);
+        jp1_v = series(j+1);
+        jp2_v = series(j+2);
+        jp3_v = series(j+3);
+        jp4_v = series(j+4);
+        
+        if (j == 0) {
+            jm4_v = series(nump - 4);
+            jm3_v = series(nump - 3);
+            jm2_v = series(nump - 2);
+            jm1_v = series(nump - 1);
+        } 
+        else if (j == 1) {
+            jm4_v = series(nump - 3);
+            jm3_v = series(nump - 2);
+            jm2_v = series(nump - 1);
+        }
+        else if (j == 2) {
+            jm4_v = series(nump - 2);
+            jm3_v = series(nump - 1);
+        }
+        else if (j == 3) {
+            jm4_v = series(nump - 1);
+        }
+        
+        if (j == nump - 1) {
+            jp1_v = series(0);
+            jp2_v = series(1);
+            jp3_v = series(2);
+            jp4_v = series(3);
+        }
+        else if (j == nump - 2) {
+            jp2_v = series(0);
+            jp3_v = series(1);
+            jp4_v = series(2);
+        }
+        else if (j == nump - 3) {
+            jp3_v = series(0);
+            jp4_v = series(1);
+        }
+        else if (j == nump - 4) {
+            jp4_v = series(0);
+        }
+        
+        derivative[j] = (-jp4_v + 8 * jp3_v - 28 * jp2_v + 56 * jp1_v - 56 * jm1_v + 28 * jm2_v - 8 * jm3_v + jm4_v) / 
+                        840.0 * (M_ext / (type(0,1) * 2.0 * M_PI));
+    }
+}
+
+
 
 void Kubo_solver_filtered::Bastin_FFTs_imag  (r_type E_points[], std::complex<r_type>** bras_re, std::complex<r_type>** bras_im, std::complex<r_type>** kets_re, std::complex<r_type>** kets_im,  type* r_data, int s){
 
