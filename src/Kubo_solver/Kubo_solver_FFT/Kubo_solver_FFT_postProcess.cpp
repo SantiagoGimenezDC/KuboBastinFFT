@@ -232,7 +232,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
   dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
 
   for(int e=0;e<nump;e++)  
-    dataR<< a * rearranged_E_points[e] - b<<"  "<< rvec_partial_result [e] <<std::endl;
+    dataR<< a * rearranged_E_points[e] - b<<"  "<< rvec_partial_result [e]<<"  "<<  partial_result [e] <<std::endl;
 
   dataR.close();
   
