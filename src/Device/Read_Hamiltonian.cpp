@@ -20,7 +20,7 @@ void Read_Hamiltonian::build_Hamiltonian(){
   inFile.precision(14);
   inFile.open(run_dir+"operators/"+filename+".HAM.CSR");
 
-  std::cout<<"  Imaginary part of the Hamiltonian is being dumped on read; "<<run_dir+"operators/"+filename+".HAM.CSR"  <<std::endl<<std::endl;
+  std::cout<<" REMEMBER: vcx/hcx hack!!  Imaginary part of the Hamiltonian is being dumped on read; "<<run_dir+"operators/"+filename+".HAM.CSR"  <<std::endl<<std::endl;
     
 
   std::size_t DIM, NNZ;
@@ -38,13 +38,13 @@ void Read_Hamiltonian::build_Hamiltonian(){
 
   indexType outerIndexPtr[DIM+1];
   indexType innerIndices[NNZ];
-  r_type values[NNZ];
+  type values[NNZ];
 
 
   for(std::size_t j=0; j<NNZ; j++){
     double re_part=0 , im_part;
      inFile>>re_part, inFile>>im_part;
-     values[j] = re_part;// + std::complex<r_type>(0,1) * type( im_part );
+     values[j] = re_part + std::complex<r_type>(0,1) * type( im_part );
   }
 
   for(std::size_t j=0; j<NNZ; j++)  
@@ -54,18 +54,10 @@ void Read_Hamiltonian::build_Hamiltonian(){
     inFile>>outerIndexPtr[j];    
 
 
-  for(std::size_t i=0;i<DIM; i++){
-    if(outerIndexPtr[i]>NNZ || outerIndexPtr[i]<0)
-      std::cout<<i<<"  "<<outerIndexPtr[i]<<" - Here."<<std::endl;
-
-    if(innerIndices[i]>DIM || innerIndices[i]<0)
-      std::cout<<i<<"  "<<innerIndices[i]<<" - Here inner."<<std::endl;
-  }
-
 
   
-  H_.resize(DIM,DIM);
-  H_=Eigen::Map<Eigen::SparseMatrix<r_type, Eigen::RowMajor,indexType> > (DIM, DIM, NNZ, outerIndexPtr, innerIndices,values);
+  Hc_.resize(DIM,DIM);
+  Hc_=Eigen::Map<Eigen::SparseMatrix<type, Eigen::RowMajor,indexType> > (DIM, DIM, NNZ, outerIndexPtr, innerIndices,values);
 
   inFile.close();
 };
@@ -104,7 +96,6 @@ void Read_Hamiltonian::H_ket ( type* vec, type* p_vec, r_type* dmp_op, r_type* d
   Eigen::Map<VectorXdT> eig_vec(vec,Dim),
     eig_p_vec(p_vec, Dim);
   
-
   
   eig_vec = H_ * eig_p_vec;   
 
@@ -173,7 +164,7 @@ void Read_Hamiltonian::setup_velOp(){
 
   inFile.open(run_dir+"operators/"+filename+".VX.CSR");
 
-  std::cout<<"  real part of the Velocity is being dumped on read;"<<std::endl<<std::endl;
+  std::cout<<"  /Remember vx/vcx hack. /real part of the Velocity is being dumped on read;"<<std::endl<<std::endl;
     
     
   std::size_t DIM, NNZ;

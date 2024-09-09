@@ -10,12 +10,14 @@
 class Read_Hamiltonian: public Device{
   typedef long int indexType;
   typedef Eigen::SparseMatrix<r_type,Eigen::RowMajor, indexType> SpMatrixXp;
+  typedef Eigen::SparseMatrix<type,Eigen::RowMajor, indexType> SpMatrixXcp;
   typedef Eigen::Matrix<r_type,-1,-1> MatrixXp;
   typedef Eigen::Matrix<type, -1, 1>                 VectorXdT;
 
 private:
   bool print_CSR = true;
-  SpMatrixXp H_, vx_; 
+  SpMatrixXp H_, vx_;
+  SpMatrixXcp Hc_, vxc_; 
   Coordinates coordinates_;
 
   r_type a_ = 1.0,
@@ -28,11 +30,16 @@ public:
 
   Coordinates& coordinates(){return coordinates_;};
   void set_coordinates(Coordinates new_coordinates){coordinates_ = new_coordinates;};
+  void set_H(Eigen::Map<Eigen::SparseMatrix<type, Eigen::RowMajor >> & new_H){ Hc_ = new_H; };
+  SpMatrixXcp& H(int){return Hc_;};
+  SpMatrixXcp& vx(int){return vxc_;};
+
   void set_H(Eigen::Map<Eigen::SparseMatrix<r_type, Eigen::RowMajor >> & new_H){ H_ = new_H; };
   SpMatrixXp& H(){return H_;};
   SpMatrixXp& vx(){return vx_;};
+
   
-  virtual r_type Hamiltonian_size(){return ( H_.innerSize() + H_.nonZeros() + H_.outerSize() ) * sizeof(r_type);};  
+  virtual r_type Hamiltonian_size(){return ( Hc_.innerSize() + Hc_.nonZeros() + Hc_.outerSize() ) * sizeof(r_type);};  
 
   virtual void build_Hamiltonian();
   virtual void setup_velOp() ;
@@ -41,11 +48,18 @@ public:
       a_=a, b_=b;
       int Dim = this->parameters().DIM_;
       SpMatrixXp Id(Dim,Dim);
+      SpMatrixXcp Id2(Dim,Dim);
       Id.setIdentity();
+      Id2.setIdentity();
 
+     if(H_.size()>0){
       H_=(H_+b*Id)/a;
       vx_=vx_/a;
-
+      }
+     if(Hc_.size()>0){
+      Hc_=(Hc_+b*Id2)/a;
+      vxc_=vxc_/a;
+     }
   };
   virtual void damp   ( r_type*) ;
 
