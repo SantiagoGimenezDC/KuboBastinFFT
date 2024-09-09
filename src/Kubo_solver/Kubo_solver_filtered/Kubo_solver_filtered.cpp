@@ -53,7 +53,7 @@ Kubo_solver_filtered::Kubo_solver_filtered(solver_vars& parameters, Device& devi
 
   parameters_.SECTION_SIZE_ = device_.parameters().SUBDIM_ / parameters_.num_parts_ + device_.parameters().SUBDIM_ % parameters_.num_parts_;
 
-  sym_formula_ = KUBO_BASTIN;
+  sym_formula_ = KUBO_GREENWOOD;
 }
 
 

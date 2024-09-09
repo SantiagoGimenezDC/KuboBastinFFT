@@ -105,15 +105,17 @@ void Device::minMax_EigenValues( int maxIter, r_type& eEmax, r_type& eEmin){ //P
   
   for( int i=0; i<maxIter; i++){
     
-    this->H_ket(y.data(),y_Ant.data());
+    //    this->H_ket(y.data(),y_Ant.data());
+    this->H_ket(y.data(),y_Ant.data(), filler_vec_2, filler_vec);
     y_norm=y.norm();
     y=y/y_norm;
     y_Ant=y;
   }
 
   
-  this->H_ket(y.data(),y_Ant.data());
-
+  //this->H_ket(y.data(),y_Ant.data());
+  this->H_ket(y.data(),y_Ant.data(), filler_vec_2, filler_vec);
+    
   Emax = std::real(y_Ant.dot(y)/y_Ant.squaredNorm());
 
 
@@ -124,7 +126,8 @@ void Device::minMax_EigenValues( int maxIter, r_type& eEmax, r_type& eEmin){ //P
   this->adimensionalize(1.0,-Emax);
   
   for( int i=0; i<maxIter; i++){
-    this->H_ket(y.data(),y_Ant.data());
+    //this->H_ket(y.data(),y_Ant.data());
+    this->H_ket(y.data(),y_Ant.data(), filler_vec_2, filler_vec);  
     y_norm=y.norm();
 
     y=y/y_norm;
@@ -132,8 +135,10 @@ void Device::minMax_EigenValues( int maxIter, r_type& eEmax, r_type& eEmin){ //P
   }
 
 
-  this->H_ket(y.data(),y_Ant.data());
-  
+  //this->H_ket(y.data(),y_Ant.data());
+  //this->H_ket(y.data(),y_Ant.data(), filler_vec_2, filler_vec);
+  this->H_ket(y.data(),y_Ant.data(), filler_vec_2, filler_vec);  
+
   Emin  = std::real(((y_Ant.dot(y))/y_Ant.squaredNorm()));
   Emin += Emax;
 
