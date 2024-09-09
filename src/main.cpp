@@ -108,6 +108,12 @@ int main(int , char **argv){
     std::cout<<"Nonzeros: "<<test_con.vx().nonZeros()<<"  "<<test_ham.vx().nonZeros()<<std::endl;
   std::cout<<(test_con.vx()-test_ham.vx()).norm()<<std::endl;
   */
+  std::cout<<"Ongoing gimmicks:"<<std::endl;
+  std::cout<<"Read_Hamiltonian only works for real Hamiltonian;"<<std::endl;
+  std::cout<<"Min max eigenvalues is using H_ket with the 4 entries;"<<std::endl;
+  std::cout<<"The min max eigv are not fixed;"<<std::endl;
+  std::cout<<"Filtered eq: KG,  FFT eq: KB"<<std::endl;
+
   
   if(device_choice==0)
     device = new Graphene(graphene_vars);
