@@ -64,7 +64,7 @@ int main(int , char **argv){
   s_vars.SECTION_SIZE_ = graphene_vars.SUBDIM_/s_vars.num_parts_;
 
 
-  s_vars.a_ =1.0;
+  s_vars.a_ =8.3;
   s_vars.b_ = 0.0;
 
   //  double Eedge = 8.09852;
@@ -109,10 +109,11 @@ int main(int , char **argv){
   std::cout<<(test_con.vx()-test_ham.vx()).norm()<<std::endl;
   */
   std::cout<<"Ongoing gimmicks:"<<std::endl;
-  std::cout<<"Read_Hamiltonian only works for real Hamiltonian;"<<std::endl;
+  std::cout<<"AUTO BOUND DETECTION NOT WORKING - on normal mode only???"<<std::endl;
+  std::cout<<"Read_Hamiltonian only works for COMPLEX Hamiltonian;"<<std::endl;
   std::cout<<"Min max eigenvalues is using H_ket with the 4 entries;"<<std::endl;
-  std::cout<<"The min max eigv are not fixed;"<<std::endl;
-  std::cout<<"Filtered eq: KG,  FFT eq: KB"<<std::endl;
+  std::cout<<"The min max eigv are fixed;"<<std::endl;
+  std::cout<<"Filtered eq: KG,  FFT eq: KG"<<std::endl;
 
   
   if(device_choice==0)

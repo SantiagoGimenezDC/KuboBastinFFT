@@ -26,7 +26,7 @@ void Kubo_solver_FFT_postProcess::operator()(const std::vector<type>& final_data
   if(parent_solver_.simulation_formula() == KUBO_GREENWOOD)
     Greenwood_postProcess(final_data, r_data, r);
 
-  if(parent_solver_.simulation_formula() == KUBO_BASTIN)
+  if(parent_solver_.simulation_formula() == KUBO_BASTIN || parent_solver_.simulation_formula() == KUBO_SEA)
     Bastin_postProcess(final_data, r_data, r);
 };
 
@@ -157,6 +157,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
     partial_result[e]      = 0.0;
     rvec_partial_result[e] = 0.0;
   }   
+
 
   rearrange_crescent_order(rearranged_E_points);
   /*When introducing a const. eta with modified polynomials, the result is equals to that of a

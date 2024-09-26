@@ -39,7 +39,15 @@ public:
   SpMatrixXp& vx(){return vx_;};
 
   
-  virtual r_type Hamiltonian_size(){return ( Hc_.innerSize() + Hc_.nonZeros() + Hc_.outerSize() ) * sizeof(r_type);};  
+  virtual r_type Hamiltonian_size(){
+    if(H_.size()>0)
+      return ( H_.innerSize() + H_.nonZeros() + H_.outerSize() ) * sizeof(r_type);
+    if(Hc_.size()>0)
+      return ( Hc_.innerSize() + Hc_.nonZeros() + Hc_.outerSize() ) * sizeof(type);
+  };  
+
+
+
 
   virtual void build_Hamiltonian();
   virtual void setup_velOp() ;

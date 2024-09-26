@@ -91,9 +91,41 @@ void Kubo_solver_filtered::compute_real(){
 
   
 
+  bool double_buffer = false;
+  
+  
+  //---------------------------Memory estimates-----------------------// 
+  r_type buffer_mem    = r_type( 2.0 * r_type(M_dec) * r_type( SEC_SIZE) * sizeof(type) ) / r_type( 1E9 ),
+         recursion_mem = r_type( ( 5 * r_type( DIM ) + 1 * r_type( SUBDIM ) ) * sizeof(type) )/ r_type( 1E9 ),
+         FFT_mem       = 0.0,
+         Ham_mem = device_.Hamiltonian_size()/ r_type( 1E9 ),
+         Total = 0.0;
+
+  if(parameters_.base_choice_ == 1 )
+    buffer_mem*=2;
+
+  if(double_buffer == true )
+    buffer_mem*=2;
+  
+  
+  FFT_mem = r_type( ( 1 + omp_get_num_threads() * ( 8 + 1 ) ) * nump * sizeof(type) ) / r_type( 1E9 );
+  
+  Total = buffer_mem + Ham_mem + recursion_mem + FFT_mem;
+
+  
+  std::cout<<std::endl;
+  std::cout<<"Expected memory cost breakdown:"<<std::endl;
+  std::cout<<"   Chebyshev buffers:    "<< buffer_mem<<" GBs"<<std::endl;  
+  std::cout<<"   Hamiltonian size:     "<< Ham_mem<<" GBs"<<std::endl;  
+  std::cout<<"   Recursion vectors:    "<<  recursion_mem <<" GBs"<<std::endl;
+  std::cout<<"   FFT auxiliary lines:  "<<  FFT_mem <<" GBs"<<std::endl<<std::endl;   
+  std::cout<<"TOTAL:  "<<  Total<<" GBs"<<std::endl<<std::endl;
+  //--------------------Finished Memory estimates--------------------// 
+  
+
+  
 /*------------Big memory allocation--------------*/
 
-  bool double_buffer = false;
 
   //Single Shot vectors
   type **bras = new type* [ M_dec ],
@@ -181,31 +213,6 @@ void Kubo_solver_filtered::compute_real(){
   /*-----------------------------------------------*/  
   
 
-
-  
-  
-  //---------------------------Memory estimates-----------------------// 
-  r_type buffer_mem    = r_type( 2.0 * r_type(M_dec) * r_type( SEC_SIZE) * sizeof(type) ) / r_type( 1E9 ),
-         recursion_mem = r_type( ( 5 * r_type( DIM ) + 1 * r_type( SUBDIM ) ) * sizeof(type) )/ r_type( 1E9 ),
-         FFT_mem       = 0.0,
-         Ham_mem = device_.Hamiltonian_size()/ r_type( 1E9 ),
-         Total = 0.0;
-
-  
-  FFT_mem = r_type( ( 1 + omp_get_num_threads() * ( 8 + 1 ) ) * nump * sizeof(type) ) / r_type( 1E9 );
-  
-  Total = buffer_mem + Ham_mem + recursion_mem + FFT_mem;
-
-  
-  std::cout<<std::endl;
-  std::cout<<"Expected memory cost breakdown:"<<std::endl;
-  std::cout<<"   Chebyshev buffers:    "<< buffer_mem<<" GBs"<<std::endl;  
-  std::cout<<"   Hamiltonian size:     "<< Ham_mem<<" GBs"<<std::endl;  
-  std::cout<<"   Recursion vectors:    "<<  recursion_mem <<" GBs"<<std::endl;
-  std::cout<<"   FFT auxiliary lines:  "<<  FFT_mem <<" GBs"<<std::endl<<std::endl;   
-  std::cout<<"TOTAL:  "<<  Total<<" GBs"<<std::endl<<std::endl;
-  //--------------------Finished Memory estimates--------------------// 
-  
 
 
   

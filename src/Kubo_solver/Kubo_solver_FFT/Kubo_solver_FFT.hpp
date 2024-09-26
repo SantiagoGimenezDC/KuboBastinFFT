@@ -120,6 +120,7 @@ public:
   
   void Greenwood_FFTs( storageType, storageType, std::vector<type>&, int);
   void Bastin_FFTs   ( storageType, storageType, std::vector<type>&, int);
+  void Kubo_sea_FFTs   ( storageType, storageType, std::vector<type>&, int);
 
 
 

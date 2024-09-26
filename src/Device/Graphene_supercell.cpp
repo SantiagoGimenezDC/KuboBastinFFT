@@ -203,7 +203,9 @@ void Graphene_supercell::horizontal_BC(r_type a2, type vec[], type p_vec[], r_ty
       int n_front = i;
       int n_back = (fullLe-1) * W + i;
       vec[n_front]   +=  damp_op[n_front] * ( ( n_front )%2==0 ) * t * p_vec[n_back+1];
-      vec[n_back]    +=  damp_op[n_back]  * ( ( n_back )%2!=0 ) * t * p_vec[n_front-1];
+
+      if(i>0)
+        vec[n_back]    +=  damp_op[n_back]  * ( ( n_back )%2!=0 ) * t * p_vec[n_front-1];
       
     }
 }

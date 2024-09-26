@@ -169,7 +169,10 @@ void Kubo_solver_FFT::compute(){
 	  Greenwood_FFTs(bras, kets, r_data_, s);
 
         if( sym_formula_ == KUBO_BASTIN )
-	  Bastin_FFTs(bras, kets, r_data_, s);	
+	  Bastin_FFTs(bras, kets, r_data_, s);
+	
+	if( sym_formula_ == KUBO_SEA )
+	  Kubo_sea_FFTs(bras, kets, r_data_, s);	
 
 	FFTs_time.stop("           FFT operations time:        ");
 	total_FFTs_time += FFTs_time;

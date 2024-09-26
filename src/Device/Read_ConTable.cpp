@@ -106,7 +106,7 @@ void Read_ConTable::build_Hamiltonian(){
     
     std::size_t num_threads=omp_get_num_threads();
 
-    //    double U0_norm = ( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1) ),
+    // double U0_norm = ( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1) ),
     // U1_norm = ( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1) );
 
 

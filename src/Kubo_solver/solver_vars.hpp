@@ -8,7 +8,8 @@
 
 enum formula{
   KUBO_GREENWOOD = 0,
-  KUBO_BASTIN = 1
+  KUBO_BASTIN = 1,
+  KUBO_SEA = 2
 };
 
 

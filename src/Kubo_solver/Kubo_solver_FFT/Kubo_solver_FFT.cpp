@@ -71,7 +71,7 @@ Kubo_solver_FFT::Kubo_solver_FFT(solver_vars& parameters, Device& device) : para
   
   parameters_.SECTION_SIZE_ = device_.parameters().SUBDIM_ / parameters_.num_parts_ + device_.parameters().SUBDIM_ % parameters_.num_parts_;
   
-  sym_formula_ = KUBO_BASTIN;
+  sym_formula_ = KUBO_SEA;
 }
 
 
@@ -114,6 +114,32 @@ void Kubo_solver_FFT::allocate_memory(){
       SEC_SIZE = SUBDIM / parameters_.num_parts_;
 
   parameters_.SECTION_SIZE_ = SEC_SIZE;
+
+
+  r_type buffer_mem    = r_type( 2 * r_type(M) * r_type(SEC_SIZE) * sizeof(type) ) / r_type( 1E9 ),
+         recursion_mem = r_type( ( 5 * DIM + 1 * SUBDIM ) * sizeof(type) )/ r_type( 1E9 ),
+         FFT_mem       = 0.0,
+         Ham_mem = 2 * device_.Hamiltonian_size() / r_type( 1E9 ), //the 2 is because of the vel operator
+         Total = 0.0;
+
+
+  if(sym_formula_ == KUBO_GREENWOOD)
+    FFT_mem = r_type( ( 1 + omp_get_num_threads() * ( 8 + 1 ) ) * num_p * sizeof(type) ) / r_type( 1E9 );
+  if(sym_formula_ == KUBO_BASTIN || sym_formula_ == KUBO_SEA )
+    FFT_mem = r_type( ( 1 + omp_get_num_threads() * ( 16 + 1 ) ) * num_p * sizeof(type) ) / r_type( 1E9 );
+
+  Total = buffer_mem + Ham_mem + recursion_mem + FFT_mem;
+
+  
+  std::cout<<std::endl;
+  std::cout<<"Expected memory cost breakdown:"<<std::endl;
+  std::cout<<"   Chebyshev buffers:    "<< buffer_mem<<" GBs"<<std::endl;  
+  std::cout<<"   Operators size:       "<< Ham_mem<<" GBs"<<std::endl;  
+  std::cout<<"   Recursion vectors:    "<<  recursion_mem <<" GBs"<<std::endl;
+  std::cout<<"   FFT auxiliary lines:  "<<  FFT_mem <<" GBs"<<std::endl<<std::endl;   
+  std::cout<<"TOTAL:  "<<  Total<<" GBs"<<std::endl<<std::endl;
+
+  
   
 /*------------Big memory allocation--------------*/
   //Single Shot vectors
@@ -157,31 +183,6 @@ void Kubo_solver_FFT::allocate_memory(){
   reset_data( final_data_ );  
 
 
-  
-
-  r_type buffer_mem    = r_type( 2 * r_type(M) * r_type(SEC_SIZE) * sizeof(type) ) / r_type( 1E9 ),
-         recursion_mem = r_type( ( 5 * DIM + 1 * SUBDIM ) * sizeof(type) )/ r_type( 1E9 ),
-         FFT_mem       = 0.0,
-         Ham_mem = 2 * device_.Hamiltonian_size() / r_type( 1E9 ), //the 2 is because of the vel operator
-         Total = 0.0;
-
-  
-  if(sym_formula_ == KUBO_GREENWOOD)
-    FFT_mem = r_type( ( 1 + omp_get_num_threads() * ( 8 + 1 ) ) * num_p * sizeof(type) ) / r_type( 1E9 );
-  if(sym_formula_ == KUBO_BASTIN)
-    FFT_mem = r_type( ( 1 + omp_get_num_threads() * ( 16 + 1 ) ) * num_p * sizeof(type) ) / r_type( 1E9 );
-
-  Total = buffer_mem + Ham_mem + recursion_mem + FFT_mem;
-
-  
-  std::cout<<std::endl;
-  std::cout<<"Expected memory cost breakdown:"<<std::endl;
-  std::cout<<"   Chebyshev buffers:    "<< buffer_mem<<" GBs"<<std::endl;  
-  std::cout<<"   Operators size:       "<< Ham_mem<<" GBs"<<std::endl;  
-  std::cout<<"   Recursion vectors:    "<<  recursion_mem <<" GBs"<<std::endl;
-  std::cout<<"   FFT auxiliary lines:  "<<  FFT_mem <<" GBs"<<std::endl<<std::endl;   
-  std::cout<<"TOTAL:  "<<  Total<<" GBs"<<std::endl<<std::endl;
-
 }
 
 
@@ -210,7 +211,7 @@ void Kubo_solver_FFT::update_data(std::vector<type>& final_data, const std::vect
 
   if( sym_formula_ == KUBO_GREENWOOD )
     end = nump;
-  if( sym_formula_ == KUBO_BASTIN )
+  if( sym_formula_ == KUBO_BASTIN || sym_formula_ == KUBO_SEA )
     end = 2 * nump;
 
   
