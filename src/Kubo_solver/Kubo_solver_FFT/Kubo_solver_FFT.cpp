@@ -71,7 +71,7 @@ Kubo_solver_FFT::Kubo_solver_FFT(solver_vars& parameters, Device& device) : para
   
   parameters_.SECTION_SIZE_ = device_.parameters().SUBDIM_ / parameters_.num_parts_ + device_.parameters().SUBDIM_ % parameters_.num_parts_;
   
-  sym_formula_ = KUBO_SEA;
+  sym_formula_ = parameters_.sim_equation_;
 }
 
 
@@ -151,7 +151,7 @@ void Kubo_solver_FFT::allocate_memory(){
     bras_[m] = new type [ SEC_SIZE ];
     kets_[m] = new type [ SEC_SIZE ];
   }
-
+  
   
   //Recursion Vectors
   rand_vec_ = new type [ DIM ];

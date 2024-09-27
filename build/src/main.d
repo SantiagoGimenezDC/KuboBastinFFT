@@ -25,7 +25,7 @@ build/src/main.o: src/main.cpp src/static_vars.hpp src/Device/Device.hpp \
  src/Kubo_solver/Kubo_solver_FFT/../../Random.hpp \
  src/Kubo_solver/Kubo_solver_FFT/../solver_vars.hpp \
  src/Kubo_solver/Kubo_solver_FFT/../../static_vars.hpp \
- src/Kubo_solver/Kubo_solver_FFT/States.hpp \
+ src/Kubo_solver/Kubo_solver_FFT/../../States.hpp \
  src/Kubo_solver/Kubo_solver_SSD.hpp src/Kubo_solver/../static_vars.hpp \
  src/Kubo_solver/../Device/Device.hpp \
  src/Kubo_solver/../Device/Graphene.hpp \
@@ -88,7 +88,7 @@ src/Kubo_solver/Kubo_solver_FFT/../../Device/Device.hpp:
 src/Kubo_solver/Kubo_solver_FFT/../../Random.hpp:
 src/Kubo_solver/Kubo_solver_FFT/../solver_vars.hpp:
 src/Kubo_solver/Kubo_solver_FFT/../../static_vars.hpp:
-src/Kubo_solver/Kubo_solver_FFT/States.hpp:
+src/Kubo_solver/Kubo_solver_FFT/../../States.hpp:
 src/Kubo_solver/Kubo_solver_SSD.hpp:
 src/Kubo_solver/../static_vars.hpp:
 src/Kubo_solver/../Device/Device.hpp:

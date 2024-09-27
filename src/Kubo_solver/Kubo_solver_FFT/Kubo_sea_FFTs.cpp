@@ -141,16 +141,16 @@ void Kubo_solver_FFT::Kubo_sea_FFTs( storageType bras, storageType kets, std::ve
        p[j] += ( real( re_bras(j) ) - im * real( im_bras(j) ) ) *  //Re(G(k)) *
 	       ( imag( re_kets(j) ) + im * imag( im_kets(j) ) ) + //Im(G(k)) +
  	  
-	       ( imag (conj( re_bras(j) ) ) - im * imag( conj( im_bras(j) ) ) ) * //Im(G(k))
+	       ( imag(conj( re_bras(j) ) ) - im * imag( conj( im_bras(j) ) ) ) * //Im(G(k))
 	       ( real( re_kets(j) ) + im * real( im_kets(j) ) );   //Re(G(k))
 	
 
        //Here: w(k) += (ImdG(k)) * Re(G(k)) - Re(G(k)) * Im(dG(k))
-       w[j] += ( real (conj( re_D_bras(j) ) ) - im * real( conj( im_D_bras(j) ) ) )  * //Im(dG(k))
+       w[j] += ( imag(conj( re_D_bras(j) ) ) - im * imag( conj( im_D_bras(j) ) ) )  * //Im(dG(k))
 	       ( real( re_kets(j)   ) + im * real( im_kets(j) ) ) - //Re(G(k))
 	  
 	       ( real( re_bras(j) )   - im * real( im_bras(j) ) )  *  //Re(G(k))
-	       ( real( re_D_kets(j) )         + im * real( im_D_kets(j) ) ); //Im( dG(k))
+	       ( imag( re_D_kets(j) )         + im * imag( im_D_kets(j) ) ); //Im( dG(k))
      }
 
      
@@ -159,17 +159,16 @@ void Kubo_solver_FFT::Kubo_sea_FFTs( storageType bras, storageType kets, std::ve
        p[j] += ( real( re_bras(j) ) - im * real( im_bras(j) ) ) *  //Re(G(k)) *
 	       ( imag ( conj(re_kets(j) ) )   + im *       imag( conj( im_kets(j) ) ) ) + //Im(G(k))+
  	  
-	       ( imag ( re_bras(j) )   - im * imag ( im_bras(j) ) ) * //Im(G(k))
+	       ( imag( re_bras(j) )   - im * imag( im_bras(j) ) ) * //Im(G(k))
 	       ( real( re_kets(j) ) + im * real( im_kets(j) ) );   //Re(G(k))
 	
 
          //Here: w(k) += (Im dG(k)) * Re(G(k)) - Re(G(k)) * Im (dG(k))
-       w[j] += (  imag(re_D_bras(j))  - im *  imag( im_D_bras(j) )  )  * //Im (dG(k))
+       w[j] += ( imag(re_D_bras(j))  - im *  imag( im_D_bras(j) )  )  * //Im (dG(k))
 	       ( real( re_kets(j)   ) + im * real( im_kets(j) ) ) - //Re(G(k))
 	  
 	       ( real( re_bras(j) )   - im * real( im_bras(j) ) )  *  //Re(G(k))
-	       ( imag( conj( re_D_kets(j) ) )         + im * imag( conj ( im_D_kets(j) ) ) ); //Im(dG(k))
-
+	       ( imag( conj( re_D_kets(j) ) ) + im * imag( conj ( im_D_kets(j) ) ) ); //Im(dG(k))
      }
    }      
     

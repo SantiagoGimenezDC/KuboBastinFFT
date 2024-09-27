@@ -31,7 +31,7 @@ int main(int , char **argv){
   int device_choice=0;
   double   RAM_size=0; //in GB
   std::string sim_type;
-
+  std::string sim_equation;
 
   Input>>device_choice;
   //Reading device variables
@@ -59,6 +59,18 @@ int main(int , char **argv){
   Input>>s_vars.filename_;
 
   Input>>sim_type;
+  Input>>sim_equation;
+
+
+  
+  if(sim_equation == "GREENWOOD")
+    s_vars.sim_equation_ = KUBO_GREENWOOD;
+  if(sim_equation == "BASTIN")
+    s_vars.sim_equation_ = KUBO_BASTIN;
+  if(sim_equation == "SEA")
+    s_vars.sim_equation_ = KUBO_SEA;
+  
+  
   Input>>RAM_size;
 
   s_vars.SECTION_SIZE_ = graphene_vars.SUBDIM_/s_vars.num_parts_;
