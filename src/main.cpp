@@ -10,8 +10,9 @@
 #include "Device/SupercellGraph_RashbaSOC.hpp"
 #include "Device/Read_Hamiltonian.hpp"
 #include "Device/Read_ConTable.hpp"
-
 #include "Device/TBG/TBG.hpp"
+
+#include "KPM_base/KPM_base.hpp"
 #include "Kubo_solver/Kubo_solver_FFT/Kubo_solver_FFT.hpp"
 #include "Kubo_solver/Kubo_solver_SSD.hpp"
 #include "Kubo_solver/Kubo_solver_filtered/Kubo_solver_filtered.hpp"
@@ -147,6 +148,10 @@ int main(int , char **argv){
   //  Graphene test(graphene_vars);
   // test.print_hamiltonian();
 
+  if(sim_type == "DOS"){
+    KPM_DOS_solver solver( s_vars,  *device);
+    solver.compute();
+  }
   
   if(sim_type == "SSD"){
     Kubo_solver_SSD solver( s_vars, RAM_size,  *device);

@@ -69,8 +69,6 @@ KPM_base::KPM_base(solver_vars& parameters, Device& device) : parameters_(parame
 
 
 
-
-
 KPM_base::~KPM_base(){
 
 /*------------Delete everything--------------*/
@@ -90,7 +88,7 @@ void KPM_base::compute(){
   solver_station.start();
   
 
-  
+  //This should be done outside the solver loop
   //----------------Initializing the Device---------------//
   //------------------------------------------------------//
   time_station_2 hamiltonian_setup_time;
@@ -106,7 +104,8 @@ void KPM_base::compute(){
 
 
 
-
+  //And if the previous step is outside, then the following can be done as
+  //an initialization, simply
   //-------------------Allocating memory------------------//
   //------------------------------------------------------//  
   time_station_2 allocation_time;
@@ -120,11 +119,13 @@ void KPM_base::compute(){
 
 
 
-  
+  //This should just be initialization of the CAP object
   //-------------------This shouldnt be heeere--------------//
   int W      = device().parameters().W_,
       C      = device().parameters().C_,
-      LE     = device().parameters().LE_;
+      LE     = device().parameters().LE_,
+    DIM    = device().parameters().DIM_,
+    SUBDIM    = device().parameters().SUBDIM_;
 
   r_type a       = parameters_.a_,
          E_min   = parameters_.E_min_,
@@ -133,7 +134,10 @@ void KPM_base::compute(){
   E_min /= a;
   eta   /= a;
 
-  
+
+  dmp_op_ = new r_type[ DIM ];
+  rand_vec_ = new type[ SUBDIM ];
+
   cap().create_CAP(W, C, LE,  dmp_op_);
   device().damp(dmp_op_);
   //-------------------This shouldnt be heeere--------------//  
@@ -148,16 +152,7 @@ void KPM_base::compute(){
   
   for(int d = 1; d <= D; d++){
 
-
-    time_station_2 total_csrmv_time;
-    time_station_2 total_FFTs_time;
-	
-    //device_.Anderson_disorder(dis_vec_);
     device_.update_dis( dmp_op_);
-
-
-
-
     
     for(int r = 1; r <= R; r++){
 
@@ -171,7 +166,7 @@ void KPM_base::compute(){
       device_.rearrange_initial_vec( rand_vec_ ); //very hacky
       
 
-      rand_vec_iteration();
+      compute_rand_vec( ( d - 1 ) * R + r );
     
   }
 
@@ -187,33 +182,231 @@ void KPM_base::compute(){
 
 
 void KPM_DOS_solver::allocate_memory(){
-  Chebyshev_states<State<type>> cheb_vectors( device() );
+  //cheb_vectors_ = new Chebyshev_states<State<type>>( device() );
 }
 
 
 
-void KPM_DOS_solver::rand_vec_iteration(){
-  Chebyshev_states<State<type>> cheb_vectors( device() );
-  int M   = parameters_.M_;
 
+void KPM_DOS_solver::compute_rand_vec(int r){
+  int M   = parameters().M_;
 
+  Chebyshev_states<State<type>> cheb_vectors_(device());
+  
+  moments_r_ = std::vector<type>(parameters().M_, 0.0);
+
+  
   State<type> init_state( device().parameters().DIM_, rand_vec() );
-  cheb_vectors.reset( init_state );
+  cheb_vectors_.reset( init_state );
   
 
 //=================================KPM Step 0======================================//
-  //moments(0)=v0**cheb_vectors(0);
+  moments_r_[0] = init_state * ( (cheb_vectors_)(0) );
+
+
   
 //=================================KPM Step 1======================================//       
+  cheb_vectors_.update();
+  moments_r_[1] =  init_state * ( (cheb_vectors_)(1) );
 
-  cheb_vectors.update();
-  //moments(1)=v0*cheb_vectors(1);
+
   
-//=================================KPM Steps 2 and on===============================//
-    
+//=================================KPM Steps 2 and on==============================//
   for( int m = 2; m < M; m++ ){
-    cheb_vectors.update();
-    //moments(m)=v0*cheb_vectors(2).data()
+    cheb_vectors_.update();
+    moments_r_[m] =  init_state * ( (cheb_vectors_)(2) );
   }
+
+
+
+  
+  for(int m=0;m<M;m++)
+    moments_acc_[m] = ( moments_r_[m] + double(r-1) * moments_acc_[m] ) / r;
+
+
+   output_.update_data(moments_r_, moments_acc_, r);
+}
+
+
+
+DOS_output::DOS_output(device_vars& device_parameters, solver_vars& parent_solver_vars):device_parameters_(device_parameters), parameters_(parent_solver_vars){
+  int nump = parameters_.num_p_,
+    D = parameters_.dis_real_,
+    R = parameters_.R_;
+  
+  E_points_.resize(nump);
+
+  conv_R_max_.resize(D*R);
+  conv_R_av_.resize(D*R);
+
+  partial_result_.resize(nump);
+  r_data_.resize(nump);
+
+  
+  for(int k=0; k<nump;k++)
+    E_points_[k] = cos(M_PI * ( k + 0.5 ) / nump );
+  
+};
+
+
+void DOS_output::update_data(std::vector<type>& moments_r, std::vector<type>& moments_acc, int r){
+
+  const std::complex<double> im(0,1);  
+
+  std::string run_dir = parameters_.run_dir_,
+              filename = parameters_.filename_;
+
+ 
+
+  
+  int M = parameters_.M_,
+      nump = parameters_.num_p_;
+  
+  int SUBDIM = device_parameters_.SUBDIM_;    
+
+  r_type a = parameters_.a_,
+         b = parameters_.b_;
+
+  r_type omega =  SUBDIM / ( a * M_PI );//Dimensional and normalizing constant
+
+
+  
+  std::vector<r_type> new_partial_result(nump, 0.0);
+
+  fftw_plan plan;      
+  r_type* input,
+        * output;
+
+  
+  output = ( r_type* ) fftw_malloc( sizeof( r_type ) * nump );    
+  input  = ( r_type* ) fftw_malloc( sizeof( r_type ) * nump );    
+
+  for(int i = 0; i < nump;i++){
+    input[i]=0.0;
+    output[i]=0.0;
+  }
+  
+  plan = fftw_plan_r2r_1d(nump, input, output, FFTW_REDFT01, FFTW_ESTIMATE);
+
+
+  
+  
+  for(int i = 0; i < M; i++)
+    input[i] = moments_r[i].real();
+  
+  fftw_execute( plan ); 
+
+  for(int i = 0; i < nump;i++)
+    r_data_[i] = output[i];
+  
+  
+  
+  
+  for(int i = 0; i < M; i++)
+    input[i] = moments_acc[i].real();
+  
+  fftw_execute( plan ); 
+
+  for(int i = 0; i < nump; i++)
+    new_partial_result[i] = output[i];
+  
+  fftw_free(output);
+  fftw_free(input);
+  fftw_destroy_plan(plan);
+  
+
+
+
+  
+  //R convergence analysis    
+  r_type tmp = 1, max = 0, av=0;
+
+  for(int e = 0; e < nump; e++){
+
+    tmp = partial_result_ [ e ] ;
+    if( r > 1 ){
+      tmp = std::abs( ( new_partial_result [ e ] - partial_result_ [e] ) / partial_result_ [e] ) ;
+      if(tmp > max)
+        max = tmp;
+
+      av += tmp / nump ;
+    }
+  }
+
+  
+  if( r > 1 ){
+    conv_R_max_[ ( r - 1 ) ] = max;
+    conv_R_av_ [ ( r - 1 ) ] = av;
+  }
+
+  partial_result_ = new_partial_result;
+  
+
+
+
+  
+  //Writing the data
+  
+  std::ofstream dataR;
+  dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
+
+  for(int e=0;e<nump;e++)  
+    dataR<< a * E_points_[e] - b<<"  "<<  omega * r_data_ [e] <<std::endl;
+
+  dataR.close();
+  
+
+
+  
+  std::ofstream dataP;
+  dataP.open(run_dir+"currentResult_"+filename);
+
+  for(int e=0;e<nump;e++)  
+    dataP<<  a * E_points_[e]-b<<"  "<< omega * new_partial_result [e] <<std::endl;
+
+  dataP.close();
+
+
+
+  std::ofstream data;
+  data.open(run_dir+"conv_R_"+filename);
+
+  for(int l = 1; l < r; l++)  
+    data<< l <<"  "<< conv_R_max_[ ( l - 1 ) ]<<"  "<< conv_R_av_[ ( l - 1 ) ] <<std::endl;
+
+  data.close();
+
+
+
+  
+  //plotting the data
+  
+  plot_data(run_dir,filename);  
+
+}
+
+
+void DOS_output::plot_data(const std::string& run_dir, const std::string& filename){
+        //VIEW commands
+  
+     std::string exestring=
+         "gnuplot<<EOF                                               \n"
+         "set encoding utf8                                          \n"
+         "set terminal pngcairo enhanced                             \n"
+
+         "unset key  \n"
+
+         "set output '"+run_dir+filename+".png'                \n"
+
+         "set xlabel 'E[eV]'                                               \n"
+         "set ylabel  'G [2e^2/h]'                                           \n"
+         
+        "plot '"+run_dir+"currentResult_"+filename+"' using 1:2 w p ls 7 ps 0.25 lc 2;  \n"
+         "EOF";
+     
+      char exeChar[exestring.size() + 1];
+      strcpy(exeChar, exestring.c_str());    
+      if(system(exeChar)){};
+
 
 }

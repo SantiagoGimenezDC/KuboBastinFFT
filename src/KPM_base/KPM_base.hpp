@@ -32,7 +32,7 @@ private:
 public:
   KPM_base();
   KPM_base( solver_vars&, Device&);
-  ~KPM_base();
+  virtual ~KPM_base();
 
   Device& device(){ return device_; };
   solver_vars& parameters(){ return parameters_; };
@@ -49,7 +49,7 @@ public:
 
   //Heavy duty
   void compute();
-  virtual void rand_vec_iteration() = 0;
+  virtual void compute_rand_vec( int) = 0;
 };
 
 
@@ -61,21 +61,28 @@ class DOS_output{//will interpret data_set of points k=0,...,nump-1 as associate
   typedef std::complex< r_value_t > value_t;
 
   private:
+    device_vars& device_parameters_;
     solver_vars& parameters_;
+
     std::vector<r_type>
       E_points_,
-      new_r_data_,
+      r_data_,
       partial_result_,
       conv_R_max_,
       conv_R_av_;
 
   public:       
-    DOS_output( solver_vars& );
+    DOS_output(device_vars&, solver_vars& );
     ~DOS_output(){};
 
+  
+    solver_vars& parameters(){return parameters_;};
+    device_vars& device_parameters(){return device_parameters_;};
+  
     std::vector<r_type>& partial_result(){return partial_result_;};
-    std::vector<r_type>& r_data(){return partial_result_;};
+    std::vector<r_type>& r_data(){return r_data_;};
 
+    void update_data(std::vector<type>&, std::vector<type>&, int);
   
     void operator()( const std::vector<type>&, const std::vector<type>&, int);
     void plot_data   ( const std::string&, const std::string& );
@@ -86,19 +93,26 @@ class DOS_output{//will interpret data_set of points k=0,...,nump-1 as associate
 
 class KPM_DOS_solver: public KPM_base{
 private:
-  solver_vars parameters_;  
-  DOS_output output_;
+   DOS_output output_;
+   std::vector<type> moments_r_, moments_acc_;
+  
+
 public:
   KPM_DOS_solver();
-  KPM_DOS_solver( solver_vars& parameters, Device& device):KPM_base(parameters, device), output_(parameters){};
-  ~KPM_DOS_solver();
+  KPM_DOS_solver( solver_vars& parameters, Device& device):KPM_base(parameters, device), output_(device.parameters(), parameters){
+    moments_r_   = std::vector<type>(parameters.M_, 0.0);
+    moments_acc_ = std::vector<type>(parameters.M_, 0.0);
+  };
+
+  
+  virtual ~KPM_DOS_solver(){/*delete cheb_vectors_;*/};
 
   
   //Initializers
   virtual void allocate_memory();
 
   //Heavy duty
-  virtual void rand_vec_iteration();
+  virtual void compute_rand_vec( int);
 
      
 };

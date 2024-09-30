@@ -14,6 +14,8 @@ private:
 public:
   ~State(){delete []data_;};
 
+  State() : D_(0){};
+  
   State(int D) : D_(D){
     data_ = new T[D_];
   };
@@ -41,14 +43,38 @@ public:
 
   inline
   T operator[] (int i){ return data_[ i ]; };
-  
+
+
+  T operator*(State<T> vec){
+    T result = 0.0;
+
+    
+    #pragma omp parallel
+    {
+        T local_result = 0.0;
+
+        #pragma omp for
+        for (int i = 0; i < D_; i++) {
+            local_result += std::conj(data_[i]) * vec[i];
+        }
+
+        #pragma omp critical
+        {
+            result += local_result;
+        }
+    }
+        
+    return result;
+  };
+    
   void operator = ( State<T>& other_state){
         if ( this == &other_state ) 
             return ; // Handle self-assignment
         
 
-        // Delete existing data if necessary
-        delete[] data_;
+        // Delete existing data if necessary	
+        //if(D_>0)
+	  //delete[] data_;
 
         D_ = other_state.D();
         data_ = new T[D_];
@@ -140,6 +166,7 @@ private:
 public:
   Chebyshev_states(Device& device ):device_(device), States_buffer<State_T>( device.parameters().DIM_, 3 ) {};
 
+  
   int update() {
     
     if( head_num_ == 0 )
