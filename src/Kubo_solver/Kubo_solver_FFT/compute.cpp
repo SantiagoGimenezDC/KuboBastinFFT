@@ -80,8 +80,8 @@ void Kubo_solver_FFT::compute(){
 
   Chebyshev_states<State<type>> cheb_vectors( device() );
   
-  States_buffer_sliced< State<type> > bras(SUBDIM, M, parameters_.num_parts_);
-  States_buffer_sliced< State<type> > kets(SUBDIM, M, parameters_.num_parts_);
+  //States_buffer_sliced< State<type> > bras(SUBDIM, M, parameters_.num_parts_);
+  //States_buffer_sliced< State<type> > kets(SUBDIM, M, parameters_.num_parts_);
  
   allocate_memory();
   
@@ -142,7 +142,7 @@ void Kubo_solver_FFT::compute(){
         time_station_2 csrmv_time_kets;
         csrmv_time_kets.start();
 	
-        polynomial_cycle( kets, cheb_vectors, s, true );
+        polynomial_cycle( kets_, cheb_vectors, s, true );
 
 	csrmv_time_kets.stop("           Kets cycle time:            ");
         total_csrmv_time += csrmv_time_kets;
@@ -153,7 +153,7 @@ void Kubo_solver_FFT::compute(){
 	time_station_2 csrmv_time_bras;
         csrmv_time_bras.start();
 	
-	polynomial_cycle( bras, cheb_vectors, s , false );	
+	polynomial_cycle( bras_, cheb_vectors, s , false );	
 
 	csrmv_time_bras.stop("           Bras cycle time:            ");
         total_csrmv_time += csrmv_time_bras;
@@ -166,13 +166,13 @@ void Kubo_solver_FFT::compute(){
 	FFTs_time.start();
 	
 	if( sym_formula_ == KUBO_GREENWOOD )
-	  Greenwood_FFTs(bras, kets, r_data_, s);
+	  Greenwood_FFTs(bras_, kets_, r_data_, s);
 
         if( sym_formula_ == KUBO_BASTIN )
-	  Bastin_FFTs(bras, kets, r_data_, s);
+	  Bastin_FFTs(bras_, kets_, r_data_, s);
 	
 	if( sym_formula_ == KUBO_SEA )
-	  Kubo_sea_FFTs(bras, kets, r_data_, s);	
+	  Kubo_sea_FFTs(bras_, kets_, r_data_, s);	
 
 	FFTs_time.stop("           FFT operations time:        ");
 	total_FFTs_time += FFTs_time;
@@ -233,10 +233,10 @@ void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states< St
 
   if(vel){
     device_.vel_op( tmp_, cheb_vectors(0).data(), parameters_.vel_dir_2_ );
-    device_.traceover(polys[0].data(), tmp_, s, num_parts);  
+    device_.traceover(polys[0], tmp_, s, num_parts);  
   }
   else
-    device_.traceover(polys[0].data(), cheb_vectors(0).data(), s, num_parts);  
+    device_.traceover(polys[0], cheb_vectors(0).data(), s, num_parts);  
 
 
   
@@ -247,10 +247,10 @@ void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states< St
 
   if(vel){
     device_.vel_op( tmp_, cheb_vectors(1).data(), parameters_.vel_dir_2_ );
-    device_.traceover(polys[1].data(), tmp_, s, num_parts);  
+    device_.traceover(polys[1], tmp_, s, num_parts);  
   }
   else
-    device_.traceover(polys[1].data(), cheb_vectors(1).data(), s, num_parts);      
+    device_.traceover(polys[1], cheb_vectors(1).data(), s, num_parts);      
 
 
   
@@ -262,10 +262,10 @@ void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states< St
 
     if(vel){
       device_.vel_op( tmp_, cheb_vectors(2).data(), parameters_.vel_dir_2_);
-      device_.traceover(polys[m].data(), tmp_, s, num_parts);
+      device_.traceover(polys[m], tmp_, s, num_parts);
     }
     else
-      device_.traceover(polys[m].data(), cheb_vectors(2).data(), s, num_parts);      
+      device_.traceover(polys[m], cheb_vectors(2).data(), s, num_parts);      
   }
 }
 

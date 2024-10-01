@@ -20,8 +20,8 @@
 
 
 class Kubo_solver_FFT{
-  //typedef  type** storageType;
-  typedef  States_buffer_sliced< State<type> >& storageType;
+  typedef  type** storageType;
+  //typedef  States_buffer_sliced< State<type> >& storageType;
 private:
   solver_vars parameters_;
   formula sym_formula_;
