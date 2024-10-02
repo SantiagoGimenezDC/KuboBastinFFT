@@ -186,7 +186,7 @@ void Kubo_solver_FFT::Bastin_FFTs( storageType bras, storageType kets, std::vect
 # pragma omp critical
    {
      for(int k = 0; k < nump; k++){
-       r_data[ k ]        += p[ k ];
+       r_data[ k ]        += 0.0*p[ k ];
        r_data[ k + nump ] += w[ k ];	
      }
    } 

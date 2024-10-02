@@ -178,7 +178,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
     integrand[k] *= 1.0 / pow( (1.0 - E_points_[k]  * E_points_[k] ), 2.0);
     integrand[k] *=  omega / ( M_PI ); 
 
-    rvec_integrand[k]  = E_points_[k] * real( r_data[ k ] ) - ( sqrt(1.0 - E_points_[ k ] * E_points_[ k ] ) * real( r_data[ k + nump ] ) );
+    rvec_integrand[k]  = E_points_[k] * real( r_data[ k ] ) - ( sqrt(1.0 - E_points_[ k ] * E_points_[ k ] ) * imag( r_data[ k + nump ] ) );
     rvec_integrand[k] *= 1.0 / pow( (1.0 - E_points_[k]  * E_points_[k] ), 2.0);
     rvec_integrand[k] *=  omega / ( M_PI ); 
   }
