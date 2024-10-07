@@ -6,6 +6,7 @@
 #include "static_vars.hpp"
 #include "Device/Device.hpp"
 #include "Device/Graphene.hpp"
+#include "Device/Graphene_KaneMele.hpp"
 #include "Device/Graphene_supercell.hpp"
 #include "Device/SupercellGraph_RashbaSOC.hpp"
 #include "Device/Read_Hamiltonian.hpp"
@@ -128,6 +129,7 @@ int main(int , char **argv){
   std::cout<<"The min max eigv are fixed;"<<std::endl;
   std::cout<<"Filtered eq: KG,  FFT eq: KG"<<std::endl;
 
+  r_type KM_str = 0.0;
   
   if(device_choice==0)
     device = new Graphene(graphene_vars);
@@ -143,7 +145,12 @@ int main(int , char **argv){
     device = new Graphene_supercell(graphene_vars);
   if(device_choice==6)
     device = new SupercellGraph_RashbaSOC(m_str,rashba_str,graphene_vars);
+  if(device_choice==7)
+    device = new Graphene_KaneMele(m_str,rashba_str,KM_str,graphene_vars);
 
+  Graphene_KaneMele test(m_str,rashba_str,KM_str,graphene_vars);
+
+  test.print_hamiltonian();
 
   //  Graphene test(graphene_vars);
   // test.print_hamiltonian();
