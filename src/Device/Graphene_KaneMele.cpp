@@ -31,7 +31,7 @@ void Graphene_KaneMele::print_hamiltonian(){
       }
     }
 
-    dataP<<H_r;//.real();
+    dataP<<H_r.imag();//.real();
 
     std::cout<<(H_r-H_r.transpose()).norm()<<std::endl;
   dataP.close();
@@ -100,7 +100,7 @@ void Graphene_KaneMele::H_ket (r_type a, r_type b, type* ket, type* p_ket){
   
 
   std::complex<r_type> R_PF  = -type(0,1.0) * rashba_str / 3.0,    
-    KM_PF  = type(0,1.0) * KM_str / (6.0 * sqrt(3.0) );
+    KM_PF  = -type(0,1.0) * KM_str / (6.0 * sqrt(3.0) );
 
 
   Eigen::Vector3d m{0.0,0.0,0.0*m_str*t};
@@ -108,7 +108,8 @@ void Graphene_KaneMele::H_ket (r_type a, r_type b, type* ket, type* p_ket){
     H_ex = Eigen::Matrix4d::Zero(),
     H_R_diag = Eigen::Matrix4d::Zero(),
     H_R_off_1 = Eigen::Matrix4d::Zero(),
-    H_R_off_2 = Eigen::Matrix4d::Zero();
+    H_R_off_2 = Eigen::Matrix4d::Zero(),
+    H_KM = Eigen::Matrix4d::Zero();
 
   H_bare(0,2) = t;
   H_bare(1,3) = t;
@@ -119,15 +120,19 @@ void Graphene_KaneMele::H_ket (r_type a, r_type b, type* ket, type* p_ket){
   H_bare(2,2) = b_a;
   H_bare(3,3) = b_a;
 
+
+  H_ex.block(0,0,2,2) = m[0] * sx + m[1] * sy + m[2] * sz;
+  H_ex.block(2,2,2,2) = H_ex.block(0,0,2,2);
+
+  
   H_R_diag.block(0,2,2,2)  = R_PF * sx; 
   H_R_off_1.block(0,2,2,2) = R_PF * ( sx - sqrt(3.0) * sy ) /2.0;
   H_R_off_2.block(0,2,2,2) = R_PF * ( sx + sqrt(3.0) * sy ) /2.0;
 
-
   
-  H_ex.block(0,0,2,2) = m[0] * sx + m[1] * sy + m[2] * sz;
-  H_ex.block(2,2,2,2) = H_ex.block(0,0,2,2);
-
+  H_KM.block(0,0,2,2) = KM_PF * sz;
+  H_KM.block(2,2,2,2) = -KM_PF * sz;
+  
   
   r_type * disorder_potential = dis();
 
@@ -142,28 +147,41 @@ void Graphene_KaneMele::H_ket (r_type a, r_type b, type* ket, type* p_ket){
       int n1 = ( ( j % Le ) * W + ( i % W ) ) * 4;
 
       
-      eig_ket.segment(n1,4) = ( H_bare + H_ex + H_R_diag ) * eig_p_ket.segment(n1,4);
-      eig_ket.segment(n1,4) += ( H_bare.adjoint() + H_ex.adjoint() + H_R_diag.adjoint() ) * eig_p_ket.segment(n1,4);
+      eig_ket.segment(n1,4) = ( H_bare + H_ex + H_R_diag + H_KM ) * eig_p_ket.segment(n1,4);
+      eig_ket.segment(n1,4) += ( H_bare.adjoint() + H_ex.adjoint() + H_R_diag.adjoint() + H_KM.adjoint() ) * eig_p_ket.segment(n1,4);
 
       
       if( (i + 1) < W ){
-	int n2 = ( ( j  ) * W + ( i + 1 ) ) * 4;
-	eig_ket.segment(n1,4) += ( H_bare + H_R_off_1 ) * eig_p_ket.segment(n2,4);
+	int n2 = ( ( j ) * W + ( i + 1 ) ) * 4;
+	eig_ket.segment(n1,4) += ( H_bare + H_R_off_1 + H_KM ) * eig_p_ket.segment(n2,4);
       }
       if( (j + 1)  < Le ){
 	int n2 = ( ( ( j + 1 )  ) * W + ( i  ) ) * 4;
-	eig_ket.segment(n1, 4) += ( H_bare + H_R_off_2 ) * eig_p_ket.segment(n2, 4);
+	eig_ket.segment(n1, 4) += ( H_bare + H_R_off_2 + H_KM ) * eig_p_ket.segment(n2, 4);
       }
       
       if( ( i - 1 ) >= 0 ){
 	int n2 = ( ( j ) * W + ( i - 1 ) ) * 4;
-	eig_ket.segment(n1,4) += ( H_bare.adjoint() + H_R_off_1.adjoint() ) * eig_p_ket.segment(n2,4);
+	eig_ket.segment(n1,4) += ( H_bare.adjoint() + H_R_off_1.adjoint() + H_KM.adjoint()) * eig_p_ket.segment(n2,4);
       }
       if( ( j - 1 )  >= 0 ){
 	int n2 = ( ( ( j - 1 ) ) * W + ( i ) ) * 4;
-	eig_ket.segment(n1, 4) += ( H_bare.adjoint() + H_R_off_2.adjoint() ) * eig_p_ket.segment(n2, 4);
+	eig_ket.segment(n1, 4) += ( H_bare.adjoint() + H_R_off_2.adjoint() + H_KM.adjoint()) * eig_p_ket.segment(n2, 4);
       }
+
+
+
       
+      if( ( i - 1 ) >= 0 && ( j + 1 ) < Le ){
+	int n2 = ( ( j + 1 ) * W + ( i - 1 ) ) * 4;
+	eig_ket.segment(n1,4) += ( H_KM ) * eig_p_ket.segment(n2,4);
+      }
+
+      
+      if( ( i + 1 ) < W && ( j - 1 ) >= 0 ){
+	int n2 = ( ( j - 1 ) * W + ( i + 1 ) ) * 4;
+	eig_ket.segment(n1,4) += ( H_KM.adjoint() ) * eig_p_ket.segment(n2,4);
+      }     
     }
  }
 

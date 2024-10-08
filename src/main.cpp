@@ -129,7 +129,7 @@ int main(int , char **argv){
   std::cout<<"The min max eigv are fixed;"<<std::endl;
   std::cout<<"Filtered eq: KG,  FFT eq: KG"<<std::endl;
 
-  r_type KM_str = 0.0;
+  r_type KM_str = 1.0;
   
   if(device_choice==0)
     device = new Graphene(graphene_vars);
