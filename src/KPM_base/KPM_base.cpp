@@ -297,7 +297,7 @@ void DOS_output::update_data(std::vector<type>& moments_r, std::vector<type>& mo
   fftw_execute( plan ); 
 
   for(int i = 0; i < nump;i++)
-    r_data_[i] = output[i];
+    r_data_[i] = output[i] / sqrt(1 - E_points_[i] * E_points_[i]);
   
   
   
@@ -308,7 +308,7 @@ void DOS_output::update_data(std::vector<type>& moments_r, std::vector<type>& mo
   fftw_execute( plan ); 
 
   for(int i = 0; i < nump; i++)
-    new_partial_result[i] = output[i];
+    new_partial_result[i] = output[i]  / sqrt(1 - E_points_[i] * E_points_[i]);
   
   fftw_free(output);
   fftw_free(input);

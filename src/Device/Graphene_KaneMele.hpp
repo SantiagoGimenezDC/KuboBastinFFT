@@ -31,11 +31,13 @@ class Graphene_KaneMele: public Graphene{
     r_type rashba_str_       = 0.0;  
     r_type KM_str_           = 0.0;  
 
-  Eigen::Matrix2cd sx{{0,1},{1,0}}, sy{{0,-type(0,1)}, {type(0,1), 0}}, sz{{1,0}, {0, -1}};  
+    Eigen::Matrix2cd sx{{0,1},{1,0}}, sy{{0,-type(0,1)}, {type(0,1), 0}}, sz{{1,0}, {0, -1}};
+
+  
   public:
-    virtual ~Graphene_KaneMele(){};
+    ~Graphene_KaneMele(){};
     Graphene_KaneMele();
-  Graphene_KaneMele(r_type m_str, r_type rashba_str, r_type KM_str, device_vars& parameters): Graphene(parameters), m_str_(m_str), rashba_str_(rashba_str), KM_str_(KM_str){
+    Graphene_KaneMele(r_type m_str, r_type rashba_str, r_type KM_str, device_vars& parameters): Graphene(parameters), m_str_(m_str), rashba_str_(rashba_str), KM_str_(KM_str){
     
       this->parameters().DIM_*=4;
       this->parameters().SUBDIM_*=4;
@@ -45,12 +47,10 @@ class Graphene_KaneMele: public Graphene{
 	CYCLIC_BCs_=true;
 
 
-      if(this->parameters().W_%2!=0 || this->parameters().LE_%2==0 )
-	std::cout<<"Graphene supercell oly valid for EVEN W and ODD LE!!"<<std::endl;
     };
 
   void print_hamiltonian();
-  virtual void rearrange_initial_vec(type*);
+  virtual void rearrange_initial_vec(type*){};
   virtual void traceover(type* , type* , int , int);
 
   

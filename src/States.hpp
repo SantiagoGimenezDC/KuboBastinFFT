@@ -157,6 +157,57 @@ public:
 
 
 
+class Chebyshev_states{
+private:
+  Device& device_;
+  int head_num_ = 0;
+
+  type *ket, *p_ket, *pp_ket;
+  int D_;
+
+  
+public:
+  Chebyshev_states(Device& device ):device_(device), D_(device.parameters().DIM_){};
+
+
+  type* operator()(int m ){
+    if ( m == 0 )
+      return pp_ket;
+    if ( m == 1 )
+      return p_ket;
+    else if ( m == 2 )
+      return ket;
+  };
+
+  
+  int update() {
+    
+    if( head_num_ == 0 )
+      device_.H_ket( p_ket, pp_ket );
+
+    else
+      device_.update_cheb( ket, p_ket, pp_ket );
+
+      
+    head_num_++;
+    return head_num_;
+  };
+
+  type* head(){ return ket; };
+  
+  void reset( type* init_state ){
+
+    for(int i=0;i<D_;i++)
+      pp_ket[i] = init_state[i];
+    
+    head_num_ = 0;
+  };
+
+};
+
+
+
+/*
 template<class State_T>
 class Chebyshev_states: public States_buffer<State_T>{
 private:
@@ -187,7 +238,7 @@ public:
     head_num_ = 0;
   };
 
-};
+  };*/
 
 
 
