@@ -167,7 +167,16 @@ private:
 
   
 public:
-  Chebyshev_states(Device& device ):device_(device), D_(device.parameters().DIM_){};
+  Chebyshev_states(Device& device ):device_(device), D_(device.parameters().DIM_){
+    ket = new type[D_];
+    p_ket = new type[D_];
+    pp_ket = new type[D_];
+  };
+  ~Chebyshev_states(){
+    delete []ket;
+    delete []p_ket;
+    delete []pp_ket;
+  };
 
 
   type* operator()(int m ){

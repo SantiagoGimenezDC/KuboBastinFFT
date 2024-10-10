@@ -63,6 +63,7 @@ class DOS_output{//will interpret data_set of points k=0,...,nump-1 as associate
   private:
     device_vars& device_parameters_;
     solver_vars& parameters_;
+    Kernel*   kernel_;
 
     std::vector<r_type>
       E_points_,

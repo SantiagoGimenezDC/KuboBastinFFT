@@ -78,7 +78,7 @@ void Kubo_solver_FFT::compute(){
   time_station_2 allocation_time;
   allocation_time.start();
 
-  Chebyshev_states<State<type>> cheb_vectors( device() );
+  Chebyshev_states cheb_vectors( device() );
   
   //States_buffer_sliced< State<type> > bras(SUBDIM, M, parameters_.num_parts_);
   //States_buffer_sliced< State<type> > kets(SUBDIM, M, parameters_.num_parts_);
@@ -216,27 +216,27 @@ void Kubo_solver_FFT::compute(){
 
 
 
-void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states< State<type> >& cheb_vectors, int s, bool vel){
+void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states& cheb_vectors, int s, bool vel){
 
   int M   = parameters_.M_,
       num_parts = parameters_.num_parts_;
 
 
-  State<type> init_state( device().parameters().DIM_, rand_vec_ );
-  cheb_vectors.reset( init_state );
+
+  cheb_vectors.reset( rand_vec_ );
   
 
 //=================================KPM Step 0======================================//
   
   if(vel)
-    device_.vel_op( cheb_vectors(0).data(), rand_vec_, parameters_.vel_dir_1_ );
+    device_.vel_op( cheb_vectors(0), rand_vec_, parameters_.vel_dir_1_ );
 
   if(vel){
-    device_.vel_op( tmp_, cheb_vectors(0).data(), parameters_.vel_dir_2_ );
+    device_.vel_op( tmp_, cheb_vectors(0), parameters_.vel_dir_2_ );
     device_.traceover(polys[0], tmp_, s, num_parts);  
   }
   else
-    device_.traceover(polys[0], cheb_vectors(0).data(), s, num_parts);  
+    device_.traceover(polys[0], cheb_vectors(0), s, num_parts);  
 
 
   
@@ -246,11 +246,11 @@ void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states< St
 
 
   if(vel){
-    device_.vel_op( tmp_, cheb_vectors(1).data(), parameters_.vel_dir_2_ );
+    device_.vel_op( tmp_, cheb_vectors(1), parameters_.vel_dir_2_ );
     device_.traceover(polys[1], tmp_, s, num_parts);  
   }
   else
-    device_.traceover(polys[1], cheb_vectors(1).data(), s, num_parts);      
+    device_.traceover(polys[1], cheb_vectors(1), s, num_parts);      
 
 
   
@@ -261,11 +261,11 @@ void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states< St
     cheb_vectors.update();
 
     if(vel){
-      device_.vel_op( tmp_, cheb_vectors(2).data(), parameters_.vel_dir_2_);
+      device_.vel_op( tmp_, cheb_vectors(2), parameters_.vel_dir_2_);
       device_.traceover(polys[m], tmp_, s, num_parts);
     }
     else
-      device_.traceover(polys[m], cheb_vectors(2).data(), s, num_parts);      
+      device_.traceover(polys[m], cheb_vectors(2), s, num_parts);      
   }
 }
 

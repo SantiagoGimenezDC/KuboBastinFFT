@@ -186,35 +186,43 @@ void KPM_DOS_solver::allocate_memory(){
 }
 
 
+type cdot(type* vec_1, type* vec_2, int D){
+  type result = 0;
+  
+  //#pragma omp parallel for
+  for(int i = 0; i<D; i++)
+    result += conj(vec_1[i]) * vec_2[i];
+  
+  return result;
+};
 
 
 void KPM_DOS_solver::compute_rand_vec(int r){
   int M   = parameters().M_;
 
-  Chebyshev_states<State<type>> cheb_vectors_(device());
+  Chebyshev_states cheb_vectors_(device());
   
   moments_r_ = std::vector<type>(parameters().M_, 0.0);
 
   
-  State<type> init_state( device().parameters().DIM_, rand_vec() );
-  cheb_vectors_.reset( init_state );
+  cheb_vectors_.reset( rand_vec() );
   
 
 //=================================KPM Step 0======================================//
-  moments_r_[0] = init_state * ( (cheb_vectors_)(0) );
+  moments_r_[0] = cdot ( rand_vec() , (cheb_vectors_)(0), device().parameters().DIM_ );
 
 
   
 //=================================KPM Step 1======================================//       
   cheb_vectors_.update();
-  moments_r_[1] =  init_state * ( (cheb_vectors_)(1) );
+  moments_r_[1] = cdot ( rand_vec() , (cheb_vectors_)(1), device().parameters().DIM_ );
 
 
   
 //=================================KPM Steps 2 and on==============================//
   for( int m = 2; m < M; m++ ){
     cheb_vectors_.update();
-    moments_r_[m] =  init_state * ( (cheb_vectors_)(2) );
+    moments_r_[m] = cdot ( rand_vec() , (cheb_vectors_)(2), device().parameters().DIM_ );
   }
 
 
@@ -222,9 +230,12 @@ void KPM_DOS_solver::compute_rand_vec(int r){
   
   for(int m=0;m<M;m++)
     moments_acc_[m] = ( moments_r_[m] + double(r-1) * moments_acc_[m] ) / r;
+    
+  
+ 
 
-
-   output_.update_data(moments_r_, moments_acc_, r);
+  
+  output_.update_data(moments_r_, moments_acc_, r);
 }
 
 
@@ -242,6 +253,15 @@ DOS_output::DOS_output(device_vars& device_parameters, solver_vars& parent_solve
   partial_result_.resize(nump);
   r_data_.resize(nump);
 
+  partial_result_=std::vector<r_type>(nump, 0.0);
+  r_data_=std::vector<r_type>(nump, 0.0);
+  
+  if(parameters_.kernel_choice_ == 0)
+    kernel_   = new None();
+  else if(parameters_.kernel_choice_==1)
+    kernel_   = new Jackson();
+
+  
   
   for(int k=0; k<nump;k++)
     E_points_[k] = cos(M_PI * ( k + 0.5 ) / nump );
@@ -291,24 +311,30 @@ void DOS_output::update_data(std::vector<type>& moments_r, std::vector<type>& mo
 
   
   
-  for(int i = 0; i < M; i++)
-    input[i] = moments_r[i].real();
+  for(int m = 0; m < M; m++)
+    input[m] = ( 2 - ( m == 0 ) ) * kernel_->term(m,M) * moments_r[m].real();
   
-  fftw_execute( plan ); 
+  //fftw_execute( plan ); 
 
   for(int i = 0; i < nump;i++)
-    r_data_[i] = output[i] / sqrt(1 - E_points_[i] * E_points_[i]);
+    r_data_[i] = output[i] / sqrt( 1.0 - E_points_[i] * E_points_[i] );
   
   
   
-  
-  for(int i = 0; i < M; i++)
-    input[i] = moments_acc[i].real();
-  
-  fftw_execute( plan ); 
 
-  for(int i = 0; i < nump; i++)
-    new_partial_result[i] = output[i]  / sqrt(1 - E_points_[i] * E_points_[i]);
+  
+  for(int m = 0; m < M; m++)
+    input[m] = ( 2 - ( m == 0 ) ) * kernel_->term(m,M) * moments_acc[m].real();
+  
+  //fftw_execute( plan ); 
+
+  for(int i = 0; i < nump;i++){
+    for(int m = 0; m < M; m++)
+      new_partial_result[i] += input[m] * (std::cos( m*(i + 0.5) * M_PI /nump));//output[i] / sqrt( 1.0 - E_points_[i] * E_points_[i] );//
+
+    new_partial_result[i] /=  sqrt( 1.0 - E_points_[i] * E_points_[i] );
+  }
+
   
   fftw_free(output);
   fftw_free(input);
