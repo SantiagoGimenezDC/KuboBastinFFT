@@ -78,7 +78,7 @@ int main(int , char **argv){
   s_vars.SECTION_SIZE_ = graphene_vars.SUBDIM_/s_vars.num_parts_;
 
 
-  s_vars.a_ =23.5;
+  s_vars.a_ =20.5;
   s_vars.b_ = 0.0;
 
   //  double Eedge = 8.09852;
@@ -102,6 +102,7 @@ int main(int , char **argv){
 
   
   Input>>graphene_vars.Bz_;
+  Input>>graphene_vars.projector_option_;
 
 
   /*  

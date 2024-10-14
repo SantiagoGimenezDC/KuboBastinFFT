@@ -1,18 +1,18 @@
-#ifndef GRAPHENE_KANEMELE_H
-#define GRAPHENE_KANEMELE_H
+#ifndef SUPERCELL_GRAPHENE_SOC_KANEMELE_H
+#define SUPERCELL_GRAPHENE_SOC_KANEMELE_H
 
-#include "../static_vars.hpp"
-#include "../CAP.hpp"
-#include "../Random.hpp"
-#include "Device.hpp"
-#include "Graphene.hpp"
+#include "../../static_vars.hpp"
+#include "../../CAP.hpp"
+#include "../../Random.hpp"
+#include "../Device.hpp"
+#include "../Graphene.hpp"
 #include <eigen-3.4.0/Eigen/Sparse>
-#include "Coordinates.hpp"
+#include "../Coordinates.hpp"
 #include <iostream>
 
 
 
-class Graphene_KaneMele: public Graphene{
+class SupercellGraph_Rashba_KaneMele: public Graphene{
 
   typedef Eigen::SparseMatrix<std::complex<r_type>,Eigen::RowMajor> SpMatrixXpc;
   typedef Eigen::SparseMatrix<r_type,Eigen::RowMajor> SpMatrixXp;
@@ -28,33 +28,34 @@ class Graphene_KaneMele: public Graphene{
     const r_type t_standard_ = - 2.7;
     const r_type  a0_        = 0.142;
     r_type m_str_            = 0.0;
-    r_type rashba_str_       = 0.0;  
-    r_type KM_str_           = 0.0;  
+    r_type rashba_str_       = 0.0;
+    r_type KM_str_           = 0.0;    
 
-    Eigen::Matrix2cd sx{{0,1},{1,0}}, sy{{0,-type(0,1)}, {type(0,1), 0}}, sz{{1,0}, {0, -1}};
 
-  
-  public:
-    ~Graphene_KaneMele(){};
-    Graphene_KaneMele();
-    Graphene_KaneMele(r_type m_str, r_type rashba_str, r_type KM_str, device_vars& parameters): Graphene(parameters), m_str_(m_str), rashba_str_(rashba_str), KM_str_(KM_str){
+    const type j1_=type(0,1);
+    const Eigen::Matrix2cd sx{{0.0,1.0},{1.0,0.0}}, sy{{0.0,-j1_},{j1_,0.0}}, sz{{1.0,0.0},{0.0,-1.0}};
     
+  public:
+    virtual ~SupercellGraph_Rashba_KaneMele(){};
+    SupercellGraph_Rashba_KaneMele();
+    SupercellGraph_Rashba_KaneMele(r_type m_str, r_type rashba_str,r_type KM_str, device_vars& parameters): Graphene(parameters), m_str_(m_str), rashba_str_(rashba_str), KM_str_(KM_str){
       this->parameters().DIM_*=4;
       this->parameters().SUBDIM_*=4;
 
 
+      
       if(this->parameters().C_==0)
 	CYCLIC_BCs_=true;
-
 
     };
 
   void print_hamiltonian();
-  virtual void rearrange_initial_vec(type*){};
+  virtual void rearrange_initial_vec(type*);
   virtual void traceover(type* , type* , int , int);
 
-  
-  virtual void projector(type* );  
+
+ 
+ 
   virtual void build_Hamiltonian(){};
 
   //Rashba coupling Hamiltonian
@@ -80,4 +81,4 @@ class Graphene_KaneMele: public Graphene{
 
 
 
-#endif // ARMCHAIR_GRAPHENE_H
+#endif // ARMCHAIR_GRAPHENE_SOC_KANEMELEH

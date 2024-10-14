@@ -204,25 +204,29 @@ void KPM_DOS_solver::compute_rand_vec(int r){
   
   moments_r_ = std::vector<type>(parameters().M_, 0.0);
 
+  std::vector<type> l_r_vec(rand_vec(), rand_vec()+device().parameters().DIM_);
+
+  device().projector(l_r_vec.data());
+  
   
   cheb_vectors_.reset( rand_vec() );
   
 
 //=================================KPM Step 0======================================//
-  moments_r_[0] = cdot ( rand_vec() , (cheb_vectors_)(0), device().parameters().DIM_ );
+  moments_r_[0] = cdot ( l_r_vec.data() , (cheb_vectors_)(0), device().parameters().DIM_ );
 
 
   
 //=================================KPM Step 1======================================//       
   cheb_vectors_.update();
-  moments_r_[1] = cdot ( rand_vec() , (cheb_vectors_)(1), device().parameters().DIM_ );
+  moments_r_[1] = cdot ( l_r_vec.data() , (cheb_vectors_)(1), device().parameters().DIM_ );
 
 
   
 //=================================KPM Steps 2 and on==============================//
   for( int m = 2; m < M; m++ ){
     cheb_vectors_.update();
-    moments_r_[m] = cdot ( rand_vec() , (cheb_vectors_)(2), device().parameters().DIM_ );
+    moments_r_[m] = cdot ( l_r_vec.data(), (cheb_vectors_)(2), device().parameters().DIM_ );
   }
 
 

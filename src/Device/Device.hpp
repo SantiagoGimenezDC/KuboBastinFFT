@@ -7,9 +7,10 @@
 
 
 struct device_vars{
-  int W_, LE_, C_, DIM_, SUBDIM_,  dis_seed_;
+  int W_, LE_, C_, DIM_, SUBDIM_,  dis_seed_, projector_option_;
   r_type dis_str_, theta_, d_min_, Bz_;
 
+  
   std::string run_dir_, filename_;
 };
 
@@ -51,6 +52,7 @@ public:
 
   r_type* dis(){ return dis_; };
   r_type* damp_op(){ return damp_; };
+  virtual void projector(type*){};
 
   
   virtual r_type Hamiltonian_size() = 0;  
