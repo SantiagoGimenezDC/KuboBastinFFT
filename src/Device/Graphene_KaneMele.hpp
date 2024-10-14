@@ -43,10 +43,21 @@ class Graphene_KaneMele: public Graphene{
       this->parameters().SUBDIM_*=4;
 
 
+      
       if(this->parameters().C_==0)
 	CYCLIC_BCs_=true;
 
 
+      Eigen::Vector3d v1{ this->parameters().W_* 0.5, this->parameters().W_* sqrt(3.0)/2, 0},
+	v2{-this->parameters().LE_* 0.5 , this->parameters().LE_*sqrt(3.0)/2,0 },
+	cross_p;// = v1.cross(v2);
+
+      
+      r_type Length = 1.0;//sqrt( abs(cross_p(2)) );
+      
+      this->set_sysSubLength(Length);
+      this->set_sysLength(Length);
+      
     };
 
   void print_hamiltonian();
