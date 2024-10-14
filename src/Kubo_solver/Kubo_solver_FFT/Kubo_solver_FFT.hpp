@@ -129,7 +129,7 @@ class Kubo_solver_FFT_postProcess{//will interpret data_set of points k=0,...,nu
 
   
           void rearrange_crescent_order( std::vector<r_type>& );
-  
+          void rearrange_crescent_order_2(std::vector<r_type>&, std::vector<r_type>& );  
           void eta_CAP_correct(std::vector<r_type>&, std::vector<type>& );
   
           void plot_data   ( const std::string&, const std::string& );

@@ -122,6 +122,34 @@ void Kubo_solver_FFT_postProcess::rearrange_crescent_order( std::vector<r_type>&
 }
 
 
+void Kubo_solver_FFT_postProcess::rearrange_crescent_order_2(std::vector<r_type>& E_points, std::vector<r_type>& data) {
+    // Create a vector of indices from 0 to nump - 1
+    int nump = E_points.size();
+    std::vector<int> indices(nump);
+    
+    for (int i = 0; i < nump; ++i) {
+        indices[i] = i;
+    }
+
+    // Sort the indices based on the values of E_points
+    std::sort(indices.begin(), indices.end(), [&](int a, int b) {
+        return E_points[a] < E_points[b];
+    });
+
+    // Create temporary vectors to store the sorted versions
+    std::vector<r_type> sorted_E_points(nump);
+    std::vector<r_type> sorted_data(nump);
+
+    // Reorder both vectors based on sorted indices
+    for (int i = 0; i < nump; ++i) {
+        sorted_E_points[i] = E_points[indices[i]];
+        sorted_data[i] = data[indices[i]];
+    }
+
+    // Move sorted values back to original vectors
+    E_points = std::move(sorted_E_points);
+    data = std::move(sorted_data);
+}
 
 void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& final_data, const std::vector<type>& r_data, int r){
 
@@ -159,7 +187,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
   }   
 
 
-  rearrange_crescent_order(rearranged_E_points);
+  //rearrange_crescent_order(rearranged_E_points);
   /*When introducing a const. eta with modified polynomials, the result is equals to that of a
   simulation with regular polynomials and an variable eta_{var}=eta*sin(acos(E)). The following
   heuristical correction greatly improves the result far from the CNP to match that of the
@@ -175,7 +203,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
   //Keeping just the real part of E*p(E)+im*sqrt(1-E^2)*w(E) yields the Kubo-Bastin integrand:
   for(int k = 0; k < nump; k++){
     integrand[k]  = E_points_[k] * real( final_data[ k ] ) - ( sqrt(1.0 - E_points_[ k ] * E_points_[ k ] ) * imag( final_data[ k + nump ] ) );
-    integrand[k] *= 1.0 / pow( (1.0 - E_points_[k]  * E_points_[k] ), 1.0);
+    integrand[k] *= 1.0 / pow( (1.0 - E_points_[k]  * E_points_[k] ), 2.0);
     integrand[k] *=  omega / ( M_PI ); 
 
     rvec_integrand[k]  = E_points_[k] * real( r_data[ k ] ) - ( sqrt(1.0 - E_points_[ k ] * E_points_[ k ] ) * imag( r_data[ k + nump ] ) );
@@ -183,7 +211,9 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
     rvec_integrand[k] *=  omega / ( M_PI ); 
   }
 
-  rearrange_crescent_order(integrand);
+  
+  rearrange_crescent_order_2(rearranged_E_points, integrand);
+  //rearrange_crescent_order(integrand);
   rearrange_crescent_order(rvec_integrand);
 
   

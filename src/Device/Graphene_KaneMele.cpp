@@ -193,12 +193,9 @@ void Graphene_KaneMele::H_ket (r_type a, r_type b, type* ket, type* p_ket){
   H_KM.block(2,2,2,2) = -KM_PF * sz ;
   
 
-  H_1 = H_bare + H_ex + H_R_diag + H_KM ;
-  H_2 = H_bare + H_R_off_1 + H_KM ;
-  H_3 = H_bare + H_R_off_2 + H_KM ;
-
-
-  
+  H_1 = H_bare + H_ex + H_R_diag ;
+  H_2 = H_bare + H_R_off_1 + H_KM;
+  H_3 = H_bare + H_R_off_2 + H_KM.adjoint();
 
   
   r_type * disorder_potential = dis();
@@ -210,37 +207,34 @@ void Graphene_KaneMele::H_ket (r_type a, r_type b, type* ket, type* p_ket){
 #pragma omp parallel for 
  for(int j=0; j<Le; j++){
     for(int i=0; i<W; i++){      
-      int n1 = ( (j) * W + i ) * 4;
+      int n1 = ( j * W + i ) * 4;
 
       
       eig_ket.segment(n1,4) = H_1 * eig_p_ket.segment(n1,4);
       eig_ket.segment(n1,4) += H_1.adjoint() * eig_p_ket.segment(n1,4);
 
       
-
-      int n2 = ( ( j ) * W + ( i + 1 ) % W ) * 4;
-      eig_ket.segment(n1,4) += H_2 * eig_p_ket.segment(n2,4);
+      int n2 = (  j * W + ( i + 1 ) % W ) * 4;
+      eig_ket.segment(n1,4) +=  H_2  * eig_p_ket.segment(n2,4);
 
       n2 = ( ( ( j + 1 ) % Le ) * W + i ) * 4;
-      eig_ket.segment(n1, 4) += H_3 * eig_p_ket.segment(n2, 4);
-      
-      n2 = ( ( j ) * W + ( ( i - 1 ) == -1 ? (W-1) : (i-1) )  ) * 4;
+      eig_ket.segment(n1, 4) +=  H_3  * eig_p_ket.segment(n2, 4);
+
+      n2 = ( j * W + ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
       eig_ket.segment(n1,4) += H_2.adjoint() * eig_p_ket.segment(n2,4);
 
-      n2 = (  ( ( j - 1 ) == -1 ? (Le - 1) : (j-1) ) * W + i ) * 4;
+      n2 = (  ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W + i ) * 4;
       eig_ket.segment(n1, 4) += H_3.adjoint() * eig_p_ket.segment(n2, 4);
-	
 
+      
 
-
-
-      n2 = ( ( ( j + 1 ) % Le )* W + ( ( i - 1 ) == -1 ? (W-1) : (i-1) ) ) * 4;
+      
+      n2 = ( ( ( j + 1 ) % Le ) * W + ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) ) ) * 4;
       eig_ket.segment(n1,4) += H_KM * eig_p_ket.segment(n2,4);
-
-
-      n2 = ( ( ( j - 1 ) == -1 ? (W-1) : (j-1) ) * W + ( i + 1 ) % W ) * 4;
+      
+      n2 = ( ( ( j - 1 ) == -1 ? ( W - 1 ) : ( j - 1 ) ) * W + ( i + 1 ) % W ) * 4;
       eig_ket.segment(n1,4) += H_KM.adjoint() * eig_p_ket.segment(n2,4);
-
+      
     }
  }
 
@@ -309,9 +303,9 @@ void Graphene_KaneMele::update_cheb ( type ket[], type p_ket[], type pp_ket[]){
   H_KM.block(2,2,2,2) = -KM_PF * sz ;
   
 
-  H_1 = H_bare + H_ex + H_R_diag + H_KM ;
+  H_1 = H_bare + H_ex + H_R_diag  ;
   H_2 = H_bare + H_R_off_1 + H_KM ;
-  H_3 = H_bare + H_R_off_2 + H_KM ;
+  H_3 = H_bare + H_R_off_2 + H_KM.adjoint() ;
 	    
   r_type * disorder_potential = dis();
 
