@@ -83,7 +83,9 @@ public:
 
   virtual void vel_op (type*, type*){};
   virtual void vel_op (type*, type*, int){};
+  virtual void J (type*, type*, int);
 
+  
   virtual void setup_velOp() = 0;
   
   void Anderson_disorder();

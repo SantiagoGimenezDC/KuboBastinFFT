@@ -19,6 +19,44 @@ void Device::Anderson_disorder(r_type disorder_vec[]){
   
 }
 
+void Device::J (type* ket, type* p_ket, int dir){
+
+  int SUBDIM = device_vars_.SUBDIM_;
+  
+  int C   = this->parameters().C_,
+      Le  = this->parameters().LE_,
+      W   = this->parameters().W_;
+
+  
+  Eigen::Matrix2cd sx{{0,1},{1,0}}, sy{{0,-type(0,1)}, {type(0,1), 0}}, sz{{1,0}, {0, -1}}, chosen_dir;
+
+  if(dir==0)
+    chosen_dir = sx;
+
+  if(dir==1)
+    chosen_dir = sy;
+  
+  if(dir==2)
+    chosen_dir = sz;
+
+  
+  
+  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,SUBDIM),
+    eig_p_ket(p_ket, SUBDIM);
+
+    
+#pragma omp parallel for 
+ for(int j=0; j<Le; j++){
+    for(int i=0; i<W; i++){      
+      int n1 = ( ( j + C ) * W + i ) * 4;
+
+      eig_ket.segment(n1,2) = chosen_dir * eig_p_ket.segment(n1,2);
+      eig_ket.segment(n1+2,2) = chosen_dir * eig_p_ket.segment(n1+2,2);
+      
+    }
+ }
+
+};
 
 
 

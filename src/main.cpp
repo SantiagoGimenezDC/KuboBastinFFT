@@ -78,7 +78,7 @@ int main(int , char **argv){
   s_vars.SECTION_SIZE_ = graphene_vars.SUBDIM_/s_vars.num_parts_;
 
 
-  s_vars.a_ =21.0;
+  s_vars.a_ =15.0;
   s_vars.b_ = 0.0;
 
   //  double Eedge = 8.09852;
@@ -154,8 +154,8 @@ int main(int , char **argv){
   //Graphene_KaneMele test(m_str,rashba_str,KM_str,graphene_vars);
   //test.print_hamiltonian();
 
-  //  Graphene test(graphene_vars);
-  // test.print_hamiltonian();
+  //Graphene test(graphene_vars);
+  //test.print_hamiltonian();
 
   if(sim_type == "DOS"){
     KPM_DOS_solver solver( s_vars,  *device);
