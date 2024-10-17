@@ -53,11 +53,13 @@ class Graphene_KaneMele: public Graphene{
 
   
     virtual void projector(type* );  
+    virtual void J (type*, type*, int);
+
     virtual void build_Hamiltonian(){};
 
     //Rashba coupling Hamiltonian
     virtual void H_ket  ( type* ket , type* p_ket ){ H_ket(this->a(),this->b(), ket, p_ket); }
-    virtual void H_ket  ( type* ket , type* p_ket, r_type*, r_type* ){ H_ket(this->a(),this->b(), ket, p_ket); }
+    virtual void H_ket  ( type* ket , type* p_ket, r_type*, r_type* ){ H_ket(this->a(), this->b(), ket, p_ket); }
   
     virtual void H_ket  (r_type, r_type,  type*, type* );
     virtual void update_cheb ( type*, type*,  type*);

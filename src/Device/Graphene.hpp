@@ -48,6 +48,7 @@ public:
   virtual void adimensionalize(r_type a, r_type b){
     a_ = a, b_ = b; t_a_=t_standard_/a;
 
+
     if(csc_mode){
 
       int Dim = this->parameters().DIM_;

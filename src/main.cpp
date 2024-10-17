@@ -52,6 +52,7 @@ int main(int , char **argv){
   Input>>s_vars.kernel_choice_;
   Input>>s_vars.M_, Input>>s_vars.R_, Input>>s_vars.dis_real_, Input>>s_vars.seed_, Input>>s_vars.edge_,
   Input>>s_vars.num_parts_,   Input>>nump_factor;
+  Input>>s_vars.a_, Input>>s_vars.b_;
 
   s_vars.num_p_= s_vars.M_*nump_factor;
   
@@ -77,9 +78,6 @@ int main(int , char **argv){
 
   s_vars.SECTION_SIZE_ = graphene_vars.SUBDIM_/s_vars.num_parts_;
 
-
-  s_vars.a_ =15.0;
-  s_vars.b_ = 0.0;
 
   //  double Eedge = 8.09852;
   //s_vars.a_ = 2*Eedge/(2.0-s_vars.edge_);
@@ -125,7 +123,7 @@ int main(int , char **argv){
   std::cout<<(test_con.vx()-test_ham.vx()).norm()<<std::endl;
   */
   std::cout<<"Ongoing gimmicks:"<<std::endl;
-  std::cout<<"ADDED KANE MELE STR TO THE INPUTS"<<std::endl;
+  std::cout<<"ADDED KANE MELE STR TO THE INPUTS and A and B inputs!!"<<std::endl;
   std::cout<<"AUTO BOUND DETECTION NOT WORKING - on normal mode only???"<<std::endl;
   std::cout<<"Read_Hamiltonian only works for COMPLEX Hamiltonian;"<<std::endl;
   std::cout<<"Min max eigenvalues is using H_ket with the 4 entries;"<<std::endl;

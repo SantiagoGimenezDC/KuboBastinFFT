@@ -100,7 +100,7 @@ void Kubo_solver_filtered::compute_imag(){
   //-------------Finished Catching all necessary parameters----------------//
   
 
-  bool double_buffer = false;
+  bool double_buffer = true;
 
   
   //---------------------------Memory estimates-----------------------// 

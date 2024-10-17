@@ -55,13 +55,19 @@ Graphene_KaneMele::Graphene_KaneMele(r_type m_str, r_type rashba_str, r_type KM_
 
 
   
-  H_R_diag.block(0,2,2,2)  = R_PF * sx;
+  H_R_diag.block(0,2,2,2)  = -R_PF * sx;
 
-  
 
   H_R_off_1.block(0,2,2,2) = R_PF * ( sx - sqrt(3.0) * sy ) / 2.0;
   H_R_off_2.block(0,2,2,2) = R_PF * ( sx + sqrt(3.0) * sy ) / 2.0;
 
+  /*
+  std::cout<<sx<<std::endl;
+  std::cout<<sy<<std::endl;
+  std::cout<< H_R_diag + H_R_diag.adjoint() <<std::endl;  
+  std::cout<< H_R_off_1 <<std::endl;  
+  std::cout<< H_R_off_2 <<std::endl;  
+  */
   
   H_KM_.block(0,0,2,2) = KM_PF * sz ;
   H_KM_.block(2,2,2,2) = -KM_PF * sz ;
@@ -89,6 +95,45 @@ Graphene_KaneMele::Graphene_KaneMele(r_type m_str, r_type rashba_str, r_type KM_
       n2 = (  ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W + i ) * 4;
       eig_ket.segment(n1, 4) += H_3.adjoint() * eig_p_ket.segment(n2, 4);
   */
+
+};
+
+void Graphene_KaneMele::J (type* ket, type* p_ket, int dir){
+
+  int SUBDIM = this->parameters().SUBDIM_;
+  
+  int C   = this->parameters().C_,
+      Le  = this->parameters().LE_,
+      W   = this->parameters().W_;
+
+  
+  Eigen::Matrix2cd sx{{0,1},{1,0}}, sy{{0,-type(0,1)}, {type(0,1), 0}}, sz{{1,0}, {0, -1}}, chosen_dir;
+
+  if(dir==0)
+    chosen_dir = sx;
+
+  if(dir==1)
+    chosen_dir = sy;
+  
+  if(dir==2)
+    chosen_dir = sz;
+
+  
+  
+  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,SUBDIM),
+    eig_p_ket(p_ket, SUBDIM);
+
+    
+#pragma omp parallel for 
+ for(int j=0; j<Le; j++){
+    for(int i=0; i<W; i++){      
+      int n1 = ( ( j + C ) * W + i ) * 4;
+
+      eig_ket.segment(n1,2) = type(0.0,1.0) * chosen_dir * eig_p_ket.segment(n1,2);
+      eig_ket.segment(n1+2,2) = type(0.0,1.0) * chosen_dir * eig_p_ket.segment(n1+2,2);
+      
+    }
+ }
 
 };
 
@@ -243,12 +288,7 @@ void Graphene_KaneMele::H_ket (r_type a, r_type b, type* ket, type* p_ket){
   r_type b_a = b/a;
   
           
-  Eigen::Matrix4cd
-    Id = Eigen::Matrix4d::Identity(),
-    H_KM = Eigen::Matrix4d::Zero(),
-    H_1 = Eigen::Matrix4d::Zero(),
-    H_2 = Eigen::Matrix4d::Zero(),
-    H_3 = Eigen::Matrix4d::Zero();
+  Eigen::Matrix4cd Id = Eigen::Matrix4d::Identity(), H_KM, H_1, H_2, H_3;
 
   H_1 = H_1_/a + b_a*Id;
   H_2 = H_2_/a;
@@ -319,11 +359,7 @@ void Graphene_KaneMele::update_cheb ( type ket[], type p_ket[], type pp_ket[]){
   
           
   Eigen::Matrix4cd
-    Id = Eigen::Matrix4d::Identity(),
-    H_KM = Eigen::Matrix4d::Zero(),
-    H_1 = Eigen::Matrix4d::Zero(),
-    H_2 = Eigen::Matrix4d::Zero(),
-    H_3 = Eigen::Matrix4d::Zero();
+    Id = Eigen::Matrix4d::Identity(), H_KM, H_1, H_2, H_3;
 
   H_1 = H_1_/a + b_a*Id;
   H_2 = H_2_/a;
