@@ -38,6 +38,75 @@ void Kubo_solver_filtered::integration_linqt(const r_type* E_points, const r_typ
 }
 
 
+/*
+void Kubo_solver_filtered::integration_linqt(const r_type* E_points, const r_type* integrand, r_type* result){
+
+    int nump = parameters_.num_p_;
+
+    // Check if nump is odd, as Simpson's rule requires an even number of intervals
+    if (nump % 2 == 0) {
+        nump -= 1; // Ensure we have an odd number of points
+    }
+
+    double acc = 0;
+    result[0] = 0; // Initial result for the first point
+
+    for (int i = 0; i < nump - 2; i ++) {
+        const double h = E_points[i+2] - E_points[i];  // Step size over 3 points
+        acc += (h / 6) * ( integrand[i] + 4 * integrand[i+1] + integrand[i+2] );  // Simpson's rule
+        result[i+2] = acc/2;
+    }
+    
+    // Handle the last interval if the number of points is even
+    if (nump % 2 == 0) {
+        const double h = E_points[nump] - E_points[nump-1];
+        acc += 0.5 * h * (integrand[nump-1] + integrand[nump]);
+        result[nump] = acc;
+    }
+}
+*/
+
+/*
+void Kubo_solver_filtered::integration_linqt(const r_type* E_points, const r_type* integrand, r_type* result){
+
+    int nump = parameters_.num_p_;
+
+    double acc = 0;
+
+    // Iterate through the points using Simpson's rule
+    for (int i = 0; i < nump - 2; i +=2) {
+
+        // Calculate step sizes between the points
+        double h1 = E_points[i+1] - E_points[i];   // Step between E_points[i] and E_points[i+1]
+        double h2 = E_points[i+2] - E_points[i+1]; // Step between E_points[i+1] and E_points[i+2]
+
+        // Simpson's rule for non-equidistant points
+        double h = (h1 + h2) / 2.0;  // Average step size
+        double simpson_integral = (integrand[i] * (h2 * (2 * h1 + h2)) +
+                                   4 * integrand[i+1] * (h1 + h2) +
+                                   integrand[i+2] * (h1 * (h1 + 2 * h2))) / (6.0 * (h1 + h2));
+
+        // Accumulate the result
+        acc += h * simpson_integral;
+        result[i] = acc;   // Store the result at current index
+    }
+
+    // If the number of points is odd, apply trapezoidal rule for the last interval
+    if (nump % 2 == 1) {
+        int last_point = nump - 2;
+        double denerg = E_points[last_point + 1] - E_points[last_point];  // Step between the last two points
+        double trap_integral = (integrand[last_point] + integrand[last_point + 1]) / 2.0 * denerg;
+
+        // Accumulate and store the final result
+        acc += trap_integral;
+        result[last_point] = acc;
+    }
+}
+*/
+
+
+
+
 void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], type final_data[], r_type conv_R[], int r, std::string run_dir, std::string filename){
 
   const std::complex<double> im(0,1);  
@@ -82,7 +151,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
   
   for( int e = 0; e < 2*nump; e++ ){  
     //prev_partial_result[e] = final_data[e];
-    final_data[e] += ( final_data [e] * (r-1.0) +  r_data[e] ) / r;
+    final_data[e] = ( final_data [e] * (r-1.0) +  r_data[e] ) / r;
   }
 
 
