@@ -295,7 +295,8 @@ void DOS_output::update_data(std::vector<type>& moments_r, std::vector<type>& mo
 
 
   
-  std::vector<r_type> new_partial_result(nump, 0.0);
+  std::vector<r_type> new_partial_result(nump, 0.0),
+    new_r_data(nump, 0.0);
 
   fftw_plan plan;      
   r_type* input,
@@ -320,8 +321,15 @@ void DOS_output::update_data(std::vector<type>& moments_r, std::vector<type>& mo
   
   //fftw_execute( plan ); 
 
-  for(int i = 0; i < nump;i++)
-    r_data_[i] = output[i] / sqrt( 1.0 - E_points_[i] * E_points_[i] );
+  //  for(int i = 0; i < nump;i++)
+  //  r_data_[i] = output[i] / sqrt( 1.0 - E_points_[i] * E_points_[i] );
+
+  for(int i = 0; i < nump;i++){
+    for(int m = 0; m < M; m++)
+      new_r_data[i] += input[m] * (std::cos( m*(i + 0.5) * M_PI /nump));//output[i] / sqrt( 1.0 - E_points_[i] * E_points_[i] );//
+
+    new_r_data[i] /=  sqrt( 1.0 - E_points_[i] * E_points_[i] );
+  }
   
   
   
@@ -370,7 +378,7 @@ void DOS_output::update_data(std::vector<type>& moments_r, std::vector<type>& mo
   }
 
   partial_result_ = new_partial_result;
-  
+  r_data_ = new_r_data;  
 
 
 
@@ -381,7 +389,7 @@ void DOS_output::update_data(std::vector<type>& moments_r, std::vector<type>& mo
   dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
 
   for(int e=0;e<nump;e++)  
-    dataR<< a * E_points_[e] - b<<"  "<<  omega * r_data_ [e] <<std::endl;
+    dataR<< a * E_points_[e] - b<<"  "<<  omega * r_data_ [e] <<"  "<< omega * new_partial_result [e]<<std::endl;
 
   dataR.close();
   
