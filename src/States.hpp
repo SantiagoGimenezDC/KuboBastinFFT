@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "Device/Device.hpp"
+#include<iostream>
 //#include "../solver_vars.hpp"
 
 template<typename T>
@@ -132,6 +133,179 @@ public:
 
 
 
+class State_raw{
+  typedef int indexType;
+private:
+  indexType D_ = 0;
+  type* data_ = NULL;
+
+public:
+  ~State_raw(){};
+
+  State_raw() : D_(0){};
+  
+  //  State_raw(int D) : D_(D){//This can be used for generating random vector
+    //    data_ = new type[D_];
+  //};
+
+  State_raw(int D, type* data) : D_(D){//This works as a wrapper. Data must have been allocated previously.
+    data_ = data;    
+  };
+
+  
+  // Copy constructor
+  State_raw(State_raw& other) : D_( other.D() ), data_(new type[ other.D() ]) {
+
+    type* other_data = other.data();
+    
+#pragma omp parallel for
+    for( int i=0; i<D_; i++ )
+      data_[i] = other_data[i];
+
+  };
+
+  inline
+  type cdot( State_raw& other ){
+    type* other_data = other.data();
+
+    type sum=0.;
+    int i;
+    
+  # pragma omp parallel shared(sum)
+    {
+      std::complex< double > priv_sum = 0.;
+      # pragma omp for
+      for (i=0; i<D_;i++ )
+      {
+        priv_sum += std::conj<double>(data_[i]) * other_data[i];
+      }
+
+      #pragma omp critical
+      {
+        sum += priv_sum;
+      }
+    }
+  return sum;
+  };
+  
+  
+  indexType D(){ return D_; };
+  type* data(){ return data_; };
+
+  type operator() (int i){ return data_[ i ]; };
+  
+  inline
+  type operator[] (int i){ return data_[ i ]; };
+    
+  void operator = ( State_raw& other_state){//This cosiders that the data has been allocated in both States.
+        if ( this == &other_state ) 
+            return ; // Handle self-assignment
+        if( other_state.D() != D_){
+	  std::cout<<"You have asigned a state with an incorrect size"<<std::endl;
+	    return;
+	}
+#pragma omp parallel for
+        for (int i = 0; i < D_; i++) 
+            data_[i] = other_state[i];
+        
+  };
+};
+
+
+  
+class States_buffer_raw{
+  typedef int indexType;
+private:
+  indexType D_=0, M_=0;
+  type* raw_buffer_ = NULL;
+
+  State_raw **states_ = NULL;
+
+  
+public:
+  States_buffer_raw(){};
+  ~States_buffer_raw(){
+    if(D_>0){
+      delete []states_;
+      delete raw_buffer_;
+    }
+  };
+  
+  States_buffer_raw( indexType D, indexType M ) : D_(D), M_(M) {
+    raw_buffer_ = new type[ D_ * M_ ];
+    states_ = new State_raw*[ M_ ];
+
+    for( int i = 0; i < M_; i++ )
+      states_[i] = new State_raw( D, &(raw_buffer_[i]) );
+
+  };
+
+  States_buffer_raw( States_buffer_raw& copied ) {
+
+    if( M_ != 0 )
+      delete []raw_buffer_;
+
+    D_ = copied.D();
+    M_ = copied.M();
+
+    
+    raw_buffer_ = new type[ D_ * M_ ];
+
+    type* copied_data = copied.data();
+
+#pragma omp parallel for
+    for( int i=0; i < M_ * D_; i++ )
+      raw_buffer_[i] = copied_data[i];
+
+    
+  };
+
+  indexType D(){ return D_; };
+  indexType M(){ return M_; };
+  
+  indexType memory_size()       { return M_ * D_ * sizeof(type); };
+
+  type* data() { return raw_buffer_; };
+
+  inline
+  State_raw& operator()(indexType m ){ return   *(states_[ m ]); };
+
+  
+  inline
+  type* operator[](indexType m ){ return & ( raw_buffer_[ m * D_ ]); };
+
+  inline
+  type& operator()(indexType m, indexType i ){ return raw_buffer_[ m * D_ + i ] ; };
+
+
+
+  States_buffer_raw& operator=( States_buffer_raw& copied ) {
+
+    if( this == &copied )
+      return *this;
+    
+    if( M_ != 0 )
+      delete []raw_buffer_;
+
+    D_ = copied.D();
+    M_ = copied.M();
+
+    
+    raw_buffer_ = new type[ D_ * M_ ];
+
+    type* copied_data = copied.data();
+
+#pragma omp parallel for
+    for( int i=0; i < M_ * D_; i++ )
+      raw_buffer_[i] = copied_data[i];
+
+    return *this; 
+  };
+
+
+};
+
+
 
 
 
@@ -167,11 +341,14 @@ private:
 
   
 public:
+  //  Chebyshev_states(){};
+  
   Chebyshev_states(Device& device ):device_(device), D_(device.parameters().DIM_){
     ket = new type[D_];
     p_ket = new type[D_];
     pp_ket = new type[D_];
   };
+  
   ~Chebyshev_states(){
     delete []ket;
     delete []p_ket;
@@ -182,10 +359,12 @@ public:
   type* operator()(int m ){
     if ( m == 0 )
       return pp_ket;
-    if ( m == 1 )
+    else if ( m == 1 )
       return p_ket;
     else if ( m == 2 )
       return ket;
+    else
+      return NULL;
   };
 
   

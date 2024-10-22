@@ -167,7 +167,11 @@ void KPM_base::compute(){
       
 
       compute_rand_vec( ( d - 1 ) * R + r );
-    
+
+            
+      randVec_time.stop("       Total RandVec time:         ");
+      std::cout<<std::endl;
+
   }
 
 

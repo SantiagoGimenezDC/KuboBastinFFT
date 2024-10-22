@@ -21,7 +21,9 @@ Graphene_KaneMele::Graphene_KaneMele(r_type m_str, r_type rashba_str, r_type KM_
       //    std::cout<<cross_p<<std::endl;
       
       r_type Length = sqrt( abs(cross_p(2)) );
-      
+
+      std::cout<<"Length:  "<<Length<<std::endl<<std::endl<<std::endl;
+
       this->set_sysSubLength(Length);
       this->set_sysLength(Length);
       
@@ -441,11 +443,7 @@ void Graphene_KaneMele::vel_op_y (type* ket, type* p_ket){
   
 
   Eigen::Matrix4cd
-    Id = Eigen::Matrix4d::Identity(),
-    H_KM = Eigen::Matrix4d::Zero(),
-    H_1 = Eigen::Matrix4d::Zero(),
-    H_2 = Eigen::Matrix4d::Zero(),
-    H_3 = Eigen::Matrix4d::Zero();
+    Id = Eigen::Matrix4d::Identity(), H_KM, H_1, H_2, H_3;
 
   H_1 = H_1_/a + b_a*Id;
   H_2 = H_2_/a;
@@ -455,8 +453,8 @@ void Graphene_KaneMele::vel_op_y (type* ket, type* p_ket){
 
   
   std::complex<r_type>
-    d_y  = -a0_, 
-    d_y2 = a0_ * sin( M_PI /6.0 );
+    d_y  = -1.0, 
+    d_y2 =  sin( M_PI /6.0 );
 
   
   Eigen::Map<Eigen::VectorXcd> eig_ket(ket,Dim),
@@ -507,10 +505,10 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
   
   Eigen::Matrix4cd
     Id = Eigen::Matrix4d::Identity(),
-    H_KM = Eigen::Matrix4d::Zero(),
-    H_1 = Eigen::Matrix4d::Zero(),
-    H_2 = Eigen::Matrix4d::Zero(),
-    H_3 = Eigen::Matrix4d::Zero();
+    H_KM,
+    H_1,
+    H_2,
+    H_3;
 
   H_1 = H_1_/a + b_a*Id;
   H_2 = H_2_/a;
@@ -518,9 +516,9 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
   H_KM = H_KM_/a;
 
   std::complex<r_type>
-    d_x  = -a0_ * cos( M_PI /6.0 ),
-    d_x2 = a0_ * cos( M_PI /6.0 ),
-    d_x3 = 2.0 * a0_ * cos( M_PI /6.0 );
+    d_x  = -cos( M_PI /6.0 ),
+    d_x2 =  cos( M_PI /6.0 ),
+    d_x3 = 2.0 * cos( M_PI /6.0 );
 
 
   Eigen::Map<Eigen::VectorXcd> eig_ket(ket,Dim),
