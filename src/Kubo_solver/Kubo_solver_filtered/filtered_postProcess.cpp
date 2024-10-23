@@ -38,6 +38,42 @@ void Kubo_solver_filtered::integration_linqt(const r_type* E_points, const r_typ
 }
 
 
+
+void Kubo_solver_filtered::interpolated_integration(const r_type* E_points, const r_type* integrand,  r_type* result){
+
+  int nump = parameters_.num_p_;
+
+  r_type interpolated_E_points[2*nump],
+    interpolated_integrand[2*nump],
+    full_result[2*nump];
+
+
+  
+  for( int i=0; i < nump; i++)
+  {
+      interpolated_integrand[2*i] = integrand[i];
+      interpolated_E_points[2*i] = E_points[i];
+    
+      interpolated_E_points[2*i+1] = (E_points[i+1] + E_points[i])/2.0;
+      interpolated_integrand[2*i+1] = (integrand[i+1]+integrand[i])/2.0;
+  }
+
+  double acc = 0;
+  for( int i=0; i < 2*nump; i++)
+  {
+     const double denerg = interpolated_E_points[i+1]-interpolated_E_points[i];
+     acc +=interpolated_integrand[i]*denerg;
+     full_result[i] = acc;
+  }
+
+  
+  for( int i=0; i < nump; i++)
+      result[i] = full_result[2*i];
+  
+  
+}
+
+
 /*
 void Kubo_solver_filtered::integration_linqt(const r_type* E_points, const r_type* integrand, r_type* result){
 
@@ -181,7 +217,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
   time_station time_integration;
       
   integration_linqt(rearranged_E_points, rvec_integrand, rvec_partial_result);  
-  integration_linqt(rearranged_E_points, integrand, partial_result);    
+  /*integration_linqt*/ interpolated_integration(rearranged_E_points, integrand, partial_result);    
 
   time_integration.stop("       Integration time:           ");
 

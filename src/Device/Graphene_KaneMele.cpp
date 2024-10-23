@@ -5,27 +5,25 @@
 
 Graphene_KaneMele::Graphene_KaneMele(r_type m_str, r_type rashba_str, r_type KM_str, device_vars& parameters): Graphene(parameters), m_str_(m_str), rashba_str_(rashba_str), KM_str_(KM_str){
     
-      this->parameters().DIM_*=4;
-      this->parameters().SUBDIM_*=4;
+  this->parameters().DIM_*=4;
+  this->parameters().SUBDIM_*=4;
 
 
       
-      if(this->parameters().C_==0)
-	CYCLIC_BCs_=true;
+  if(this->parameters().C_==0)
+    CYCLIC_BCs_=true;
 
 
-      Eigen::Vector3d v1{ this->parameters().W_* 0.5,   this->parameters().W_* sqrt(3.0)/2,  0 },
+  Eigen::Vector3d v1{ this->parameters().W_* 0.5,   this->parameters().W_* sqrt(3.0)/2,  0 },
 	v2{ -this->parameters().LE_* 0.5,    this->parameters().LE_*sqrt(3.0)/2,  0 },
 	cross_p = v1.cross(v2);
 
-      //    std::cout<<cross_p<<std::endl;
+  //    std::cout<<cross_p<<std::endl;
       
-      r_type Length = sqrt( abs(cross_p(2)) );
+  r_type Length = sqrt( abs(cross_p(2)) );
 
-      std::cout<<"Length:  "<<Length<<std::endl<<std::endl<<std::endl;
-
-      this->set_sysSubLength(Length);
-      this->set_sysLength(Length);
+  this->set_sysSubLength(Length);
+  this->set_sysLength(Length);
       
 
   r_type t = t_standard_,

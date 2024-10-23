@@ -43,7 +43,9 @@ public:
   
   solver_vars& parameters(){return parameters_;};
 
-
+  
+  void interpolated_integration(const r_type* , const r_type* , r_type* );
+  
   void reset_buffer(type**);
   
   void compute(){
