@@ -149,8 +149,8 @@ int main(int , char **argv){
     device = new Graphene_KaneMele(m_str,rashba_str,KM_str,graphene_vars);
 
   
-  //Graphene_KaneMele test(m_str,rashba_str,KM_str,graphene_vars);
-  //test.print_hamiltonian();
+  Graphene_KaneMele test(m_str,rashba_str,KM_str,graphene_vars);
+  test.print_hamiltonian();
 
   //Graphene test(graphene_vars);
   //test.print_hamiltonian();

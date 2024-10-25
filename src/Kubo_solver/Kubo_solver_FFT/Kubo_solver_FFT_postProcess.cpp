@@ -188,10 +188,13 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
 
 
   //rearrange_crescent_order(rearranged_E_points);
-  /*When introducing a const. eta with modified polynomials, the result is equals to that of a
+
+  /*
+  When introducing a const. eta with modified polynomials, the result is equals to that of a
   simulation with regular polynomials and an variable eta_{var}=eta*sin(acos(E)). The following
   heuristical correction greatly improves the result far from the CNP to match that of the
-  desired regular polys and const. eta.*/
+  desired regular polys and const. eta.
+  */
   
 
 
