@@ -90,7 +90,8 @@ int main(int , char **argv){
   Input>>graphene_vars.filename_;
   graphene_vars.run_dir_ = s_vars.run_dir_;
 
-  r_type m_str, rashba_str, KM_str;
+  r_type stgr_str, m_str, rashba_str, KM_str;
+  Input>>stgr_str;
   Input>>m_str;
   Input>>rashba_str;
   Input>>KM_str;
@@ -146,11 +147,11 @@ int main(int , char **argv){
   if(device_choice==6)
     device = new SupercellGraph_RashbaSOC(m_str,rashba_str,graphene_vars);
   if(device_choice==7)
-    device = new Graphene_KaneMele(m_str,rashba_str,KM_str,graphene_vars);
+    device = new Graphene_KaneMele(stgr_str, m_str,rashba_str,KM_str,graphene_vars);
 
   
-  Graphene_KaneMele test(m_str,rashba_str,KM_str,graphene_vars);
-  test.print_hamiltonian();
+  //Graphene_KaneMele test(stgr_str, m_str, rashba_str, KM_str, graphene_vars);
+  //test.print_hamiltonian();
 
   //Graphene test(graphene_vars);
   //test.print_hamiltonian();

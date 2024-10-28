@@ -28,6 +28,7 @@ class Graphene_KaneMele: public Graphene{
     const r_type e_standard_ = 0.0;
     const r_type t_standard_ = - 2.7;
     const r_type  a0_        = 0.142;
+    r_type stgr_str_         = 0.0;
     r_type m_str_            = 0.0;
     r_type rashba_str_       = 0.0;  
     r_type KM_str_           = 0.0;  
@@ -45,7 +46,7 @@ class Graphene_KaneMele: public Graphene{
   public:
     ~Graphene_KaneMele(){};
     Graphene_KaneMele();
-    Graphene_KaneMele(r_type, r_type , r_type, device_vars&);
+    Graphene_KaneMele(r_type, r_type, r_type , r_type, device_vars&);
 
     void print_hamiltonian();
     virtual void rearrange_initial_vec(type*){};
