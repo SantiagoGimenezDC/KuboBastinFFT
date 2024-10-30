@@ -37,16 +37,17 @@ class Graphene_KaneMele: public Graphene{
 
 
     Eigen::Matrix4cd
+      H_HLD_ = Eigen::Matrix4d::Zero(),
       H_KM_ = Eigen::Matrix4d::Zero(),
       H_1_ = Eigen::Matrix4d::Zero(),
       H_2_ = Eigen::Matrix4d::Zero(),
-      H_3_ = Eigen::Matrix4d::Zero();
-
+      H_3_ = Eigen::Matrix4d::Zero(),
+      H_4_ = Eigen::Matrix4d::Zero();
   
   public:
     ~Graphene_KaneMele(){};
     Graphene_KaneMele();
-    Graphene_KaneMele(r_type, r_type, r_type , r_type, device_vars&);
+    Graphene_KaneMele(r_type, r_type, r_type , r_type, r_type, device_vars&);
 
     void print_hamiltonian();
     virtual void rearrange_initial_vec(type*){};
