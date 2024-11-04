@@ -29,12 +29,6 @@ build/src/main.o: src/main.cpp src/static_vars.hpp src/Device/Device.hpp \
  src/Kubo_solver/Kubo_solver_FFT/../../vec_base.hpp \
  src/Kubo_solver/Kubo_solver_FFT/../solver_vars.hpp \
  src/Kubo_solver/Kubo_solver_FFT/../../States.hpp \
- src/Kubo_solver/Kubo_solver_SSD.hpp src/Kubo_solver/../static_vars.hpp \
- src/Kubo_solver/../Device/Device.hpp \
- src/Kubo_solver/../Device/Graphene.hpp \
- src/Kubo_solver/../Device/ArmchairGraph_RashbaSOC.hpp \
- src/Kubo_solver/../kernel.hpp src/Kubo_solver/../vec_base.hpp \
- src/Kubo_solver/solver_vars.hpp src/Kubo_solver/SSD_buffer.hpp \
  src/Kubo_solver/Kubo_solver_filtered/Kubo_solver_filtered.hpp \
  src/Kubo_solver/Kubo_solver_filtered/../../static_vars.hpp \
  src/Kubo_solver/Kubo_solver_filtered/../../Device/Device.hpp \
@@ -102,15 +96,6 @@ src/Kubo_solver/Kubo_solver_FFT/../../kernel.hpp:
 src/Kubo_solver/Kubo_solver_FFT/../../vec_base.hpp:
 src/Kubo_solver/Kubo_solver_FFT/../solver_vars.hpp:
 src/Kubo_solver/Kubo_solver_FFT/../../States.hpp:
-src/Kubo_solver/Kubo_solver_SSD.hpp:
-src/Kubo_solver/../static_vars.hpp:
-src/Kubo_solver/../Device/Device.hpp:
-src/Kubo_solver/../Device/Graphene.hpp:
-src/Kubo_solver/../Device/ArmchairGraph_RashbaSOC.hpp:
-src/Kubo_solver/../kernel.hpp:
-src/Kubo_solver/../vec_base.hpp:
-src/Kubo_solver/solver_vars.hpp:
-src/Kubo_solver/SSD_buffer.hpp:
 src/Kubo_solver/Kubo_solver_filtered/Kubo_solver_filtered.hpp:
 src/Kubo_solver/Kubo_solver_filtered/../../static_vars.hpp:
 src/Kubo_solver/Kubo_solver_filtered/../../Device/Device.hpp:

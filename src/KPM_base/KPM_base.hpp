@@ -3,7 +3,7 @@
 
 #include<string>
 #include<iostream>
-#include<eigen-3.4.0/Eigen/Core>
+#include<eigen3/Eigen/Core>
 
 #include"../static_vars.hpp"
 #include "../Device/Device.hpp"

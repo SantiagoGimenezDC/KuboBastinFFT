@@ -15,7 +15,6 @@
 
 #include "KPM_base/KPM_base.hpp"
 #include "Kubo_solver/Kubo_solver_FFT/Kubo_solver_FFT.hpp"
-#include "Kubo_solver/Kubo_solver_SSD.hpp"
 #include "Kubo_solver/Kubo_solver_filtered/Kubo_solver_filtered.hpp"
 #include "Kubo_solver/Kubo_solver_traditional/Kubo_solver_traditional.hpp"
 
@@ -160,11 +159,6 @@ int main(int , char **argv){
 
   if(sim_type == "DOS"){
     KPM_DOS_solver solver( s_vars,  *device);
-    solver.compute();
-  }
-  
-  if(sim_type == "SSD"){
-    Kubo_solver_SSD solver( s_vars, RAM_size,  *device);
     solver.compute();
   }
 

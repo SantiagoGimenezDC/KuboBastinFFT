@@ -1,6 +1,6 @@
 #include"Device.hpp"
-#include<eigen-3.4.0/Eigen/Core>
-#include<eigen-3.4.0/Eigen/SparseCore>
+#include<eigen3/Eigen/Core>
+#include<eigen3/Eigen/SparseCore>
 #include<chrono>
 #include<iostream>
 

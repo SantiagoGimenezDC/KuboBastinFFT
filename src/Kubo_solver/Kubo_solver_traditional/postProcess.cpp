@@ -4,7 +4,7 @@
 #include<thread>
 #include<complex>
 
-#include<eigen-3.4.0/Eigen/Core>
+#include<eigen3/Eigen/Core>
 
 #include "Kubo_solver_traditional.hpp"
 

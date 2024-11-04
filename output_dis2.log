@@ -1,9 +1,0 @@
-nohup: ignoring input
-  Reading the connectivity table and xyz at: ./tests/VietMATBG_75x75/operators/VIET_MATBG_75x75.nntable and ./tests/VietMATBG_75x75/operators/VIET_MATBG_75x75_supercell.carbon
-
-  Finished Reading the connectivity table and xyz files;
-
-  Generating VX from Hamiltonian
-  Finished Generating VX from Hamiltonian
-
-   Calculating Energy band bounds:    

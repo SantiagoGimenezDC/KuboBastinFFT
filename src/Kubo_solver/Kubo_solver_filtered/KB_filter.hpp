@@ -6,7 +6,7 @@
 #include "../../complex_op.hpp"
 
 #include<string>
-#include <eigen-3.4.0/Eigen/Core>
+#include <eigen3/Eigen/Core>
 
 struct filter_vars{
   bool post_filter_, filter_;
