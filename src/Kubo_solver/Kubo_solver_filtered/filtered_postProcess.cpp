@@ -160,7 +160,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
   
   int decRate = filter_.parameters().decRate_;   
   
-  r_type omega = 2.0 * decRate * decRate * SUBDIM/( a * a * sysSubLength * sysSubLength ) / ( 2 * M_PI );//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.
+  r_type omega = 2.0 * decRate * decRate * SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.
   //DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
   
   //r_value_t tmp, max=0, av=0;
@@ -200,11 +200,11 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
     
     integrand[k]  = E_points[k] * real( final_data[ k ] ) - ( sqrt(1.0 - E_points[ k ] * E_points[ k ] ) * imag( final_data[ k + nump ] ) );
     integrand[k] *= 1.0 / pow( (1.0 - E_points[k]  * E_points[k] ), 2.0);
-    integrand[k] *=  omega / ( M_PI ); 
+    integrand[k] *=  omega ; 
 
     rvec_integrand[k]  = E_points[k] * real( r_data[ k ] ) - ( sqrt(1.0 - E_points[ k ] * E_points[ k ] ) * real( r_data[ k + nump ] ) );
     rvec_integrand[k] *= 1.0 / pow( (1.0 - E_points[k]  * E_points[k] ), 2.0);
-    rvec_integrand[k] *=  omega / ( M_PI ); 
+    rvec_integrand[k] *=  omega ; 
   }
 
   rearrange_crescent_order(rearranged_E_points);
@@ -320,7 +320,7 @@ void Kubo_solver_filtered::update_data(r_type E_points[],  type r_data[], type f
 
 
   
-  r_type omega = SUBDIM/( a * a * sysSubLength * sysSubLength ) / ( 2 * M_PI );//Dimensional and normalizing constant
+  r_type omega = SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/ ;//Dimensional and normalizing constant
   
   r_type tmp, max=0, av=0;
 

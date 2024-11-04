@@ -327,17 +327,17 @@ void Graphene_KaneMele::H_ket (r_type a, r_type b, type* ket, type* p_ket){
       n2 = ( ( ( j + 1 ) % Le ) * W + i ) * 4;
       eig_ket.segment(n1, 4) +=  H_3  * eig_p_ket.segment(n2, 4);
 
+      n2 = ( ( ( j + 1 ) % Le ) * W    +    ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) ) ) * 4;
+      eig_ket.segment(n1,4) += H_4 * eig_p_ket.segment(n2,4);
+
+
+      
+      //Adjoints      
       n2 = ( j * W + ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
       eig_ket.segment(n1,4) += H_2.adjoint() * eig_p_ket.segment(n2,4);
 
       n2 = (  ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W + i ) * 4;
       eig_ket.segment(n1, 4) += H_3.adjoint() * eig_p_ket.segment(n2, 4);
-
-      
-
-      
-      n2 = ( ( ( j + 1 ) % Le ) * W    +    ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) ) ) * 4;
-      eig_ket.segment(n1,4) += H_4 * eig_p_ket.segment(n2,4);
       
       n2 = ( ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W +    ( i + 1 ) % W ) * 4;
       eig_ket.segment(n1,4) += H_4.adjoint() * eig_p_ket.segment(n2,4);
@@ -403,21 +403,24 @@ void Graphene_KaneMele::update_cheb ( type ket[], type p_ket[], type pp_ket[]){
       n2 = ( ( ( j + 1 ) % Le ) * W + i ) * 4;
       eig_ket.segment(n1, 4) +=  H_3  * eig_p_ket.segment(n2, 4);
 
+      n2 = ( ( ( j + 1 ) % Le ) * W    +    ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) ) ) * 4;
+      eig_ket.segment(n1,4) += H_4 * eig_p_ket.segment(n2,4);
+      
+
+
+
+      //Adjoints
       n2 = ( j * W + ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
       eig_ket.segment(n1,4) += H_2.adjoint() * eig_p_ket.segment(n2,4);
 
       n2 = (  ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W + i ) * 4;
       eig_ket.segment(n1, 4) += H_3.adjoint() * eig_p_ket.segment(n2, 4);
-
-      
-
-      
-      n2 = ( ( ( j + 1 ) % Le ) * W    +    ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) ) ) * 4;
-      eig_ket.segment(n1,4) += H_4 * eig_p_ket.segment(n2,4);
       
       n2 = ( ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W +    ( i + 1 ) % W ) * 4;
       eig_ket.segment(n1,4) += H_4.adjoint() * eig_p_ket.segment(n2,4);
 
+
+      
       
       eig_ket.segment(n1,4) *= 2.0;
       eig_pp_ket.segment(n1,4) = eig_p_ket.segment(n1,4); 
@@ -485,6 +488,8 @@ void Graphene_KaneMele::vel_op_y (type* ket, type* p_ket){
 
       n2 = ( ( ( j + 1 ) % Le ) * W + i ) * 4;
       eig_ket.segment(n1, 4) += d_y2 * H_3 * eig_p_ket.segment(n2, 4);
+
+
       
       n2 = ( ( j ) * W + ( ( i - 1 ) == -1 ? (W-1) : (i-1) )  ) * 4;
       eig_ket.segment(n1,4) +=  -d_y2 * H_2.adjoint() * eig_p_ket.segment(n2,4);
@@ -544,26 +549,25 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
       
 
       int n2 = ( j * W + ( i + 1 ) % W ) * 4;
-      eig_ket.segment(n1,4) = d_x2 * H_2 * eig_p_ket.segment(n2,4);
+      eig_ket.segment(n1,4)   = d_x2 * H_2 * eig_p_ket.segment(n2,4);
 
       n2 = ( ( ( j + 1 ) % Le ) * W + i ) * 4;
       eig_ket.segment(n1, 4) += d_x  * H_3 * eig_p_ket.segment(n2, 4);
-      
-      n2 = ( ( j ) * W + ( ( i - 1 ) == -1 ? (W-1) : (i-1) )  ) * 4;
-      eig_ket.segment(n1,4) += - d_x2 *  H_2.adjoint() * eig_p_ket.segment(n2,4);
-
-      n2 = (  ( ( j - 1 ) == -1 ? (Le - 1) : (j-1) ) * W + i ) * 4;
-      eig_ket.segment(n1, 4) += -d_x  * H_3.adjoint() * eig_p_ket.segment(n2, 4);
-	
-
-
 
       n2 = ( ( ( j + 1 ) % Le )* W + ( ( i - 1 ) == -1 ? (W-1) : (i-1) ) ) * 4;
-      eig_ket.segment(n1,4) +=  H_4 * d_x3 * eig_p_ket.segment(n2,4);
+      eig_ket.segment(n1,4)  += d_x3 * H_4 * eig_p_ket.segment(n2,4);
 
+      
 
+      //Adjoints
+      n2 = ( ( j ) * W + ( ( i - 1 ) == -1 ? (W-1) : (i-1) )  ) * 4;
+      eig_ket.segment( n1, 4 ) += -d_x2 *  H_2.adjoint() * eig_p_ket.segment(n2,4);
+      
+      n2 = (  ( ( j - 1 ) == -1 ? (Le - 1) : (j-1) ) * W + i ) * 4;
+      eig_ket.segment( n1, 4 ) += -d_x  * H_3.adjoint() * eig_p_ket.segment(n2, 4);
+	
       n2 = ( ( ( j - 1 ) == -1 ? (Le-1) : (j-1) ) * W + ( i + 1 ) % W ) * 4;
-      eig_ket.segment(n1,4) += -H_4.adjoint() * d_x3 * eig_p_ket.segment(n2,4);
+      eig_ket.segment( n1, 4 ) += -d_x3 * H_4.adjoint() * eig_p_ket.segment(n2,4);
 
     }
  }   

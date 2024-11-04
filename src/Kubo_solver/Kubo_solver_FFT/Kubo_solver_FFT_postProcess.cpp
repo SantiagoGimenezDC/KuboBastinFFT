@@ -168,7 +168,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
     sysSubLength = parent_solver_.device().sysSubLength();
   
   //  r_type omega = DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
-  r_type omega = -2.0 * SUBDIM/( a * a * sysSubLength * sysSubLength ) / ( 2 * M_PI );//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.
+  r_type omega = -2.0 * SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.
   //r_value_t tmp, max=0, av=0;
 
   std::vector<r_type>
@@ -207,11 +207,11 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
   for(int k = 0; k < nump; k++){
     integrand[k]  = E_points_[k] * real( final_data[ k ] ) - ( sqrt(1.0 - E_points_[ k ] * E_points_[ k ] ) * imag( final_data[ k + nump ] ) );
     integrand[k] *= 1.0 / pow( (1.0 - E_points_[k]  * E_points_[k] ), 2.0);
-    integrand[k] *=  omega / ( M_PI ); 
+    integrand[k] *=  omega ; 
 
     rvec_integrand[k]  = E_points_[k] * real( r_data[ k ] ) - ( sqrt(1.0 - E_points_[ k ] * E_points_[ k ] ) * imag( r_data[ k + nump ] ) );
     rvec_integrand[k] *= 1.0 / pow( (1.0 - E_points_[k]  * E_points_[k] ), 2.0);
-    rvec_integrand[k] *=  omega / ( M_PI ); 
+    rvec_integrand[k] *=  omega ; 
   }
 
   
@@ -334,7 +334,7 @@ void Kubo_solver_FFT_postProcess::Greenwood_postProcess(const std::vector<type>&
          b = parent_solver_.parameters().b_,
          sysSubLength = parent_solver_.device().sysSubLength();
   
-  r_type omega = -2.0 * SUBDIM/( a * a * sysSubLength * sysSubLength ) / ( 2 * M_PI );//Dimensional and normalizing constant
+  r_type omega = -2.0 * SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant
   
   //  r_value_t tmp, max=0, av=0;
 
