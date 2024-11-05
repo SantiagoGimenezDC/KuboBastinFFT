@@ -467,6 +467,29 @@ void Graphene_KaneMele::vel_op_y (type* ket, type* p_ket){
     d_y  = -1.0, 
     d_y2 =  sin( M_PI /6.0 );
 
+
+
+  
+  H_1.block(0,0,2,2) *= 2.0 * d_y;
+  H_1.block(2,2,2,2) *= 2.0 * d_y;
+      
+  H_2.block(0,0,2,2) *= -2.0 * d_y2;
+  H_2.block(2,2,2,2) *= -2.0 * d_y2;
+  
+  H_3.block(0,0,2,2) *= 2.0 * d_y2;
+  H_3.block(2,2,2,2) *= 2.0 * d_y2;
+
+
+
+  H_1.block(0,2,2,2) *=  d_y;
+  H_1.block(2,0,2,2) *=  d_y;
+    
+  H_2.block(0,2,2,2) *=  -d_y2;
+  H_2.block(2,0,2,2) *=  -d_y2;
+  
+  H_3.block(0,2,2,2) *=  d_y2;
+  H_3.block(2,0,2,2) *=  d_y2;
+
   
   Eigen::Map<Eigen::VectorXcd> eig_ket(ket,Dim),
     eig_p_ket(p_ket, Dim);
@@ -529,12 +552,35 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
   H_3 = H_3_/a;
   H_4 = H_4_/a;
 
+  
   std::complex<r_type>
-    d_x  = -cos( M_PI /6.0 ),
-    d_x2 =  cos( M_PI /6.0 ),
-    d_x3 = 2.0 * cos( M_PI /6.0 );
+    j1(0, 1.0),
+    d_x  = -j1 * cos( M_PI /6.0 );
 
 
+  
+  H_2.block(0,0,2,2) *= -2.0 * d_x;
+  H_2.block(2,2,2,2) *= -2.0 * d_x;
+  
+  H_3.block(0,0,2,2) *= 2.0 * d_x;
+  H_3.block(2,2,2,2) *= 2.0 * d_x;
+  
+  H_4.block(0,0,2,2) *= 2.0 * d_x;
+  H_4.block(2,2,2,2) *= 2.0 * d_x;
+  
+
+  
+  H_2.block(0,2,2,2) *=  -d_x;
+  H_2.block(2,0,2,2) *=  -d_x;
+  
+  H_3.block(0,2,2,2) *=  d_x;
+  H_3.block(2,0,2,2) *=  d_x;
+
+  H_4.block(0,2,2,2) *=  d_x;
+  H_4.block(2,0,2,2) *=  d_x;
+  
+
+  
   Eigen::Map<Eigen::VectorXcd> eig_ket(ket,Dim),
     eig_p_ket(p_ket, Dim);
 
@@ -549,25 +595,25 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
       
 
       int n2 = ( j * W + ( i + 1 ) % W ) * 4;
-      eig_ket.segment(n1,4)   = d_x2 * H_2 * eig_p_ket.segment(n2,4);
+      eig_ket.segment(n1,4)   =  H_2 * eig_p_ket.segment(n2,4);
 
       n2 = ( ( ( j + 1 ) % Le ) * W + i ) * 4;
-      eig_ket.segment(n1, 4) += d_x  * H_3 * eig_p_ket.segment(n2, 4);
+      eig_ket.segment(n1, 4) +=  H_3 * eig_p_ket.segment(n2, 4);
 
       n2 = ( ( ( j + 1 ) % Le )* W + ( ( i - 1 ) == -1 ? (W-1) : (i-1) ) ) * 4;
-      eig_ket.segment(n1,4)  += d_x3 * H_4 * eig_p_ket.segment(n2,4);
+      eig_ket.segment(n1,4)  +=  H_4 * eig_p_ket.segment(n2,4);
 
       
 
       //Adjoints
       n2 = ( ( j ) * W + ( ( i - 1 ) == -1 ? (W-1) : (i-1) )  ) * 4;
-      eig_ket.segment( n1, 4 ) += -d_x2 *  H_2.adjoint() * eig_p_ket.segment(n2,4);
+      eig_ket.segment( n1, 4 ) +=   H_2.adjoint() * eig_p_ket.segment(n2,4);
       
       n2 = (  ( ( j - 1 ) == -1 ? (Le - 1) : (j-1) ) * W + i ) * 4;
-      eig_ket.segment( n1, 4 ) += -d_x  * H_3.adjoint() * eig_p_ket.segment(n2, 4);
+      eig_ket.segment( n1, 4 ) +=  H_3.adjoint() * eig_p_ket.segment(n2, 4);
 	
       n2 = ( ( ( j - 1 ) == -1 ? (Le-1) : (j-1) ) * W + ( i + 1 ) % W ) * 4;
-      eig_ket.segment( n1, 4 ) += -d_x3 * H_4.adjoint() * eig_p_ket.segment(n2,4);
+      eig_ket.segment( n1, 4 ) +=  H_4.adjoint() * eig_p_ket.segment(n2,4);
 
     }
  }   
