@@ -61,8 +61,8 @@ void Graphene_supercell::print_hamiltonian(){
 	term_j(j)=1;
 
 
-        //this->update_cheb(tmp.data(),term_j.data(),null.data());
-	this->H_ket(tmp.data(),term_j.data());
+        this->update_cheb(tmp.data(),term_j.data(),null.data());
+	//this->H_ket(tmp.data(),term_j.data());
         //vel_op_x(tmp.data(),term_j.data());
         //vel_op_y(tmp.data(),term_j.data());
 	std::complex<double> termy = term_i.dot(tmp);
@@ -71,7 +71,7 @@ void Graphene_supercell::print_hamiltonian(){
       }
     }
 
-    dataP<<H_r;
+    dataP<<H_r.real()/2.7;
 
     std::cout<<(H_r-H_r.adjoint()).norm()<<std::endl;
   dataP.close();
@@ -103,7 +103,7 @@ void Graphene_supercell::update_cheb ( type vec[], type p_vec[], type pp_vec[]){
       
       vec[n] = b_a * p_vec[n] - damp_op[n] * pp_vec[n];
 
-
+      
       if( i != 0 )
 	vec[n] += t * p_vec[n-1] * peierls(i,-1);
       
@@ -116,17 +116,36 @@ void Graphene_supercell::update_cheb ( type vec[], type p_vec[], type pp_vec[]){
       if( j != 0 && i%2 != 0 )
 	vec[n] += t * p_vec[ n - W - 1];
 
+      
+      /*
+      //if( i != 0 )
+      int n2 = j * W + ( i - 1 == -1 ? W - 1 : ( i - 1 )  ) ;
+      vec[n] += t * p_vec[ n2 ] * peierls(i,-1);
+      
+      //if( i != ( W - 1 ) )
+      n2 = j * W + ( i + 1 ) % W;
+      vec[n] += t * p_vec[ n2 ] * peierls(i,1);
+      
 
+      if( i%2 == 0 ){
+        n2 = ( ( j + 1 )  % fullLe ) * W + i ;
+        vec[n] += t * p_vec[ n2];
+      }
+      if(  i%2 != 0 ){
+        n2 = ( j - 1 == -1 ? fullLe - 1 : ( j - 1 ) ) * W + i ;
+        vec[n] += t * p_vec[ n2];
+      }
+      */
 
-      /*      
+      /*   
       if(!CYCLIC_BCs_ && C==0){      
         if(( i == (W-1) && j==0 ) || (i == 1 && j==fullLe-1) )
 	  vec[n] -= t * p_vec[n-1] * peierls(i,-1);
 
         if( ( i == (W-2) && j==0 ) || (i == 0 && j==fullLe-1) )
 	  vec[n] -= t * p_vec[n+1] * peierls(i,1);
-      }
-      */
+      }*/
+      
       
       vec[n] *= damp_op[n];
       
@@ -135,7 +154,7 @@ void Graphene_supercell::update_cheb ( type vec[], type p_vec[], type pp_vec[]){
     }
  } 
 
-
+ 
 #pragma omp parallel for 
  for(int n=0; n<LE*W; n++)
    vec[C*W+n] += dis_vec[n] * p_vec[C*W+n] / this->a();
@@ -144,13 +163,103 @@ void Graphene_supercell::update_cheb ( type vec[], type p_vec[], type pp_vec[]){
  if(CYCLIC_BCs_){
    vertical_BC(2.0, vec,p_vec,damp_op);
    horizontal_BC(2.0, vec,p_vec,damp_op);  
- }
+   }
  
 #pragma omp parallel for 
  for(int n=0;n<DIM;n++)
    p_vec[n]  = vec[n];
  
 }
+
+
+
+
+void Graphene_supercell::H_ket ( type vec[], type p_vec[]){
+
+  r_type t = t_standard_/this->a(),
+    b_a = this->b()/this->a();
+
+  r_type *damp_op=this->damp_op(),
+         *dis = this->dis();
+  
+
+  
+  int W   = this->parameters().W_,
+      LE  = this->parameters().LE_,
+    C   = this->parameters().C_;
+  
+  const int fullLe = 2*C+LE;
+     
+  
+#pragma omp parallel for 
+ for(int j=0; j<fullLe; j++){
+    for(int i=0; i<W; i++){
+      int n = j * W + i;
+      
+      vec[n] = b_a * p_vec[n];
+
+      /*      
+      //if( i != 0 )
+      int n2 = j * W + ( i - 1 == -1 ? W - 1 : ( i - 1 )  ) ;
+      vec[n] += t * p_vec[ n2 ] * peierls(i,-1);
+      
+      //if( i != ( W - 1 ) )
+      n2 = j * W + ( i + 1 ) % W;
+      vec[n] += t * p_vec[ n2 ] * peierls(i,1);
+      
+
+      if( i%2 == 0 ){
+        n2 = ( ( j + 1 )  % fullLe ) * W + i ;
+        vec[n] += t * p_vec[ n2];
+      }
+      
+      if( i%2 != 0 ){
+        n2 = ( j - 1 == -1 ? fullLe - 1 : ( j - 1 ) ) * W + i ;
+        vec[n] += t * p_vec[ n2];
+	}*/
+
+      
+      if( i != 0 )
+	vec[n] += t * p_vec[n-1] * peierls(i,-1);
+      
+      if( i != ( W - 1 ) )
+	vec[n] += t * p_vec[n+1] * peierls(i,1);
+      
+      if( j != ( fullLe - 1 ) && !(j == 0 && i == W-1) && i%2 == 0 )
+	vec[n] += t * p_vec[ n + W + 1];
+      
+      if( j != 0 && i%2 != 0 )
+	vec[n] += t * p_vec[ n - W - 1];
+      
+
+
+      
+      /*  
+      if(!CYCLIC_BCs_ && C==0){            
+        if( (i == (W-1) && j==0) || (i == 1 && j==fullLe-1) )
+	  vec[n] -= t * p_vec[n-1] * peierls(i,-1);
+
+        if( (i == (W-2) && j==0) || (i == 0 && j==fullLe-1) )
+	  vec[n] -= t * p_vec[n+1] * peierls(i,1);
+	  }*/
+      
+      
+      vec[n] *= damp_op[n];      
+    }
+ } 
+
+#pragma omp parallel for 
+ for(int n=0; n<LE*W; n++)
+   vec[C*W+n] += dis[n] * p_vec[C*W+n] / this->a();
+
+
+ 
+ if(CYCLIC_BCs_){
+   vertical_BC(1.0, vec,p_vec,damp_op);
+   horizontal_BC(1.0, vec,p_vec,damp_op);  
+   }
+}
+
 
 
 
@@ -211,72 +320,6 @@ void Graphene_supercell::horizontal_BC(r_type a2, type vec[], type p_vec[], r_ty
 }
 
 
-
-void Graphene_supercell::H_ket ( type vec[], type p_vec[]){
-
-  r_type t = t_standard_/this->a(),
-    b_a = this->b()/this->a();
-
-  r_type *damp_op=this->damp_op(),
-         *dis = this->dis();
-  
-
-  
-  int W   = this->parameters().W_,
-      LE  = this->parameters().LE_,
-    C   = this->parameters().C_;
-  
-  const int fullLe = 2*C+LE;
-     
-  
-#pragma omp parallel for 
- for(int j=0; j<fullLe; j++){
-    for(int i=0; i<W; i++){
-      int n = j * W + i;
-      
-      vec[n] = b_a * p_vec[n];
-
-
-      if( i != 0 )
-	vec[n] += t * p_vec[n-1] * peierls(i,-1);
-      
-      if( i != ( W - 1 ) )
-	vec[n] += t * p_vec[n+1] * peierls(i,1);
-      
-      if( j != ( fullLe - 1 ) && !(j == 0 && i == W-1) && i%2 == 0 )
-	vec[n] += t * p_vec[ n + W + 1];
-      
-      if( j != 0 && i%2 != 0 )
-	vec[n] += t * p_vec[ n - W - 1];
-
-
-
-      
-      /*
-      if(!CYCLIC_BCs_ && C==0){            
-        if( (i == (W-1) && j==0) || (i == 1 && j==fullLe-1) )
-	  vec[n] -= t * p_vec[n-1] * peierls(i,-1);
-
-        if( (i == (W-2) && j==0) || (i == 0 && j==fullLe-1) )
-	  vec[n] -= t * p_vec[n+1] * peierls(i,1);
-      }
-      */
-      
-      vec[n] *= damp_op[n];      
-    }
- } 
-
-#pragma omp parallel for 
- for(int n=0; n<LE*W; n++)
-   vec[C*W+n] += dis[n] * p_vec[C*W+n] / this->a();
-
-
-
- if(CYCLIC_BCs_){
-   vertical_BC(1.0, vec,p_vec,damp_op);
-   horizontal_BC(1.0, vec,p_vec,damp_op);  
- }
-}
 
 
 

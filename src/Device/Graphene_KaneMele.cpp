@@ -153,8 +153,8 @@ void Graphene_KaneMele::print_hamiltonian(){
   Eigen::MatrixXcd H_r(dim,dim), S(dim,dim);
 
   std::ofstream dataP;
-  dataP.open("H_KM.txt");
-        
+  dataP.open("vel_op_y.txt");
+  
     for(int j=0;j<dim;j++){
       for(int i=0;i<dim;i++){
 
@@ -167,8 +167,8 @@ void Graphene_KaneMele::print_hamiltonian(){
 
 
         //this->update_cheb(tmp.data(),term_j.data(),null.data());
-	this->H_ket(tmp.data(),term_j.data());
-        //vel_op_y(tmp.data(),term_j.data());
+	//this->H_ket(tmp.data(),term_j.data());
+        vel_op_y(tmp.data(),term_j.data());
         //vel_op_y(tmp.data(),term_j.data());
 	std::complex<double> termy = term_i.dot(tmp);
 
@@ -176,7 +176,7 @@ void Graphene_KaneMele::print_hamiltonian(){
       }
     }
 
-    dataP<<-H_r.imag()/0.25980762;
+    dataP<<H_r.imag()/( 5.19615 * 0.25980762 );
 
     std::cout<<(H_r-H_r.adjoint()).norm()<<std::endl;
   dataP.close();
@@ -464,31 +464,33 @@ void Graphene_KaneMele::vel_op_y (type* ket, type* p_ket){
 
   
   std::complex<r_type>
-    d_y  = -1.0, 
-    d_y2 =  sin( M_PI /6.0 );
-
+    j1(0, 1.0),
+    d_y  = j1, 
+    d_y2 = j1 * sin( M_PI / 6.0 ),
+    d_y3 = j1 * 3.0 / 2.0 ;
 
 
   
-  H_1.block(0,0,2,2) *= 2.0 * d_y;
-  H_1.block(2,2,2,2) *= 2.0 * d_y;
-      
-  H_2.block(0,0,2,2) *= -2.0 * d_y2;
-  H_2.block(2,2,2,2) *= -2.0 * d_y2;
+  H_1.block(0,2,2,2) *= -d_y;
+  H_1.block(2,0,2,2) *= -d_y;
+  H_1.block(0,0,2,2) *= 0.0;
+  H_1.block(2,2,2,2) *= 0.0;
+
   
-  H_3.block(0,0,2,2) *= 2.0 * d_y2;
-  H_3.block(2,2,2,2) *= 2.0 * d_y2;
-
-
-
-  H_1.block(0,2,2,2) *=  d_y;
-  H_1.block(2,0,2,2) *=  d_y;
-    
-  H_2.block(0,2,2,2) *=  -d_y2;
-  H_2.block(2,0,2,2) *=  -d_y2;
   
-  H_3.block(0,2,2,2) *=  d_y2;
-  H_3.block(2,0,2,2) *=  d_y2;
+  H_2.block(0,0,2,2) *= d_y3;
+  H_2.block(2,2,2,2) *= d_y3;
+  
+  H_3.block(0,0,2,2) *= d_y3;
+  H_3.block(2,2,2,2) *= d_y3;
+
+
+  
+  H_2.block(0,2,2,2) *= d_y2;
+  H_2.block(2,0,2,2) *= d_y2;
+  
+  H_3.block(0,2,2,2) *= d_y2;
+  H_3.block(2,0,2,2) *= d_y2;
 
   
   Eigen::Map<Eigen::VectorXcd> eig_ket(ket,Dim),
@@ -501,24 +503,29 @@ void Graphene_KaneMele::vel_op_y (type* ket, type* p_ket){
       int n1 = ( (j) * W + i ) * 4;
 
       
-      eig_ket.segment(n1,4) = d_y * H_1 * eig_p_ket.segment(n1,4);
-      eig_ket.segment(n1,4) += -d_y * H_1.adjoint() * eig_p_ket.segment(n1,4);
+      eig_ket.segment(n1,4) = H_1 * eig_p_ket.segment(n1,4);
+      eig_ket.segment(n1,4) += H_1.adjoint() * eig_p_ket.segment(n1,4);
 
       
-
       int n2 = ( ( j ) * W + ( i + 1 ) % W ) * 4;
-      eig_ket.segment(n1,4) += d_y2 * H_2 * eig_p_ket.segment(n2,4);
+      //if(i+1<W)
+      eig_ket.segment(n1,4) += H_2 * eig_p_ket.segment(n2,4);
 
+      
       n2 = ( ( ( j + 1 ) % Le ) * W + i ) * 4;
-      eig_ket.segment(n1, 4) += d_y2 * H_3 * eig_p_ket.segment(n2, 4);
+      //if(j+1<Le)
+      eig_ket.segment(n1, 4) += H_3 * eig_p_ket.segment(n2, 4);
 
 
       
       n2 = ( ( j ) * W + ( ( i - 1 ) == -1 ? (W-1) : (i-1) )  ) * 4;
-      eig_ket.segment(n1,4) +=  -d_y2 * H_2.adjoint() * eig_p_ket.segment(n2,4);
+      //if(i-1>=0)
+      eig_ket.segment(n1,4) += H_2.adjoint() * eig_p_ket.segment(n2,4);
 
+      
       n2 = (  ( ( j - 1 ) == -1 ? (Le - 1) : (j-1) ) * W + i ) * 4;
-      eig_ket.segment(n1, 4) +=  -d_y2 * H_3.adjoint() * eig_p_ket.segment(n2, 4);
+      //if(j-1>=0)
+      eig_ket.segment(n1, 4) +=  H_3.adjoint() * eig_p_ket.segment(n2, 4);
        
     }
  }   
@@ -555,18 +562,19 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
   
   std::complex<r_type>
     j1(0, 1.0),
-    d_x  = -j1 * cos( M_PI /6.0 );
+    d_x  = -j1 * cos( M_PI /6.0 ),
+    d_x2  = -j1 * sqrt(3.0) / 2.0;
 
 
   
-  H_2.block(0,0,2,2) *= -2.0 * d_x;
-  H_2.block(2,2,2,2) *= -2.0 * d_x;
+  H_2.block(0,0,2,2) *= -d_x2;
+  H_2.block(2,2,2,2) *= -d_x2;
   
-  H_3.block(0,0,2,2) *= 2.0 * d_x;
-  H_3.block(2,2,2,2) *= 2.0 * d_x;
+  H_3.block(0,0,2,2) *= d_x2;
+  H_3.block(2,2,2,2) *= d_x2;
   
-  H_4.block(0,0,2,2) *= 2.0 * d_x;
-  H_4.block(2,2,2,2) *= 2.0 * d_x;
+  H_4.block(0,0,2,2) *=  -d_x2;
+  H_4.block(2,2,2,2) *=  -d_x2;
   
 
   
