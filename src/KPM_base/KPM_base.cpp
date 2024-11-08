@@ -163,6 +163,8 @@ void KPM_base::compute(){
       std::cout<<std::endl<< std::to_string( ( d - 1 ) * R + r)+"/"+std::to_string( D * R )+"-Vector/disorder realization;"<<std::endl;
 
       vec_base_->generate_vec_im( rand_vec_, r);       
+
+	
       device_.rearrange_initial_vec( rand_vec_ ); //very hacky
       
 

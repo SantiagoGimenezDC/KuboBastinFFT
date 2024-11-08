@@ -125,6 +125,8 @@ int main(int , char **argv){
     std::cout<<"Nonzeros: "<<test_con.vx().nonZeros()<<"  "<<test_ham.vx().nonZeros()<<std::endl;
   std::cout<<(test_con.vx()-test_ham.vx()).norm()<<std::endl;
   */
+
+
   std::cout<<"Ongoing gimmicks:"<<std::endl;
   std::cout<<"ADDED KANE MELE STR TO THE INPUTS and A and B inputs!!"<<std::endl;
   std::cout<<"AUTO BOUND DETECTION NOT WORKING - on normal mode only???"<<std::endl;
@@ -244,5 +246,5 @@ int main(int , char **argv){
   }
     std::cout<<"Nonzeros: "<<test_con.vx().nonZeros()<<"  "<<test_ham.vx().nonZeros()<<std::endl;
   std::cout<<(test_con.vx()-test_ham.vx()).norm()<<std::endl;
-*/
+  */
   

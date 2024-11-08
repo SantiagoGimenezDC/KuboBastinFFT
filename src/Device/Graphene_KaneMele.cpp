@@ -30,7 +30,8 @@ Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashb
   std::cout<<std::endl;
   std::cout<<"v1: "<<v1.transpose()<<"  v2:"<< v2.transpose()<<std::endl;
   std::cout<<this->parameters().SUBDIM_<<"  "<< this->parameters().SUBDIM_/4<<std::endl;
-  std::cout<<Length<<"  "<< Length<<std::endl;
+  std::cout<<"Length:  "<< Length<<std::endl;
+  std::cout<<"NUM ATOMS:  "<< this->parameters().SUBDIM_/2<<std::endl;
 
 
   
@@ -168,7 +169,7 @@ void Graphene_KaneMele::print_hamiltonian(){
 
         //this->update_cheb(tmp.data(),term_j.data(),null.data());
 	//this->H_ket(tmp.data(),term_j.data());
-        vel_op_y(tmp.data(),term_j.data());
+        vel_op_x(tmp.data(),term_j.data());
         //vel_op_y(tmp.data(),term_j.data());
 	std::complex<double> termy = term_i.dot(tmp);
 
@@ -176,7 +177,7 @@ void Graphene_KaneMele::print_hamiltonian(){
       }
     }
 
-    dataP<<H_r.imag()/( 5.19615 * 0.25980762 );
+    dataP<<H_r.real()/( 0.0481125 * 1.73205 * 5.19615 * 0.25980762 );
 
     std::cout<<(H_r-H_r.adjoint()).norm()<<std::endl;
   dataP.close();
@@ -453,13 +454,12 @@ void Graphene_KaneMele::vel_op_y (type* ket, type* p_ket){
     b_a = b/a;
   
 
-  Eigen::Matrix4cd
-    Id = Eigen::Matrix4d::Identity(), H_KM, H_1, H_2, H_3, H_4;
+  Eigen::Matrix4cd H_KM, H_1, H_2, H_3, H_4;
 
-  H_1 = H_1_/a + b_a*Id;
-  H_2 = H_2_/a;
-  H_3 = H_3_/a;
-  H_4 = H_4_/a;
+  H_1 = H_1_;
+  H_2 = H_2_;
+  H_3 = H_3_;
+  H_4 = H_4_;
 
 
   
@@ -553,12 +553,12 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
     H_2,
     H_3,
     H_4;
-
-  H_1 = H_1_/a + b_a*Id;
-  H_2 = H_2_/a;
-  H_3 = H_3_/a;
-  H_4 = H_4_/a;
-
+  
+  H_1 = H_1_;
+  H_2 = H_2_;
+  H_3 = H_3_;
+  H_4 = H_4_;
+  
   
   std::complex<r_type>
     j1(0, 1.0),
@@ -566,7 +566,7 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
     d_x2  = -j1 * sqrt(3.0) / 2.0;
 
 
-  
+    
   H_2.block(0,0,2,2) *= -d_x2;
   H_2.block(2,2,2,2) *= -d_x2;
   
@@ -591,8 +591,6 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
   
   Eigen::Map<Eigen::VectorXcd> eig_ket(ket,Dim),
     eig_p_ket(p_ket, Dim);
-
-  Eigen::Vector4cd id{1.0,1.0, 1.0, 1.0};
   
     
 #pragma omp parallel for 
