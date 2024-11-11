@@ -579,8 +579,8 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
   H_3.block(0,0,2,2) *= d_x2;
   H_3.block(2,2,2,2) *= d_x2;
   
-  H_4.block(0,0,2,2) *=  2.0 * d_x2;
-  H_4.block(2,2,2,2) *=  2.0 * d_x2;
+  H_4.block(0,0,2,2) *= 2.0 * d_x2;
+  H_4.block(2,2,2,2) *= 2.0 * d_x2;
   
 
   
