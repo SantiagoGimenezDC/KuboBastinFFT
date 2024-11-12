@@ -6,8 +6,8 @@
 #include "../Random.hpp"
 #include "Device.hpp"
 #include "Graphene.hpp"
-#include <eigen3/Eigen/Sparse>
-#include <eigen3/Eigen/Dense>
+#include <eigen-3.4.0/Eigen/Sparse>
+#include <eigen-3.4.0/Eigen/Dense>
 #include "Coordinates.hpp"
 #include <iostream>
 
