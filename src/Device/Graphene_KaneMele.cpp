@@ -13,25 +13,13 @@ Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashb
   if(this->parameters().C_==0)
     CYCLIC_BCs_=true;
 
-  //  double acc=sqrt(3.0) * 1.0;
+
   
   Eigen::Vector3d v1{ this->parameters().W_* 0.5 * sqrt(3.0),   this->parameters().W_* 3.0/2,  0 },
 	v2{ -this->parameters().LE_* 0.5 * sqrt(3.0),    this->parameters().LE_ * 3.0 /2,  0 },
 	cross_p = v1.cross(v2);
-
-  //v1*=acc;
-  //v2*=acc;
-  
-  //    std::cout<<cross_p<<std::endl;
       
   r_type Length = sqrt( abs(cross_p(2)) );
-
-  std::cout<<std::endl;
-  std::cout<<std::endl;
-  std::cout<<"v1: "<<v1.transpose()<<"  v2:"<< v2.transpose()<<std::endl;
-  std::cout<<this->parameters().SUBDIM_<<"  "<< this->parameters().SUBDIM_/4<<std::endl;
-  std::cout<<"Length:  "<< Length<<std::endl;
-  std::cout<<"NUM ATOMS:  "<< this->parameters().SUBDIM_/2<<std::endl;
 
 
   

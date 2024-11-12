@@ -157,9 +157,9 @@ void Kubo_solver_FFT::Bastin_FFTs( storageType bras, storageType kets, std::vect
 
        //Here: w(k) += (dG(k)) * Re(G(k)) - Re(G(k)) * (dG(k))
        w[j] += ( conj( re_D_bras(j) ) - im * conj( im_D_bras(j) ) )  * //dG(k)
-        ( real( re_kets(j)   ) + im * real( im_kets(j) ) ) - //Re(G(k))
+               ( real( re_kets(j)   ) + im * real( im_kets(j) ) ) - //Re(G(k))
 	  
-        ( real( re_bras(j) )   - im * real( im_bras(j) ) )  *  //Re(G(k))
+               ( real( re_bras(j) )   - im * real( im_bras(j) ) )  *  //Re(G(k))
                ( re_D_kets(j)         + im * im_D_kets(j) ); //dG(k)
      }
 
@@ -167,18 +167,18 @@ void Kubo_solver_FFT::Bastin_FFTs( storageType bras, storageType kets, std::vect
      for(int j = nump / 2; j < nump; j++){
        //Here: p(k) += Re(G(k)) * G(k) + G(k) * Re(G(k)).
        p[j] += ( real( re_bras(j) ) - im * real( im_bras(j) ) ) *  //Re(G(k)) *
-           ( conj(re_kets(j) )   + im *       conj( im_kets(j) ) ) + //G(k)+
+               ( conj(re_kets(j) )   + im *       conj( im_kets(j) ) ) + //G(k)+
  	  
-             ( re_bras(j)   - im * im_bras(j)  ) * //G(k)
-             ( real( re_kets(j) ) + im * real( im_kets(j) ) );   //Re(G(k))
+               ( re_bras(j)   - im * im_bras(j)  ) * //G(k)
+               ( real( re_kets(j) ) + im * real( im_kets(j) ) );   //Re(G(k))
 	
 
          //Here: w(k) += (dG(k)) * Re(G(k)) - Re(G(k)) * (dG(k))
-       w[j] += (  re_D_bras(j)  - im *  im_D_bras(j)  )  * //dG(k)
-       	 ( real( re_kets(j)   ) + im * real( im_kets(j) ) ) - //Re(G(k))
+       w[j] += ( re_D_bras(j)         - im *  im_D_bras(j)  )  * //dG(k)
+       	       ( real( re_kets(j)   ) + im * real( im_kets(j) ) ) - //Re(G(k))
 	  
-              ( real( re_bras(j) )   - im * real( im_bras(j) ) )  *  //Re(G(k))
-             ( conj( re_D_kets(j) )         + im * conj ( im_D_kets(j) ) ); //dG(k)
+               ( real( re_bras(j) )   - im * real( im_bras(j) ) )  *  //Re(G(k))
+               ( conj( re_D_kets(j) ) + im * conj ( im_D_kets(j) ) ); //dG(k)
 
      }
    }      
@@ -186,7 +186,7 @@ void Kubo_solver_FFT::Bastin_FFTs( storageType bras, storageType kets, std::vect
 # pragma omp critical
    {
      for(int k = 0; k < nump; k++){
-       r_data[ k ]        += p[ k ];
+       r_data[ k ]        += 0.0*p[ k ];
        r_data[ k + nump ] += w[ k ];	
      }
    } 

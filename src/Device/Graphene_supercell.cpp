@@ -26,11 +26,9 @@ Graphene_supercell::Graphene_supercell(device_vars& parameters) : Graphene(param
 
     //CYCLIC_BCs_=false;
 
-    this->set_sysLength( 279.181);//(fullLe-1) * ( 1.0 + sin( M_PI / 6 ) ) ); 
-    this->set_sysSubLength( 279.181);//(Le-1) * ( 1.0 + sin( M_PI / 6 ) ) );
+    this->set_sysLength( (fullLe-1) * ( 1.0 + sin( M_PI / 6 ) ) ); 
+    this->set_sysSubLength( (Le-1) * ( 1.0 + sin( M_PI / 6 ) ) );
 
-    std::cout<<"Syslength:  "<<(Le-1)*(1.0+sin(M_PI/6))<<std::endl<<std::endl;
-      std::cout<<"NUM ATOMS:  "<< this->parameters().SUBDIM_<<std::endl;
     //Bz here will be trated as the ratio between phi/phi_0;
     int bc_phase = CYCLIC_BCs_?0:-1;
     //    return  std::polar(1.0,  ( i1 % 2 == 0 ? -1 : 1 ) * peierls_d_ * ( 2 * i1 + sign * 1  ) );
