@@ -1,3 +1,4 @@
+
 #ifndef KUBO_BASTIN_FILTERED_SOLVER_HPP
 #define KUBO_BASTIN_FILTERED_SOLVER_HPP
 
@@ -71,8 +72,11 @@ public:
   void filtered_polynomial_cycle_direct_doubleBuffer( type** , type**, type*, int , int );
   
   void Greenwood_FFTs( std::complex<r_type>**, std::complex<r_type>**,  type*, int);
-  void Bastin_FFTs   ( r_type*, std::complex<r_type>**, std::complex<r_type>**,  type*, int );  
+  void Bastin_FFTs   ( r_type*, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
+  void Sea_FFTs   ( r_type*, std::complex<r_type>**, std::complex<r_type>**,  type*, int );  
+
   void Bastin_FFTs_doubleBuffer   ( r_type*, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, type*, int );
+
 
   
 
@@ -91,7 +95,10 @@ public:
   
   void Greenwood_FFTs_imag( std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
   void Bastin_FFTs_imag   ( r_type*, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
+   void Sea_FFTs_imag   ( r_type*, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
+  
   void Bastin_FFTs_doubleBuffer_imag   ( r_type*, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
+  void Sea_FFTs_doubleBuffer_imag   ( r_type*, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**, std::complex<r_type>**,  type*, int );
 
   
   
@@ -107,6 +114,8 @@ public:
   void eta_CAP_correct(r_type*, r_type* );
   void update_data ( r_type*, type*, type*, r_type*, int ,  std::string, std::string );
   void update_data_Bastin ( r_type*, type*, type*, r_type*,  int ,  std::string, std::string );
+  void update_data_Sea ( r_type*, type*, type*, r_type*,  int ,  std::string, std::string );
+
   void plot_data   ( std::string, std::string );
   //*POST-PROCESSING------------------
 

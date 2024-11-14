@@ -158,7 +158,7 @@ void Kubo_solver_filtered::compute_imag(){
        **d_bras_im,
        **d_kets_im;
 
-  if(sym_formula_ == KUBO_BASTIN && double_buffer ){
+  if( (sym_formula_ == KUBO_BASTIN || sym_formula_ == KUBO_SEA ) && double_buffer ){
     d_bras_re = new type* [ M_dec ];
     d_kets_re = new type* [ M_dec ];
     d_bras_im = new type* [ M_dec ];
@@ -284,7 +284,7 @@ void Kubo_solver_filtered::compute_imag(){
          reset_buffer(kets_re);
          reset_buffer(kets_im);
 
-         if(sym_formula_ == KUBO_BASTIN && double_buffer){
+         if( ( sym_formula_ == KUBO_BASTIN || sym_formula_ == KUBO_SEA ) && double_buffer){
            reset_buffer(d_bras_re);
            reset_buffer(d_kets_re);
            reset_buffer(d_bras_im);
@@ -297,7 +297,7 @@ void Kubo_solver_filtered::compute_imag(){
          time_station_2 csrmv_time_kets;
          csrmv_time_kets.start();
 
-	 if(sym_formula_ == KUBO_BASTIN && double_buffer)	   
+	 if( ( sym_formula_ == KUBO_BASTIN || sym_formula_ == KUBO_SEA ) && double_buffer)	   
            filtered_polynomial_cycle_direct_doubleBuffer_imag(bras_re, bras_im, d_bras_re, d_bras_im, rand_vec, s, 0);     
 	 else
 	   filtered_polynomial_cycle_direct_imag(bras_re, bras_im, rand_vec, s, 0);     
@@ -315,7 +315,7 @@ void Kubo_solver_filtered::compute_imag(){
 	 time_station_2 csrmv_time_bras;
          csrmv_time_bras.start();
 
-	 if(sym_formula_ == KUBO_BASTIN && double_buffer)	   
+	 if( ( sym_formula_ == KUBO_BASTIN || sym_formula_ == KUBO_SEA )  && double_buffer)	   
            filtered_polynomial_cycle_direct_doubleBuffer_imag(kets_re, kets_im, d_kets_re, d_kets_im, rand_vec, s, 1);     
 	 else
 	   filtered_polynomial_cycle_direct_imag(kets_re, kets_im, rand_vec, s, 1);     
@@ -338,6 +338,12 @@ void Kubo_solver_filtered::compute_imag(){
 	     Bastin_FFTs_doubleBuffer_imag(E_points, bras_re, bras_im, d_bras_re, d_bras_im, kets_re, kets_im, d_kets_re, d_kets_im, r_data, 1);
 	   else
 	     Bastin_FFTs_imag(E_points, bras_re, bras_im, kets_re, kets_im, r_data, 1);
+	 }
+	 if(sym_formula_ == KUBO_SEA){
+	   if(double_buffer)
+	     Sea_FFTs_doubleBuffer_imag(E_points, bras_re, bras_im, d_bras_re, d_bras_im, kets_re, kets_im, d_kets_re, d_kets_im, r_data, 1);
+           else
+	    Sea_FFTs_imag(E_points, bras_re, bras_im, kets_re, kets_im, r_data, 1);
 	 }
 	 
 	 FFTs_time.stop("           FFT operations time:        ");
@@ -368,6 +374,9 @@ void Kubo_solver_filtered::compute_imag(){
       if(sym_formula_ == KUBO_BASTIN)
         update_data_Bastin(E_points, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
 
+      if(sym_formula_ == KUBO_SEA)
+        update_data_Sea(E_points, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
+      
 	 
       plot_data(run_dir,filename);
 

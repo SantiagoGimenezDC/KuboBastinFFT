@@ -26,8 +26,12 @@ void Kubo_solver_FFT_postProcess::operator()(const std::vector<type>& final_data
   if(parent_solver_.simulation_formula() == KUBO_GREENWOOD)
     Greenwood_postProcess(final_data, r_data, r);
 
-  if(parent_solver_.simulation_formula() == KUBO_BASTIN || parent_solver_.simulation_formula() == KUBO_SEA)
+  if(parent_solver_.simulation_formula() == KUBO_BASTIN )
     Bastin_postProcess(final_data, r_data, r);
+
+  if( parent_solver_.simulation_formula() == KUBO_SEA )
+    Sea_postProcess(final_data, r_data, r);
+
 };
 
 
@@ -150,6 +154,169 @@ void Kubo_solver_FFT_postProcess::rearrange_crescent_order_2(std::vector<r_type>
     E_points = std::move(sorted_E_points);
     data = std::move(sorted_data);
 }
+
+void Kubo_solver_FFT_postProcess::Sea_postProcess(const std::vector<type>& final_data, const std::vector<type>& r_data, int r){
+
+  const std::complex<double> im(0,1);  
+
+  
+  std::string run_dir = parent_solver_.parameters().run_dir_,
+              filename = parent_solver_.parameters().filename_;
+  
+  
+  int nump = parent_solver_.parameters().num_p_;
+  int SUBDIM = parent_solver_.device().parameters().SUBDIM_;    
+
+  r_type a = parent_solver_.parameters().a_,
+    b = parent_solver_.parameters().b_,
+    sysSubLength = parent_solver_.device().sysSubLength();
+
+  
+  //  r_type omega = DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
+  r_type omega = -2.0 * SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.
+  //r_value_t tmp, max=0, av=0;
+
+  
+  std::vector<r_type>
+    rearranged_E_points(nump),
+    integrand(nump),
+    rvec_integrand(nump),
+    partial_result(nump),
+    rvec_partial_result(nump);
+
+  for(int e=0; e<nump; e++){
+    rearranged_E_points[e] = E_points_[e];
+    integrand[e]           = 0.0;
+    rvec_integrand[e]      = 0.0;
+    partial_result[e]      = 0.0;
+    rvec_partial_result[e] = 0.0;
+  }   
+
+
+  //rearrange_crescent_order(rearranged_E_points);
+
+  /*
+  When introducing a const. eta with modified polynomials, the result is equals to that of a
+  simulation with regular polynomials and an variable eta_{var}=eta*sin(acos(E)). The following
+  heuristical correction greatly improves the result far from the CNP to match that of the
+  desired regular polys and const. eta.
+  */
+  
+
+
+
+  
+
+    
+
+  //Keeping just the real part of E*p(E)+im*sqrt(1-E^2)*w(E) yields the Kubo-Bastin integrand:
+  for(int k = 0; k < nump; k++){
+    integrand[k]  = -E_points_[k] * imag( final_data[ k ] ) - ( sqrt(1.0 - E_points_[ k ] * E_points_[ k ] ) * imag( final_data[ k + nump ] ) );
+    integrand[k] *= 1.0 / pow( (1.0 - E_points_[k]  * E_points_[k] ), 2.0);
+    integrand[k] *=  omega ; 
+
+    rvec_integrand[k]  = -E_points_[k] * imag( r_data[ k ] ) - ( sqrt(1.0 - E_points_[ k ] * E_points_[ k ] ) * imag( r_data[ k + nump ] ) );
+    rvec_integrand[k] *= 1.0 / pow( (1.0 - E_points_[k]  * E_points_[k] ), 2.0);
+    rvec_integrand[k] *=  omega ; 
+  }
+
+  
+  rearrange_crescent_order_2(rearranged_E_points, integrand);
+  //rearrange_crescent_order(integrand);
+  rearrange_crescent_order(rvec_integrand);
+
+  
+
+
+  time_station time_integration;
+      
+  integration(rearranged_E_points, rvec_integrand, rvec_partial_result);  
+  integration(rearranged_E_points, integrand, partial_result);    
+
+  time_integration.stop("       Integration time:           ");
+
+  
+
+  /*
+  if( parameters_.eta_!=0 ){
+    eta_CAP_correct(rearranged_E_points, partial_result);
+    eta_CAP_correct(rearranged_E_points, rvec_partial_result);
+  }
+  */
+
+    r_type tmp = 1, max = 0, av=0;
+  //R convergence analysis  
+  for(int e = 0; e < nump; e++){
+
+    tmp = partial_result [ e ] ;
+    if( r > 1 ){
+      tmp = std::abs( ( partial_result [ e ] - prev_partial_result_ [e] ) / prev_partial_result_ [e] ) ;
+      if(tmp > max)
+        max = tmp;
+
+      av += tmp / nump ;
+    }
+  }
+
+  
+  if( r > 1 ){
+    conv_R_max_[ ( r - 1 ) ] = max;
+    conv_R_av_ [ ( r - 1 ) ] = av;
+  }
+
+
+  
+  prev_partial_result_=partial_result;
+  
+  std::ofstream dataR;
+  dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
+
+  for(int e=0;e<nump;e++)  
+    dataR<< a * rearranged_E_points[e] - b<<"  "<< rvec_partial_result [e]<<"  "<<  partial_result [e] <<std::endl;
+
+  dataR.close();
+  
+
+
+  
+  std::ofstream dataP;
+  dataP.open(run_dir+"currentResult_"+filename);
+
+  for(int e=0;e<nump;e++)  
+    dataP<< a * rearranged_E_points[e] - b<<"  "<<  partial_result [e] <<std::endl;
+
+  dataP.close();
+
+
+
+  
+  
+  std::ofstream data;
+  data.open(run_dir+"conv_R_"+filename);
+
+  for(int l = 1; l < r; l++)  
+    data<< l <<"  "<< conv_R_max_[ ( l - 1 ) ]<<"  "<< conv_R_av_[ ( l - 1 ) ] <<std::endl;
+
+  data.close();
+  
+
+  
+  
+  
+  std::ofstream data2;
+  data2.open( run_dir + filename + "_integrand");
+
+  for(int e=0;e<nump;e++)  
+    data2<< a * rearranged_E_points[e] - b<<"  "<<  integrand[e] <<std::endl;
+  
+  data2.close();
+
+
+  plot_data(run_dir,filename);
+
+}
+
+
 
 void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& final_data, const std::vector<type>& r_data, int r){
 
@@ -311,7 +478,6 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
   plot_data(run_dir,filename);
 
 }
-
 
 
 

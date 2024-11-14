@@ -147,18 +147,18 @@ void Kubo_solver_FFT::Kubo_sea_FFTs( storageType bras, storageType kets, std::ve
        */
 
               p[j] += ( real( re_bras(j) ) - im * real( im_bras(j) ) ) *  //Re(G(k)) *
-		      ( (re_kets(j))   + im *       (im_kets(j)) ) + //G(k)+
+		      ( imag(re_kets(j))   + im *       imag(im_kets(j)) ) + //G(k)+
  	  
-		      ( (conj( re_bras(j) )) - im * (conj( im_bras(j) )) ) * //G(k)
+		      ( imag(conj( re_bras(j) )) - im * imag(conj( im_bras(j) )) ) * //G(k)
                       ( real( re_kets(j) ) + im * real( im_kets(j) ) );   //Re(G(k))
 
 
        //Here: w(k) += (ImdG(k)) * Re(G(k)) - Re(G(k)) * Im(dG(k))
-       w[j] += ( ( conj( re_D_bras(j) ) ) - im * ( conj( im_D_bras(j) ) ) )  * //Im(dG(k))
+       w[j] += ( real( conj( re_D_bras(j) ) ) - im * real( conj( im_D_bras(j) ) ) )  * //Im(dG(k))
 	       ( real( re_kets(j)   ) + im * real( im_kets(j) ) ) - //Re(G(k))
 	  
 	       ( real( conj( re_bras(j) ) )   - im * real( conj( im_bras(j) ) ) )  *  //Re(G(k))
-               ( ( re_D_kets(j) ) + im * ( im_D_kets(j) ) ); //Im( dG(k))
+               ( real( re_D_kets(j) ) + im * real( im_D_kets(j) ) ); //Im( dG(k))
        }
 
      
@@ -171,19 +171,19 @@ void Kubo_solver_FFT::Kubo_sea_FFTs( storageType bras, storageType kets, std::ve
 	       ( real( conj ( re_kets(j) ) ) ) + im * real( conj( im_kets(j) ) );   //Re(G(k))
 */
        p[j] += ( real( re_bras(j) ) - im * real( im_bras(j) ) ) *  //Re(G(k)) *
-	       ( (conj(re_kets(j) ))   + im *       (conj( im_kets(j) ) ) ) + //G(k)+
+	       ( imag(conj(re_kets(j) ))   + im *       imag(conj( im_kets(j) ) ) ) + //G(k)+
  	  
-	       ( (re_bras(j))   - im * (im_bras(j))  ) * //G(k)
+	       ( imag(re_bras(j))   - im * imag(im_bras(j))  ) * //G(k)
                ( real( re_kets(j) ) + im * real( im_kets(j) ) );   //Re(G(k))
 	
 
 
          //Here: w(k) += (Im dG(k)) * Re(G(k)) - Re(G(k)) * Im (dG(k))
-       w[j] += ( (re_D_bras(j))  - im * ( im_D_bras(j) )  )  * //Im (dG(k))
+       w[j] += ( real(re_D_bras(j))  - im * real( im_D_bras(j) )  )  * //Im (dG(k))
 	       ( real( conj (re_kets(j) )   ) + im * real( conj( im_kets(j) ) ) ) - //Re(G(k))
 	  
                ( real( re_bras(j) )   - im * real( im_bras(j) ) )  *  //Re(G(k))
-               ( ( conj( re_D_kets(j) ) ) + im * ( conj ( im_D_kets(j) ) ) ); //Im(dG(k))
+               ( real( conj( re_D_kets(j) ) ) + im * real( conj ( im_D_kets(j) ) ) ); //Im(dG(k))
      }
    }
    

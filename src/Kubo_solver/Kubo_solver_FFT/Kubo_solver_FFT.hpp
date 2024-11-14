@@ -122,6 +122,7 @@ class Kubo_solver_FFT_postProcess{//will interpret data_set of points k=0,...,nu
   
           void Greenwood_postProcess ( const std::vector<type>&, const std::vector<type>&, int );
           void Bastin_postProcess    ( const std::vector<type>&, const std::vector<type>&, int);
+          void Sea_postProcess       ( const std::vector<type>&, const std::vector<type>&, int);
 
           void integration         ( const std::vector<r_type>&, const std::vector<r_type>&, std::vector<r_type>& );
           void integration_linqt   ( const std::vector<r_type>&, const std::vector<r_type>&, std::vector<r_type>& );

@@ -306,6 +306,10 @@ void Kubo_solver_filtered::compute_real(){
 	   else
 	     Bastin_FFTs(E_points, bras,  kets, r_data, 1);
 	 }
+	 else if(sym_formula_ == KUBO_SEA)
+	   Sea_FFTs(E_points, bras,  kets, r_data, 1);
+	 
+
 	 
 	 FFTs_time.stop("           FFT operations time:        ");
 	 total_FFTs_time += FFTs_time;
