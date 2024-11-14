@@ -304,6 +304,167 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
 
 
 
+void Kubo_solver_filtered::update_data_Sea(r_type E_points[], type r_data[], type final_data[], r_type conv_R[], int r, std::string run_dir, std::string filename){
+
+  const std::complex<double> im(0,1);  
+  
+  
+  int nump = parameters_.num_p_,
+    R = parameters_.R_,
+    D = parameters_.dis_real_;
+  
+  int SUBDIM = device_.parameters().SUBDIM_;    
+
+  r_type a = parameters_.a_,
+    b = parameters_.b_,
+    sysSubLength = device_.sysSubLength();
+  
+  int decRate = filter_.parameters().decRate_;   
+  
+  r_type omega = 2.0 * decRate * decRate * SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.
+  //DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
+  
+  //r_value_t tmp, max=0, av=0;
+
+  r_type
+    rearranged_E_points[nump],
+    integrand[nump],
+    rvec_integrand[nump],
+    partial_result[nump],
+    rvec_partial_result[nump];
+
+  for(int e=0; e<nump; e++){
+    rearranged_E_points[e] = E_points[e];
+    integrand[e]           = 0.0;
+    rvec_integrand[e]      = 0.0;
+    partial_result[e]      = 0.0;
+    rvec_partial_result[e] = 0.0;
+  }   
+
+  
+    
+
+
+  
+  for( int e = 0; e < 2*nump; e++ ){  
+    //prev_partial_result[e] = final_data[e];
+    final_data[e] = ( final_data [e] * (r-1.0) +  r_data[e] ) / r;
+  }
+
+
+  
+
+    
+
+  //Keeping just the real part of E*p(E)+im*sqrt(1-E^2)*w(E) yields the Kubo-Bastin integrand:
+  for(int k = 0; k < nump; k++){
+    
+    integrand[k]  = -E_points[k] * imag( final_data[ k ] ) - ( sqrt(1.0 - E_points[ k ] * E_points[ k ] ) * imag( final_data[ k + nump ] ) );
+    integrand[k] *= 1.0 / pow( (1.0 - E_points[k]  * E_points[k] ), 2.0);
+    integrand[k] *=  omega ; 
+
+    rvec_integrand[k]  = -E_points[k] * imag( r_data[ k ] ) - ( sqrt(1.0 - E_points[ k ] * E_points[ k ] ) * imag( r_data[ k + nump ] ) );
+    rvec_integrand[k] *= 1.0 / pow( (1.0 - E_points[k]  * E_points[k] ), 2.0);
+    rvec_integrand[k] *=  omega ; 
+  }
+
+  rearrange_crescent_order(rearranged_E_points);
+  rearrange_crescent_order(integrand);
+  rearrange_crescent_order(rvec_integrand);
+
+  
+
+
+  time_station time_integration;
+      
+  integration_linqt(rearranged_E_points, rvec_integrand, rvec_partial_result);  
+  /*integration_linqt*/ interpolated_integration(rearranged_E_points, integrand, partial_result);    
+
+  time_integration.stop("       Integration time:           ");
+
+  
+
+  /*
+  if( parameters_.eta_!=0 ){
+    eta_CAP_correct(rearranged_E_points, partial_result);
+    eta_CAP_correct(rearranged_E_points, rvec_partial_result);
+  }
+  */
+
+
+  /*-----------------
+  r_type tmp = 1, max = 0, av=0;
+  //R convergence analysis  
+  for(int e = 0; e < nump; e++){
+
+    tmp = partial_result [ e ] ;
+    if( r > 1 ){
+      tmp = std::abs( ( partial_result [ e ] - prev_partial_result_ [e] ) / prev_partial_result_ [e] ) ;
+      if(tmp > max)
+        max = tmp;
+
+      av += tmp / nump ;
+    }
+  }
+
+  
+  if( r > 1 ){
+    conv_R[ 2 * ( r - 1 ) ] = max;
+    conv_R[ 2 * ( r - 1 ) + 1 ] = av;
+  }
+  */
+  
+  //prev_partial_result_=partial_result;
+
+
+  
+  std::ofstream dataR;
+  dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
+
+  for(int e=0;e<nump;e++)  
+    dataR<< a * rearranged_E_points[e] - b<<"  "<< rvec_partial_result [e]<<"  "<< partial_result [e]  <<std::endl;
+
+  dataR.close();
+  
+
+
+  
+  std::ofstream dataP;
+  dataP.open(run_dir+"currentResult_"+filename);
+
+  for(int e=0;e<nump;e++)  
+    dataP<< a * rearranged_E_points[e] - b<<"  "<<  partial_result [e] <<std::endl;
+
+  dataP.close();
+
+
+
+  
+  std::ofstream data;
+  data.open(run_dir+"conv_R_"+filename);
+
+  for(int r=1;r<D*R;r++)  
+    data<< r <<"  "<< conv_R[ 2*(r-1) ]<<"  "<< conv_R[ 2*(r-1) + 1 ] <<std::endl;
+
+  data.close();  
+
+  
+  
+  
+  std::ofstream data2;
+  data2.open( run_dir + filename + "_integrand");
+
+  for(int e=0;e<nump;e++)  
+    data2<< a * rearranged_E_points[e] - b<<"  "<<  integrand[e] <<std::endl;
+  
+  data2.close();
+
+
+  plot_data(run_dir,filename);
+}
+
+
+
 
 void Kubo_solver_filtered::update_data(r_type E_points[],  type r_data[], type final_data[], r_type conv_R[], int r, std::string run_dir, std::string filename){
 
