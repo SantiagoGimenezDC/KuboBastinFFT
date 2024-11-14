@@ -339,6 +339,8 @@ void Kubo_solver_filtered::compute_imag(){
 	   else
 	     Bastin_FFTs_imag(E_points, bras_re, bras_im, kets_re, kets_im, r_data, 1);
 	 }
+	 if(sym_formula_ == KUBO_SEA)
+	   Sea_FFTs_imag(E_points, bras_re, bras_im, kets_re, kets_im, r_data, 1);
 	 
 	 FFTs_time.stop("           FFT operations time:        ");
 	 total_FFTs_time += FFTs_time;
@@ -368,6 +370,9 @@ void Kubo_solver_filtered::compute_imag(){
       if(sym_formula_ == KUBO_BASTIN)
         update_data_Bastin(E_points, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
 
+      if(sym_formula_ == KUBO_SEA)
+        update_data_Sea(E_points, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
+      
 	 
       plot_data(run_dir,filename);
 

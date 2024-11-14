@@ -1,0 +1,46 @@
+nohup: ignoring input
+Ongoing gimmicks:
+ADDED KANE MELE STR TO THE INPUTS and A and B inputs!!
+AUTO BOUND DETECTION NOT WORKING - on normal mode only???
+Read_Hamiltonian only works for COMPLEX Hamiltonian;
+Min max eigenvalues is using H_ket with the 4 entries;
+The min max eigv are fixed;
+Filtered eq: KG,  FFT eq: KG
+9610000
+4648.5
+
+
+v1: 2684.68    4650       0  v2:-2684.68     4650        0
+38440000  9610000
+Length:  4996.75
+NUM ATOMS:  19220000
+    Time to setup the Hamiltonian:            423.813 ms 
+
+ Effective filter length: 962
+
+Expected memory cost breakdown:
+   Chebyshev buffers:    242.326 GBs
+   Hamiltonian size:     0 GBs
+   Recursion vectors:    3.69024 GBs
+   FFT auxiliary lines:  0.0005 GBs
+
+TOTAL:  246.016 GBs
+
+
+1/1-Vector/disorder realization;
+    -Part: 1/2
+           Kets cycle time:            2 hrs, 19 mins;
+           Bras cycle time:            2 hrs, 45 mins;
+           FFT operations time:        1 mins, 51 secs;
+    -Part: 2/2
+           Kets cycle time:            2 hrs, 24 mins;
+           Bras cycle time:            2 hrs, 39 mins;
+           FFT operations time:        1 mins, 50 secs;
+
+       Total CSRMV time:           10 hrs, 9 mins;
+       Total FFTs time:            3 mins, 42 secs;
+       Integration time:           0.076 ms 
+       Post-processing time:       159.914 ms 
+       Total RandVec time:         10 hrs, 12 mins;
+
+Total case execution time:              10 hrs, 14 mins;
