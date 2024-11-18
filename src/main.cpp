@@ -128,12 +128,11 @@ int main(int , char **argv){
 
 
   std::cout<<"Ongoing gimmicks:"<<std::endl;
-  std::cout<<"ADDED KANE MELE STR TO THE INPUTS and A and B inputs!!"<<std::endl;
   std::cout<<"AUTO BOUND DETECTION NOT WORKING - on normal mode only???"<<std::endl;
   std::cout<<"Read_Hamiltonian only works for COMPLEX Hamiltonian;"<<std::endl;
   std::cout<<"Min max eigenvalues is using H_ket with the 4 entries;"<<std::endl;
   std::cout<<"The min max eigv are fixed;"<<std::endl;
-  std::cout<<"Filtered eq: KG,  FFT eq: KG"<<std::endl;
+ 
 
 
   if(device_choice==0)
@@ -193,8 +192,8 @@ int main(int , char **argv){
     Input>>f_vars.energy_center_, Input>>cutoff_fact;
     Input>>f_vars.att_;
 
-    if(!f_vars.post_filter_ && !f_vars.filter_)
-      f_vars.decRate_ = 1;
+    //    if(!f_vars.post_filter_ && !f_vars.filter_)
+    //  f_vars.decRate_ = 1;
 
     
     f_vars.M_ext_ = nump_factor * f_vars.M_ ;

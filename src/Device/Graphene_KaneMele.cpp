@@ -283,7 +283,7 @@ void Graphene_KaneMele::H_ket (r_type a, r_type b, type* ket, type* p_ket){
 
 
   r_type b_a = b/a;
-  
+
           
   Eigen::Matrix4cd Id = Eigen::Matrix4d::Identity(),H_1, H_2, H_3, H_4;
 
@@ -293,7 +293,7 @@ void Graphene_KaneMele::H_ket (r_type a, r_type b, type* ket, type* p_ket){
   H_4 = H_4_/a;
 
 
-  
+  r_type *dmp_op = damp_op();  
   r_type * disorder_potential = dis();
 
   Eigen::Map<Eigen::VectorXcd> eig_ket(ket,Dim),
@@ -306,7 +306,7 @@ void Graphene_KaneMele::H_ket (r_type a, r_type b, type* ket, type* p_ket){
       int n1 = ( j * W + i ) * 4;
 
       
-      eig_ket.segment(n1,4) = H_1 * eig_p_ket.segment(n1,4);
+      eig_ket.segment(n1,4) =  H_1 * eig_p_ket.segment(n1,4);
       eig_ket.segment(n1,4) += H_1.adjoint() * eig_p_ket.segment(n1,4);
 
       
@@ -331,15 +331,16 @@ void Graphene_KaneMele::H_ket (r_type a, r_type b, type* ket, type* p_ket){
       n2 = ( ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W +    ( i + 1 ) % W ) * 4;
       eig_ket.segment(n1,4) += H_4.adjoint() * eig_p_ket.segment(n2,4);
 
-      
+
+      eig_ket.segment(n1,4) *= dmp_op[n1/4];
     }
  }
 
 
  
  if( disorder_potential != NULL )
-   for( int i = 0; i < W * Le ; i ++ )
-     eig_ket.segment(i,4) += disorder_potential[ i ] * eig_p_ket.segment(i,4);
+   for( int i = 0; i < 2 * W * Le ; i ++ )
+     eig_ket.segment(i,2) += dmp_op[i/2] * disorder_potential[ i ] * eig_p_ket.segment(i,2);
    
 };
 
@@ -364,7 +365,8 @@ void Graphene_KaneMele::update_cheb ( type ket[], type p_ket[], type pp_ket[]){
   H_2 = H_2_/a;
   H_3 = H_3_/a;
   H_4 = H_4_/a;
-	    
+
+  r_type *dmp_op = damp_op();  
   r_type * disorder_potential = dis();
 
 
@@ -378,7 +380,7 @@ void Graphene_KaneMele::update_cheb ( type ket[], type p_ket[], type pp_ket[]){
     for(int i=0; i<W; i++){      
       int n1 = ( j * W + i ) * 4;
       
-      eig_ket.segment(n1,4) = b_a  * eig_p_ket.segment(n1,4) - 0.5 * eig_pp_ket.segment(n1,4);
+      eig_ket.segment(n1,4) = b_a  * eig_p_ket.segment(n1,4) - 0.5 * dmp_op[n1/4] * eig_pp_ket.segment(n1,4);
 
       
       eig_ket.segment(n1,4) += H_1 * eig_p_ket.segment(n1,4);
@@ -410,8 +412,8 @@ void Graphene_KaneMele::update_cheb ( type ket[], type p_ket[], type pp_ket[]){
 
 
       
+      eig_ket.segment(n1,4) *= 2.0 * dmp_op[n1/4];
       
-      eig_ket.segment(n1,4) *= 2.0;
       eig_pp_ket.segment(n1,4) = eig_p_ket.segment(n1,4); 
     }
  }
@@ -419,8 +421,94 @@ void Graphene_KaneMele::update_cheb ( type ket[], type p_ket[], type pp_ket[]){
 
  
  if( disorder_potential != NULL )
-   for( int i = 0; i < W * Le ; i ++ )
-     eig_ket.segment(i,4) += disorder_potential[ i ] * eig_p_ket.segment(i,4);
+   for( int i = 0; i < 2 * W * Le ; i ++ )
+     eig_ket.segment(i,2) += dmp_op[i] * disorder_potential[ i ] * eig_p_ket.segment(i,2);
+
+ 
+ eig_p_ket = eig_ket;
+ 
+};
+
+
+
+
+void Graphene_KaneMele::update_cheb_filtered ( type ket[], type p_ket[], type pp_ket[], r_type disp_factor){
+  int Le = this->parameters().LE_,
+    W  = this->parameters().W_,
+    Dim = this->parameters().DIM_;
+
+
+  r_type a = this->a(),
+         b = this->b();
+
+  r_type b_a = b/a;
+  
+          
+  Eigen::Matrix4cd
+    Id = Eigen::Matrix4d::Identity(), H_1, H_2, H_3, H_4;
+
+  H_1 = H_1_/a + b_a*Id;
+  H_2 = H_2_/a;
+  H_3 = H_3_/a;
+  H_4 = H_4_/a;
+
+  r_type *dmp_op = damp_op();  
+  r_type * disorder_potential = dis();
+
+
+  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,Dim),
+    eig_p_ket(p_ket, Dim),
+    eig_pp_ket(pp_ket, Dim);
+
+    
+#pragma omp parallel for 
+ for(int j=0; j<Le; j++){
+    for(int i=0; i<W; i++){      
+      int n1 = ( j * W + i ) * 4;
+      
+      eig_ket.segment(n1,4) = b_a  * eig_p_ket.segment(n1,4) - 0.5 * disp_factor * dmp_op[n1/4] * eig_pp_ket.segment(n1,4);
+
+      
+      eig_ket.segment(n1,4) += H_1 * eig_p_ket.segment(n1,4);
+      eig_ket.segment(n1,4) += H_1.adjoint() * eig_p_ket.segment(n1,4);
+
+      
+      
+      int n2 = (  j * W + ( i + 1 ) % W ) * 4;
+      eig_ket.segment(n1,4) +=  H_2  * eig_p_ket.segment(n2,4);
+
+      n2 = ( ( ( j + 1 ) % Le ) * W + i ) * 4;
+      eig_ket.segment(n1, 4) +=  H_3  * eig_p_ket.segment(n2, 4);
+
+      n2 = ( ( ( j + 1 ) % Le ) * W    +    ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) ) ) * 4;
+      eig_ket.segment(n1,4) += H_4 * eig_p_ket.segment(n2,4);
+      
+
+
+
+      //Adjoints
+      n2 = ( j * W + ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
+      eig_ket.segment(n1,4) += H_2.adjoint() * eig_p_ket.segment(n2,4);
+
+      n2 = (  ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W + i ) * 4;
+      eig_ket.segment(n1, 4) += H_3.adjoint() * eig_p_ket.segment(n2, 4);
+      
+      n2 = ( ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W +    ( i + 1 ) % W ) * 4;
+      eig_ket.segment(n1,4) += H_4.adjoint() * eig_p_ket.segment(n2,4);
+
+
+      
+      eig_ket.segment(n1,4) *= 2.0 * disp_factor * dmp_op[n1/4];
+      
+      eig_pp_ket.segment(n1,4) = eig_p_ket.segment(n1,4); 
+    }
+ }
+
+
+ 
+ if( disorder_potential != NULL )
+   for( int i = 0; i < 2 * W * Le ; i ++ )
+     eig_ket.segment(i,2) += dmp_op[i] * disorder_potential[ i ] * eig_p_ket.segment(i,2);
 
  
  eig_p_ket = eig_ket;

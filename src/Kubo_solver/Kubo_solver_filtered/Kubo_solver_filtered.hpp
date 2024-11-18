@@ -89,7 +89,8 @@ public:
   
   void filter_imag( int, type*, type**, type**, type*, type*, int, int);
   void filter_doubleBuffer_imag( int, type*, type**, type**, type**, type**, type*, type*, int, int);
-  
+
+  void filtered_polynomial_cycle_OTF_imag( type** , type** ,  type*, int , int );  
   void filtered_polynomial_cycle_direct_imag( type** , type** , type*, int , int );
   void filtered_polynomial_cycle_direct_doubleBuffer_imag( type** , type**, type** , type** , type*, int , int );
   
