@@ -28,10 +28,10 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_OTF_imag(type** re_poly_buf
 
   bool cyclic = true;
 
-
+  /*
   if( M_ext > M + Np)
     cyclic = false;
-
+  */
   
   for(int i=0; i < L; i++)
     KB_window[i] = filter_.KB_window()[i];
@@ -69,7 +69,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_OTF_imag(type** re_poly_buf
 
   
   if( vel_op == 1 )
-    device_.vel_op( pp_vec, rand_vec );  
+    device_.vel_op( pp_vec, rand_vec, parameters_.vel_dir_2_  );  
   else
 #pragma omp parallel for
     for(int l = 0; l < DIM; l++)
@@ -108,18 +108,18 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_OTF_imag(type** re_poly_buf
 
     for( int m=2; m<M; m++ ){
 
-      
       device_.update_cheb( vec, p_vec, pp_vec);
 
       
-      factor = 2 * std::polar(1.0,  M_PI * m * (  - 2 * k_dis + initial_disp_) / M_ext );
 
-      filter_imag( m, p_vec, re_poly_buffer, im_poly_buffer, tmp, tmp_velOp, s, vel_op ); 
+      if( m < L || M - m - 1 < L )
+        filter_imag( m, vec, re_poly_buffer, im_poly_buffer, tmp, tmp_velOp, s, vel_op ); 
       
       
-
       
       //==========================Filtered recursion==============================//
+      factor = 2 * std::polar(1.0,  M_PI * m * (  - 2 * k_dis + initial_disp_) / M_ext );
+
       
       if( m < L + 1 )
         plus_eq( pp_vec_f, vec,  factor * KB_window[ Np + ( m - ( Np + 1 ) ) ], DIM);
@@ -136,7 +136,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_OTF_imag(type** re_poly_buf
       //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
       if( (Np + 1 ) % decRate == 0 && m == L + 2){
 	  if( vel_op == 1 ){
-            device_.vel_op( tmp_velOp, pp_vec_f );
+            device_.vel_op( tmp_velOp, pp_vec_f, parameters_.vel_dir_2_ );
             device_.traceover( tmp, tmp_velOp, s, num_parts );
 	    plus_eq_imag( re_poly_buffer[ ( Np + 1 ) / decRate ], im_poly_buffer[  ( Np + 1 ) / decRate ], tmp,  1.0, SEC_SIZE);
 	  }
@@ -147,7 +147,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_OTF_imag(type** re_poly_buf
 	
 	  if( (Np + 2) % decRate == 0 ){
 	    if( vel_op == 1 ){
-              device_.vel_op( tmp_velOp, p_vec_f );
+              device_.vel_op( tmp_velOp, p_vec_f, parameters_.vel_dir_2_ );
               device_.traceover( tmp, tmp_velOp, s, num_parts );
 	      plus_eq_imag( re_poly_buffer[ ( Np + 2 ) / decRate ], im_poly_buffer[  ( Np + 2 ) / decRate ], tmp,  1.0 , SEC_SIZE);
 	    }
@@ -159,7 +159,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_OTF_imag(type** re_poly_buf
       }
       if( (Np + 2) % decRate == 0 && (Np + 1) % decRate > 0 && m == L + 2 ){
 	  if( vel_op == 1 ){
-            device_.vel_op( tmp_velOp, p_vec_f );
+            device_.vel_op( tmp_velOp, p_vec_f, parameters_.vel_dir_2_ );
 	    plus_eq_imag( re_poly_buffer[ Np / decRate + 1 ], im_poly_buffer[ Np / decRate + 1 ], tmp,  1.0 , SEC_SIZE);
 	    
 	  }
@@ -177,6 +177,11 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_OTF_imag(type** re_poly_buf
 
       //Filtered recursion starts at m = Np, ends at M - Np
       
+      if( m == M-1)
+      for(int i=0; i<M_dec;i++)
+	std::cout<<i<<"/"<<M_dec<<"   "<<re_poly_buffer[i][SEC_SIZE/2]<<std::endl;
+      
+      
       if( m > L + 1 && m < M){
 
 
@@ -185,7 +190,7 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_OTF_imag(type** re_poly_buf
 	
 	if( ( m - Np ) % decRate == 0 ){
 	  if( vel_op == 1 ){
-            device_.vel_op( tmp_velOp, vec_f );
+            device_.vel_op( tmp_velOp, vec_f, parameters_.vel_dir_2_ );
             device_.traceover( tmp, tmp_velOp, s, num_parts );
 	    plus_eq_imag( re_poly_buffer[ ( m - Np ) / decRate ], im_poly_buffer[  ( m - Np ) / decRate ], tmp,  1.0 , SEC_SIZE);
 

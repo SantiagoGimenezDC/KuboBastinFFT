@@ -66,11 +66,11 @@ class Graphene_KaneMele: public Graphene{
     virtual void H_ket  (r_type, r_type,  type*, type* );
     virtual void update_cheb ( type*, type*,  type*);
 
-    virtual void update_cheb_filtered ( type ket[], type p_ket[], type pp_ket[], r_type*, r_type*, r_type disp_factor){
+    virtual void update_cheb_filtered ( type ket[], type p_ket[], type pp_ket[], r_type*, r_type*, type disp_factor){
       update_cheb_filtered ( ket, p_ket, pp_ket, disp_factor );
     };
   
-    void update_cheb_filtered ( type *, type *, type *,  r_type );
+    void update_cheb_filtered ( type *, type *, type *,  type );
   
     virtual void vel_op   ( type* ket, type* p_ket, int dir){
       if( dir == 0 )

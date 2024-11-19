@@ -432,7 +432,7 @@ void Graphene_KaneMele::update_cheb ( type ket[], type p_ket[], type pp_ket[]){
 
 
 
-void Graphene_KaneMele::update_cheb_filtered ( type ket[], type p_ket[], type pp_ket[], r_type disp_factor){
+void Graphene_KaneMele::update_cheb_filtered ( type ket[], type p_ket[], type pp_ket[], type disp_factor){
   int Le = this->parameters().LE_,
     W  = this->parameters().W_,
     Dim = this->parameters().DIM_;
@@ -460,7 +460,7 @@ void Graphene_KaneMele::update_cheb_filtered ( type ket[], type p_ket[], type pp
     eig_p_ket(p_ket, Dim),
     eig_pp_ket(pp_ket, Dim);
 
-    
+
 #pragma omp parallel for 
  for(int j=0; j<Le; j++){
     for(int i=0; i<W; i++){      
