@@ -176,11 +176,12 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_OTF_imag(type** re_poly_buf
       
 
       //Filtered recursion starts at m = Np, ends at M - Np
-      
+
+      /*      
       if( m == M-1)
       for(int i=0; i<M_dec;i++)
 	std::cout<<i<<"/"<<M_dec<<"   "<<re_poly_buffer[i][SEC_SIZE/2]<<std::endl;
-      
+      */
       
       if( m > L + 1 && m < M){
 

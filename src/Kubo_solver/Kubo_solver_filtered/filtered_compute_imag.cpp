@@ -294,8 +294,8 @@ void Kubo_solver_filtered::compute_imag(){
 
 	 
 	 
-         time_station_2 csrmv_time_kets;
-         csrmv_time_kets.start();
+         time_station_2 csrmv_time_bras;
+         csrmv_time_bras.start();
 
 	 if( ( sym_formula_ == KUBO_BASTIN || sym_formula_ == KUBO_SEA ) && double_buffer)	   
            filtered_polynomial_cycle_direct_doubleBuffer_imag(bras_re, bras_im, d_bras_re, d_bras_im, rand_vec, s, 0);     
@@ -304,16 +304,16 @@ void Kubo_solver_filtered::compute_imag(){
 	   //filtered_polynomial_cycle_OTF_imag(bras_re, bras_im, rand_vec, s, 0);
 
 	 
-	 csrmv_time_kets.stop("           Kets cycle time:            ");
-         total_csrmv_time += csrmv_time_kets;
+	 csrmv_time_bras.stop("           Bras cycle time:            ");
+         total_csrmv_time += csrmv_time_bras;
 
 
 
 	 
 
 	 
-	 time_station_2 csrmv_time_bras;
-         csrmv_time_bras.start();
+	 time_station_2 csrmv_time_kets;
+         csrmv_time_kets.start();
 
 	 if( ( sym_formula_ == KUBO_BASTIN || sym_formula_ == KUBO_SEA )  && double_buffer)	   
            filtered_polynomial_cycle_direct_doubleBuffer_imag(kets_re, kets_im, d_kets_re, d_kets_im, rand_vec, s, 1);     
@@ -321,8 +321,8 @@ void Kubo_solver_filtered::compute_imag(){
 	   filtered_polynomial_cycle_direct_imag(kets_re, kets_im, rand_vec, s, 1);     
 	   //filtered_polynomial_cycle_OTF_imag(kets_re, kets_im, rand_vec, s, 1);
 
-	 csrmv_time_bras.stop("           Bras cycle time:            ");
-         total_csrmv_time += csrmv_time_bras;
+	 csrmv_time_kets.stop("           Kets cycle time:            ");
+         total_csrmv_time += csrmv_time_kets;
 	 
 
 
@@ -344,7 +344,7 @@ void Kubo_solver_filtered::compute_imag(){
 	   if(double_buffer)
 	     Sea_FFTs_doubleBuffer_imag(E_points, bras_re, bras_im, d_bras_re, d_bras_im, kets_re, kets_im, d_kets_re, d_kets_im, r_data, 1);
            else
-	    Sea_FFTs_imag(E_points, bras_re, bras_im, kets_re, kets_im, r_data, 1);
+	     Sea_FFTs_imag(E_points, bras_re, bras_im, kets_re, kets_im, r_data, 1);
 	 }
 	 
 	 FFTs_time.stop("           FFT operations time:        ");
@@ -607,11 +607,11 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_imag(type** poly_buf
     device_.update_cheb( vec, p_vec, pp_vec );
 
     filter_imag( m, vec, poly_buffer_re, poly_buffer_im, tmp, tmp_velOp, s, vel_op );
-
+    /*
       if( m == M-1)
 	for(int i=0; i<filter_.M_dec();i++)
 	std::cout<<i<<"/"<<filter_.M_dec()<<"   "<<poly_buffer_re[i][SEC_SIZE/2]<<std::endl;
-
+    */
   }
       
     delete []vec;

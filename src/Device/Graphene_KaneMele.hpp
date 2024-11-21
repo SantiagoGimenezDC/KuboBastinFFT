@@ -59,6 +59,7 @@ class Graphene_KaneMele: public Graphene{
 
     virtual void build_Hamiltonian(){};
 
+    void Hk(Eigen::Vector3d );
     //Rashba coupling Hamiltonian
     virtual void H_ket  ( type* ket , type* p_ket ){ H_ket(this->a(),this->b(), ket, p_ket); }
     virtual void H_ket  ( type* ket , type* p_ket, r_type*, r_type* ){ H_ket(this->a(), this->b(), ket, p_ket); }

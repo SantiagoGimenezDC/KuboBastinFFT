@@ -132,7 +132,7 @@ int main(int , char **argv){
   std::cout<<"Read_Hamiltonian only works for COMPLEX Hamiltonian;"<<std::endl;
   std::cout<<"Min max eigenvalues is using H_ket with the 4 entries;"<<std::endl;
   std::cout<<"The min max eigv are fixed;"<<std::endl;
- 
+  std::cout<<"REAL filtered randVec does not work with complex Hamiltonian! Same issue as general imag vector i think, we lose the imag part of the Hamiltonian"<<std::endl; 
 
 
   if(device_choice==0)

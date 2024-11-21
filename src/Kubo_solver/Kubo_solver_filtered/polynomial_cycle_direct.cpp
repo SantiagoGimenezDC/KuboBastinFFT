@@ -56,6 +56,12 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct(type** poly_buffer, 
     device_.update_cheb( vec, p_vec, pp_vec );
 
     filter_2( m, vec, poly_buffer, tmp, tmp_velOp, s, vel_op );
+
+    /*        if( m == M-1)
+	    for(int i=0; i<filter_.M_dec();i++)
+	std::cout<<i<<"/"<<filter_.M_dec()<<"   "<<poly_buffer[i][SEC_SIZE/2]<<std::endl;
+    */
+
   }
       
     delete []vec;

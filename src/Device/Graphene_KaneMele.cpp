@@ -95,6 +95,13 @@ Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashb
 
 };
 
+
+void Graphene_KaneMele::Hk(Eigen::Vector3d k){
+
+
+
+};
+
 void Graphene_KaneMele::J (type* ket, type* p_ket, int dir){
 
   int SUBDIM = this->parameters().SUBDIM_;
@@ -126,12 +133,12 @@ void Graphene_KaneMele::J (type* ket, type* p_ket, int dir){
     for(int i=0; i<W; i++){      
       int n1 = ( ( j + C ) * W + i ) * 4;
 
-      eig_ket.segment(n1,2) = type(0.0,1.0) * chosen_dir * eig_p_ket.segment(n1,2);
+      eig_ket.segment(n1,2)   = type(0.0,1.0) * chosen_dir * eig_p_ket.segment(n1,2);
       eig_ket.segment(n1+2,2) = type(0.0,1.0) * chosen_dir * eig_p_ket.segment(n1+2,2);
-      
+ 
     }
  }
-
+ 
 };
 
 

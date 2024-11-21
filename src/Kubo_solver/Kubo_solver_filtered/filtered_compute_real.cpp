@@ -273,7 +273,7 @@ void Kubo_solver_filtered::compute_real(){
   	   filtered_polynomial_cycle_direct(bras, rand_vec, s, 0);
            //filtered_polynomial_cycle_OTF(bras, rand_vec, device_.damp_op(), device_.dis(), s, 0);
 	 
-	 csrmv_time_kets.stop("           Kets cycle time:            ");
+	 csrmv_time_kets.stop("           Bras cycle time:            ");
          total_csrmv_time += csrmv_time_kets;
 
 
@@ -287,9 +287,9 @@ void Kubo_solver_filtered::compute_real(){
 	   filtered_polynomial_cycle_direct_doubleBuffer(kets, d_kets, rand_vec, s, 1);
 	 else
 	   filtered_polynomial_cycle_direct(kets, rand_vec, s, 1);
-	 //filtered_polynomial_cycle_OTF(kets, rand_vec, device_.damp_op(), device_.dis(), s, 1);
+	   //filtered_polynomial_cycle_OTF(kets, rand_vec, device_.damp_op(), device_.dis(), s, 0);
 	 
-	 csrmv_time_bras.stop("           Bras cycle time:            ");
+	 csrmv_time_bras.stop("           Kets cycle time:            ");
          total_csrmv_time += csrmv_time_bras;
 	 
 
@@ -306,15 +306,12 @@ void Kubo_solver_filtered::compute_real(){
            if(double_buffer)
 	     Bastin_FFTs_doubleBuffer(E_points, bras, d_bras, kets, d_kets, r_data, 1);
 	   else{
-	     std::cout<<"Yes. It is Bastin"<<std::endl;
 	     Bastin_FFTs(E_points, bras,  kets, r_data, 1);
 	   }
 	 }
-	 else if(sym_formula_ == KUBO_SEA){
-
-	   std::cout<<"No. It is SEA  "<<sym_formula_<<std::endl;
+	 else if(sym_formula_ == KUBO_SEA)
 	   Sea_FFTs(E_points, bras,  kets, r_data, 1);
-	 }
+	 
 
 	 
 	 FFTs_time.stop("           FFT operations time:        ");
