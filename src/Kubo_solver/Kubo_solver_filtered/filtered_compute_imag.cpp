@@ -370,7 +370,6 @@ void Kubo_solver_filtered::compute_imag(){
 
       if(sym_formula_ == KUBO_GREENWOOD)
         update_data(E_points,  r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
-
        
       if(sym_formula_ == KUBO_BASTIN)
         update_data_Bastin(E_points, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);

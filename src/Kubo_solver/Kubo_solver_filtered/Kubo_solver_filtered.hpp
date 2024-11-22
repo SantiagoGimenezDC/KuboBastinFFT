@@ -50,10 +50,11 @@ public:
   void reset_buffer(type**);
   
   void compute(){
+          compute_imag();/*
     if( parameters_.base_choice_ == 1  )
       compute_imag();
     else
-      compute_real();
+    compute_real();*/
   };
 
 
