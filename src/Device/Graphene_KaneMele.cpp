@@ -26,18 +26,18 @@ Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashb
   this->set_sysSubLength(Length);
   this->set_sysLength(Length);
       
-
+  //values in eVs
   r_type t = t_standard_,
-         stgr_str_2 = -stgr_str_ * t,
-         m_str_2 = -m_str_ * t /2,
-         rashba_str_2 = -rashba_str_ * t,
-    KM_str_2 = -KM_str_ * t,
-    HLD_str_2 = - HLD_str * t;
+         stgr_str_2 = stgr_str_ ,
+         m_str_2 = m_str_ /2,
+         rashba_str_2 = rashba_str_ ,
+    KM_str_2 = KM_str_ ,
+    HLD_str_2 = HLD_str ;
   
 
-  std::complex<r_type> R_PF  = -type(0,1.0) * rashba_str_2 / 3.0,    
-    KM_PF  = -type(0,1.0) * KM_str_2 / (6.0 * sqrt(3.0) ),
-    HLD_PF  = -type(0,1.0) * HLD_str_2 / (6.0 * sqrt(3.0) );
+  std::complex<r_type> R_PF  = type(0,1.0) * rashba_str_2 / 3.0,    
+    KM_PF  = type(0,1.0) * KM_str_2 / (6.0 * sqrt(3.0) ),
+    HLD_PF  = type(0,1.0) * HLD_str_2 / (6.0 * sqrt(3.0) );
 
   Eigen::Vector3d m{0.0,0.0,m_str_2};
   Eigen::Matrix4cd H_bare = Eigen::Matrix4cd::Zero(),
