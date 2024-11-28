@@ -32,12 +32,12 @@ Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashb
          m_str_2 = m_str_ /2,
          rashba_str_2 = rashba_str_ ,
     KM_str_2 = -KM_str_ , //Unexplained minus sign here
-    HLD_str_2 = HLD_str ;
+    HLD_str_2 = -HLD_str ; //Unexplained minus sign here
   
 
-  std::complex<r_type> R_PF  = type(0,1.0) * rashba_str_2 / 3.0 * 0.3333333/0.9,    //UNEXPLAINED 2.1 factor??
-    KM_PF  = type(0,1.0) * KM_str_2 / (6.0 * sqrt(3.0) ) * 0.3333333/0.9,
-    HLD_PF  = type(0,1.0) * HLD_str_2 / (6.0 * sqrt(3.0) ) * 0.3333333/0.9;
+  std::complex<r_type> R_PF  = type(0,1.0) * rashba_str_2 / 3.0 , 
+    KM_PF  = type(0,1.0) * KM_str_2 / (6.0 * sqrt(3.0) ) ,
+    HLD_PF  = type(0,1.0) * HLD_str_2 / (6.0 * sqrt(3.0) ) ;
 
   Eigen::Vector3d m{0.0,0.0,m_str_2};
   Eigen::Matrix4cd H_bare = Eigen::Matrix4cd::Zero(),
@@ -401,7 +401,7 @@ void Graphene_KaneMele::update_cheb ( type ket[], type p_ket[], type pp_ket[]){
       n2 = ( ( ( j + 1 ) % Le ) * W + i ) * 4;
       eig_ket.segment(n1, 4) +=  H_3  * eig_p_ket.segment(n2, 4);
 
-      n2 = ( ( ( j + 1 ) % Le ) * W    +    ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) ) ) * 4;
+      n2 = ( ( ( j + 1 ) % Le ) * W    +    ( i + 1 ) % W ) * 4;
       eig_ket.segment(n1,4) += H_4 * eig_p_ket.segment(n2,4);
       
 
@@ -414,7 +414,7 @@ void Graphene_KaneMele::update_cheb ( type ket[], type p_ket[], type pp_ket[]){
       n2 = (  ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W + i ) * 4;
       eig_ket.segment(n1, 4) += H_3.adjoint() * eig_p_ket.segment(n2, 4);
       
-      n2 = ( ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W +    ( i + 1 ) % W ) * 4;
+      n2 = ( ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W  +    ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
       eig_ket.segment(n1,4) += H_4.adjoint() * eig_p_ket.segment(n2,4);
 
 
@@ -695,7 +695,7 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
       n2 = ( ( ( j + 1 ) % Le ) * W + i ) * 4;
       eig_ket.segment(n1, 4) +=  H_3 * eig_p_ket.segment(n2, 4);
 
-      n2 = ( ( ( j + 1 ) % Le )* W + ( ( i - 1 ) == -1 ? (W-1) : (i-1) ) ) * 4;
+      n2 = ( ( ( j + 1 ) % Le )* W + ( i + 1 ) % W  ) * 4;
       eig_ket.segment(n1,4)  +=  H_4 * eig_p_ket.segment(n2,4);
 
       
@@ -707,7 +707,7 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
       n2 = (  ( ( j - 1 ) == -1 ? (Le - 1) : (j-1) ) * W + i ) * 4;
       eig_ket.segment( n1, 4 ) +=  H_3.adjoint() * eig_p_ket.segment(n2, 4);
 	
-      n2 = ( ( ( j - 1 ) == -1 ? (Le-1) : (j-1) ) * W + ( i + 1 ) % W ) * 4;
+      n2 = ( ( ( j - 1 ) == -1 ? (Le-1) : (j-1) ) * W  + ( ( i - 1 ) == -1 ? (W-1) : (i-1) )  ) * 4;
       eig_ket.segment( n1, 4 ) +=  H_4.adjoint() * eig_p_ket.segment(n2,4);
 
     }

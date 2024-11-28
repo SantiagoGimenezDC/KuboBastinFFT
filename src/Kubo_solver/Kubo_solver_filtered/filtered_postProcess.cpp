@@ -160,7 +160,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
   
   int decRate = filter_.parameters().decRate_;   
   
-  r_type omega = 2.0 * decRate * decRate * SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.
+  r_type omega = 2.0 * decRate * decRate * SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.(REMOVED)
   //DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
   
   //r_value_t tmp, max=0, av=0;
@@ -321,7 +321,7 @@ void Kubo_solver_filtered::update_data_Sea(r_type E_points[], type r_data[], typ
   
   int decRate = filter_.parameters().decRate_;   
   
-  r_type omega = 2.0 * decRate * decRate * SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.
+  r_type omega = 2.0 * decRate * decRate * SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.(REMOVED)
   //DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
   
   //r_value_t tmp, max=0, av=0;
@@ -481,7 +481,7 @@ void Kubo_solver_filtered::update_data(r_type E_points[],  type r_data[], type f
 
 
   
-  r_type omega = SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/ ;//Dimensional and normalizing constant
+  r_type omega = SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/ ;//Dimensional and normalizing constant(REMOVED MINUS SIGN)
   
   r_type tmp, max=0, av=0;
 
