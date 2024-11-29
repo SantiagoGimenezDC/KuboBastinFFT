@@ -54,9 +54,6 @@ Graphene::Graphene(device_vars& parameters) : Device(parameters),   coordinates_
     CYCLIC_BCs_=true;
 
 
-  std::cout<<parameters.SUBDIM_<<std::endl;
-  std::cout<<(fullLe-1) * (1.0+sin(M_PI/6))<<std::endl;
-
   
   this->set_sysLength( (fullLe-1) * (1.0+sin(M_PI/6)) ); 
   this->set_sysSubLength( (Le-1)*(1.0+sin(M_PI/6)) );

@@ -26,10 +26,10 @@ Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashb
   this->set_sysSubLength(Length);
   this->set_sysLength(Length);
       
-  //values in eVs
+  //values in eVs; I still dont know why the strngths are normalized by t.
   r_type t = t_standard_,
          stgr_str_2 = stgr_str_ ,
-         m_str_2 = m_str_ /2,
+         m_str_2 = m_str_ /4 ,
          rashba_str_2 = rashba_str_ ,
     KM_str_2 = -KM_str_ , //Unexplained minus sign here
     HLD_str_2 = -HLD_str ; //Unexplained minus sign here
@@ -149,7 +149,7 @@ void Graphene_KaneMele::print_hamiltonian(){
   Eigen::MatrixXcd H_r(dim,dim), S(dim,dim);
 
   std::ofstream dataP;
-  dataP.open("Ham_imag.txt");
+  dataP.open("velOpY_real.txt");
   
     for(int j=0;j<dim;j++){
       for(int i=0;i<dim;i++){
@@ -163,16 +163,16 @@ void Graphene_KaneMele::print_hamiltonian(){
 
 
         //this->update_cheb(tmp.data(),term_j.data(),null.data());
-	this->H_ket(tmp.data(),term_j.data());
+	//this->H_ket(tmp.data(),term_j.data());
         //vel_op_x(tmp.data(),term_j.data());
-        //vel_op_y(tmp.data(),term_j.data());
+        vel_op_y(tmp.data(),term_j.data());
 	std::complex<double> termy = term_i.dot(tmp);
 
 	 H_r(i,j)=termy;
       }
     }
 
-    dataP<<H_r.imag();
+    dataP<<H_r.real();
 
     std::cout<<(H_r-H_r.adjoint()).norm()<<std::endl;
   dataP.close();
