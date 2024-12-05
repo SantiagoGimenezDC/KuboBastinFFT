@@ -174,4 +174,35 @@ void FullTrace::generate_vec_re( r_type rand_vec[], int r){
 
 
 
+void projected_FullTrace::generate_vec_im( std::complex<r_type> rand_vec[], int r){
+
+  int SUBDIM = this->parameters().SUBDIM_;
+
+
+  for( int j = 0; j <  SUBDIM; j++ ){
+    rand_vec [j] = 0;
+    if( ( j - ( r - 1 ) ) % stride_ == 0){
+      double phase = 2.0 * M_PI * this->rng().get() ;
+      rand_vec [j] = std::polar( 1.0, phase ) / sqrt(double(SUBDIM/stride_));
+    }
+
+  }
+  
+}
+
+void projected_FullTrace::generate_vec_re( r_type rand_vec[], int r){
+
+  int SUBDIM = this->parameters().SUBDIM_;
+
+  
+  for( int j = 0; j <  SUBDIM; j++ )
+    if( ( j - ( r - 1 ) ) % stride_ == 0)
+      rand_vec [j] = (2.0*this->rng().get() - 1.)*sqrt(3.0)/ sqrt(double(SUBDIM/stride_));   
+   
+}
+
+
+
+
+
 

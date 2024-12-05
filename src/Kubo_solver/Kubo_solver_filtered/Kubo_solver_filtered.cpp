@@ -21,6 +21,12 @@
 #include "../time_station.hpp"
 
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include <filesystem>
+namespace fs = std::filesystem;
+
 
 Kubo_solver_filtered::Kubo_solver_filtered(solver_vars& parameters, Device& device, KB_filter& filter) : parameters_(parameters), device_(device), filter_(filter)
 {
@@ -42,6 +48,8 @@ Kubo_solver_filtered::Kubo_solver_filtered(solver_vars& parameters, Device& devi
     vec_base_ = new Complex_Phase_real(device_.parameters(), parameters_.seed_);
   else if(parameters_.base_choice_ == 3 )
     vec_base_ = new FullTrace(device_.parameters(), parameters_.seed_);
+  else if(parameters_.base_choice_ == 4 )
+    vec_base_ = new projected_FullTrace(device_.parameters(), parameters_.seed_, device_.unit_cell_size());
 
   
   if(parameters_.kernel_choice_==0)
@@ -54,7 +62,21 @@ Kubo_solver_filtered::Kubo_solver_filtered(solver_vars& parameters, Device& devi
   parameters_.SECTION_SIZE_ = device_.parameters().SUBDIM_ / parameters_.num_parts_ + device_.parameters().SUBDIM_ % parameters_.num_parts_;
 
   sym_formula_ = parameters_.sim_equation_;//KUBO_SEA;
+
+
+
+  std::string filename = parameters_.filename_;
+
+
+  mkdir( ( "./" + filename ).c_str(), 0755);
+  mkdir( ( "./" + filename + "/"  + "vecs" ).c_str(), 0755);
   
+
+  const std::string sourceFile = "./SimData.dat";  // Source file path
+  const std::string destinationFile =  "./" + filename + "/SimData.dat" ;  // Destination file path
+
+  fs::copy(sourceFile, destinationFile, fs::copy_options::overwrite_existing);
+
 }
 
 

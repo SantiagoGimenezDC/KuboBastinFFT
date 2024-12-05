@@ -1,6 +1,12 @@
 #include "Kubo_solver_FFT.hpp"
 #include "../time_station.hpp"
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include <filesystem>
+
+namespace fs = std::filesystem;
   
   
 Kubo_solver_FFT_postProcess::Kubo_solver_FFT_postProcess(Kubo_solver_FFT& parent_solver): parent_solver_(parent_solver){
@@ -18,6 +24,22 @@ Kubo_solver_FFT_postProcess::Kubo_solver_FFT_postProcess(Kubo_solver_FFT& parent
   for(int k=0; k<nump;k++){
     E_points_[k] = cos(M_PI * ( 2 * k + 0.5 ) / nump );
   }
+
+
+
+  
+  std::string filename = parent_solver_.parameters().filename_;
+
+
+  mkdir( ( "./" + filename ).c_str(), 0755);
+  mkdir( ( "./" + filename + "/"  + "vecs" ).c_str(), 0755);
+  
+
+  const std::string sourceFile = "./SimData.dat";  // Source file path
+  const std::string destinationFile =  "./" + filename + "/SimData.dat" ;  // Destination file path
+
+  fs::copy(sourceFile, destinationFile, fs::copy_options::overwrite_existing);
+
 };
 
 
@@ -266,10 +288,13 @@ void Kubo_solver_FFT_postProcess::Sea_postProcess(const std::vector<type>& final
 
 
   
+
+
+     
   prev_partial_result_=partial_result;
   
   std::ofstream dataR;
-  dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
+  dataR.open("./" + filename+"/"+run_dir+"vecs/r"+std::to_string(r)+".dat");
 
   for(int e=0;e<nump;e++)  
     dataR<< a * rearranged_E_points[e] - b<<"  "<< rvec_partial_result [e]<<"  "<<  partial_result [e] <<std::endl;
@@ -280,7 +305,7 @@ void Kubo_solver_FFT_postProcess::Sea_postProcess(const std::vector<type>& final
 
   
   std::ofstream dataP;
-  dataP.open(run_dir+"currentResult_"+filename);
+  dataP.open("./" + filename+"/currentResult.dat");
 
   for(int e=0;e<nump;e++)  
     dataP<< a * rearranged_E_points[e] - b<<"  "<<  partial_result [e] <<std::endl;
@@ -292,7 +317,7 @@ void Kubo_solver_FFT_postProcess::Sea_postProcess(const std::vector<type>& final
   
   
   std::ofstream data;
-  data.open(run_dir+"conv_R_"+filename);
+  data.open("./" + filename+"/conv_R.dat");
 
   for(int l = 1; l < r; l++)  
     data<< l <<"  "<< conv_R_max_[ ( l - 1 ) ]<<"  "<< conv_R_av_[ ( l - 1 ) ] <<std::endl;
@@ -304,7 +329,7 @@ void Kubo_solver_FFT_postProcess::Sea_postProcess(const std::vector<type>& final
   
   
   std::ofstream data2;
-  data2.open( run_dir + filename + "_integrand");
+  data2.open( "./" + filename + "Bastin_integrand.dat");
 
   for(int e=0;e<nump;e++)  
     data2<< a * rearranged_E_points[e] - b<<"  "<<  integrand[e] <<std::endl;
@@ -312,7 +337,7 @@ void Kubo_solver_FFT_postProcess::Sea_postProcess(const std::vector<type>& final
   data2.close();
 
 
-  plot_data(run_dir,filename);
+  plot_data("./" +filename, "");
 
 }
 
@@ -430,9 +455,10 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
 
   
   prev_partial_result_=partial_result;
-  
+
+
   std::ofstream dataR;
-  dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
+  dataR.open("./" + filename+"/"+run_dir+"vecs/r"+std::to_string(r)+".dat" );
 
   for(int e=0;e<nump;e++)  
     dataR<< a * rearranged_E_points[e] - b<<"  "<< rvec_partial_result [e]<<"  "<<  partial_result [e] <<std::endl;
@@ -443,7 +469,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
 
   
   std::ofstream dataP;
-  dataP.open(run_dir+"currentResult_"+filename);
+  dataP.open("./" + filename+"/currentResult.dat");
 
   for(int e=0;e<nump;e++)  
     dataP<< a * rearranged_E_points[e] - b<<"  "<<  partial_result [e] <<std::endl;
@@ -455,7 +481,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
   
   
   std::ofstream data;
-  data.open(run_dir+"conv_R_"+filename);
+  data.open("./" + filename+"/conv_R.dat");
 
   for(int l = 1; l < r; l++)  
     data<< l <<"  "<< conv_R_max_[ ( l - 1 ) ]<<"  "<< conv_R_av_[ ( l - 1 ) ] <<std::endl;
@@ -467,7 +493,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
   
   
   std::ofstream data2;
-  data2.open( run_dir + filename + "_integrand");
+  data2.open( "./" + filename + "Bastin_integrand.dat");
 
   for(int e=0;e<nump;e++)  
     data2<< a * rearranged_E_points[e] - b<<"  "<<  integrand[e] <<std::endl;
@@ -475,7 +501,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
   data2.close();
 
 
-  plot_data(run_dir,filename);
+  plot_data("./" + filename,"");
 
 }
 
@@ -564,12 +590,12 @@ void Kubo_solver_FFT_postProcess::Greenwood_postProcess(const std::vector<type>&
 
   prev_partial_result_ = partial_result;
   
- 
+  
   std::ofstream dataR;
-  dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
+  dataR.open("./" + filename+"/"+run_dir+"vecs/r"+std::to_string(r)+".dat" );
 
   for(int e=0;e<nump;e++)  
-    dataR<< a * rearranged_E_points[e] - b<<"  "<<  rvec_partial_result [e] <<std::endl;
+    dataR<< a * rearranged_E_points[e] - b<<"  "<< rvec_partial_result [e]<<"  "<<  partial_result [e] <<std::endl;
 
   dataR.close();
   
@@ -577,27 +603,31 @@ void Kubo_solver_FFT_postProcess::Greenwood_postProcess(const std::vector<type>&
 
   
   std::ofstream dataP;
-  dataP.open(run_dir+"currentResult_"+filename);
+  dataP.open("./" + filename+"/currentResult.dat");
 
   for(int e=0;e<nump;e++)  
-    dataP<<  a * rearranged_E_points[e]-b<<"  "<< partial_result [e] <<std::endl;
+    dataP<< a * rearranged_E_points[e] - b<<"  "<<  partial_result [e] <<std::endl;
 
   dataP.close();
 
 
 
+  
+  
   std::ofstream data;
-  data.open(run_dir+"conv_R_"+filename);
+  data.open("./" + filename+"/conv_R.dat");
 
   for(int l = 1; l < r; l++)  
     data<< l <<"  "<< conv_R_max_[ ( l - 1 ) ]<<"  "<< conv_R_av_[ ( l - 1 ) ] <<std::endl;
 
   data.close();
+  
+
+ 
+  plot_data("./" + filename,"");
 
 
   
-  plot_data(run_dir,filename);  
-
 }
 
 
@@ -617,12 +647,12 @@ void Kubo_solver_FFT_postProcess::plot_data(const std::string& run_dir, const st
 
          "unset key  \n"
 
-         "set output '"+run_dir+filename+".png'                \n"
+         "set output '"+run_dir+"/currentResult.png'                \n"
 
          "set xlabel 'E[eV]'                                               \n"
          "set ylabel  'G [2e^2/h]'                                           \n"
          
-        "plot '"+run_dir+"currentResult_"+filename+"' using 1:2 w p ls 7 ps 0.25 lc 2;  \n"
+        "plot '"+run_dir+"/currentResult.dat'  using 1:2 w p ls 7 ps 0.25 lc 2;  \n"
          "EOF";
      
       char exeChar[exestring.size() + 1];

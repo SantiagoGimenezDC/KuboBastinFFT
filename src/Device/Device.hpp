@@ -42,6 +42,7 @@ public:
   };
 
 
+  virtual int unit_cell_size(){return 1;};
   void set_sysLength(r_type sysLength){sysLength_=sysLength;};
   r_type sysLength(){return sysLength_;};
   void set_sysSubLength(r_type sysSubLength){sysSubLength_=sysSubLength;};

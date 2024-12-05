@@ -6,8 +6,8 @@
 #include "../Random.hpp"
 #include "Device.hpp"
 #include "Graphene.hpp"
-#include <eigen-3.4.0/Eigen/Sparse>
-#include <eigen-3.4.0/Eigen/Dense>
+#include <eigen3/Eigen/Sparse>
+#include <eigen3/Eigen/Dense>
 #include "Coordinates.hpp"
 #include <iostream>
 
@@ -53,7 +53,7 @@ class Graphene_KaneMele: public Graphene{
     virtual void rearrange_initial_vec(type*){};
     virtual void traceover(type* , type* , int , int);
 
-  
+    virtual int unit_cell_size(){return 4;};  
     virtual void projector(type* );  
     virtual void J (type*, type*, int);
 

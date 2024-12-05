@@ -347,7 +347,7 @@ void Graphene_KaneMele::H_ket (r_type a, r_type b, type* ket, type* p_ket){
  
  if( disorder_potential != NULL )
    for( int i = 0; i < 2 * W * Le ; i ++ )
-     eig_ket.segment(i,2) += dmp_op[i/2] * disorder_potential[ i ] * eig_p_ket.segment(i,2);
+     eig_ket.segment(i,2) += dmp_op[i/2] * disorder_potential[ i ] * eig_p_ket.segment(i,2) / a;
    
 };
 
@@ -429,7 +429,7 @@ void Graphene_KaneMele::update_cheb ( type ket[], type p_ket[], type pp_ket[]){
  
  if( disorder_potential != NULL )
    for( int i = 0; i < 2 * W * Le ; i ++ )
-     eig_ket.segment(i,2) += dmp_op[i] * disorder_potential[ i ] * eig_p_ket.segment(i,2);
+     eig_ket.segment(i,2) += dmp_op[i] * disorder_potential[ i ] * eig_p_ket.segment(i,2) / a;
 
  
  eig_p_ket = eig_ket;
@@ -515,7 +515,7 @@ void Graphene_KaneMele::update_cheb_filtered ( type ket[], type p_ket[], type pp
  
  if( disorder_potential != NULL )
    for( int i = 0; i < 2 * W * Le ; i ++ )
-     eig_ket.segment(i,2) += dmp_op[i] * disorder_potential[ i ] * eig_p_ket.segment(i,2);
+     eig_ket.segment(i,2) += dmp_op[i] * disorder_potential[ i ] * eig_p_ket.segment(i,2)/a;
 
  
  eig_p_ket = eig_ket;

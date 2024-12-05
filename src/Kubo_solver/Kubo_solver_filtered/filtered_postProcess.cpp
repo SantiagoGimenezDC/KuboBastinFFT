@@ -256,12 +256,14 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
   //prev_partial_result_=partial_result;
 
 
-  
+
+
+
   std::ofstream dataR;
-  dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
+  dataR.open("./" + filename+"/"+run_dir+"vecs/r"+std::to_string(r)+".dat" );
 
   for(int e=0;e<nump;e++)  
-    dataR<< a * rearranged_E_points[e] - b<<"  "<< rvec_partial_result [e]<<"  "<< partial_result [e]  <<std::endl;
+    dataR<< a * rearranged_E_points[e] - b<<"  "<< rvec_partial_result [e]<<"  "<<  partial_result [e] <<std::endl;
 
   dataR.close();
   
@@ -269,7 +271,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
 
   
   std::ofstream dataP;
-  dataP.open(run_dir+"currentResult_"+filename);
+  dataP.open("./" + filename+"/currentResult.dat");
 
   for(int e=0;e<nump;e++)  
     dataP<< a * rearranged_E_points[e] - b<<"  "<<  partial_result [e] <<std::endl;
@@ -279,19 +281,21 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
 
 
   
+  
   std::ofstream data;
-  data.open(run_dir+"conv_R_"+filename);
+  data.open("./" + filename+"/conv_R.dat");
 
-  for(int r=1;r<D*R;r++)  
+  for(int l = 1; l < r; l++)  
     data<< r <<"  "<< conv_R[ 2*(r-1) ]<<"  "<< conv_R[ 2*(r-1) + 1 ] <<std::endl;
 
-  data.close();  
+  data.close();
+  
 
   
   
   
   std::ofstream data2;
-  data2.open( run_dir + filename + "_integrand");
+  data2.open( "./" + filename + "Bastin_integrand.dat");
 
   for(int e=0;e<nump;e++)  
     data2<< a * rearranged_E_points[e] - b<<"  "<<  integrand[e] <<std::endl;
@@ -299,7 +303,8 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
   data2.close();
 
 
-  plot_data(run_dir,filename);
+  plot_data("./" + filename,"");
+
 }
 
 
@@ -417,12 +422,12 @@ void Kubo_solver_filtered::update_data_Sea(r_type E_points[], type r_data[], typ
   //prev_partial_result_=partial_result;
 
 
-  
+
   std::ofstream dataR;
-  dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
+  dataR.open("./" + filename+"/"+run_dir+"vecs/r"+std::to_string(r)+".dat" );
 
   for(int e=0;e<nump;e++)  
-    dataR<< a * rearranged_E_points[e] - b<<"  "<< rvec_partial_result [e]<<"  "<< partial_result [e]  <<std::endl;
+    dataR<< a * rearranged_E_points[e] - b<<"  "<< rvec_partial_result [e]<<"  "<<  partial_result [e] <<std::endl;
 
   dataR.close();
   
@@ -430,7 +435,7 @@ void Kubo_solver_filtered::update_data_Sea(r_type E_points[], type r_data[], typ
 
   
   std::ofstream dataP;
-  dataP.open(run_dir+"currentResult_"+filename);
+  dataP.open("./" + filename+"/currentResult.dat");
 
   for(int e=0;e<nump;e++)  
     dataP<< a * rearranged_E_points[e] - b<<"  "<<  partial_result [e] <<std::endl;
@@ -440,19 +445,21 @@ void Kubo_solver_filtered::update_data_Sea(r_type E_points[], type r_data[], typ
 
 
   
+  
   std::ofstream data;
-  data.open(run_dir+"conv_R_"+filename);
+  data.open("./" + filename+"/conv_R.dat");
 
-  for(int r=1;r<D*R;r++)  
+  for(int l = 1; l < r; l++)  
     data<< r <<"  "<< conv_R[ 2*(r-1) ]<<"  "<< conv_R[ 2*(r-1) + 1 ] <<std::endl;
 
-  data.close();  
+  data.close();
+  
 
   
   
   
   std::ofstream data2;
-  data2.open( run_dir + filename + "_integrand");
+  data2.open( "./" + filename + "Bastin_integrand.dat");
 
   for(int e=0;e<nump;e++)  
     data2<< a * rearranged_E_points[e] - b<<"  "<<  integrand[e] <<std::endl;
@@ -460,7 +467,9 @@ void Kubo_solver_filtered::update_data_Sea(r_type E_points[], type r_data[], typ
   data2.close();
 
 
-  plot_data(run_dir,filename);
+  plot_data("./" + filename,"");
+
+
 }
 
 
@@ -514,46 +523,47 @@ void Kubo_solver_filtered::update_data(r_type E_points[],  type r_data[], type f
     conv_R[ 2 * (r-1)+1 ] = av;
   }
 
+
+
+    
+  
   std::ofstream dataR;
-  dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
+  dataR.open("./" + filename+"/"+run_dir+"vecs/r"+std::to_string(r)+".dat" );
 
-  
-  for(int e=0;e<nump;e++)  
-    dataR<< a * E_points[e] - b<<"  "<< real( omega * r_data [e] )<<"  "<< real(final_data [e]) <<std::endl;
-    //  dataP<<  e <<"  "<< final_data [e] <<std::endl;
+  for(int e=0;e<nump;e++)
+    dataR<< a * E_points[e] - b<<"  "<< real( omega * r_data [e] )<<"  "<< real(final_data [e]) <<std::endl;    
+  //dataR<< a * E_points[e] - b<<"  "<< rvec_partial_result [e]<<"  "<<  partial_result [e] <<std::endl;
 
-  
   dataR.close();
-
+  
 
 
   
   std::ofstream dataP;
-  dataP.open(run_dir+"currentResult_"+filename);
+  dataP.open("./" + filename+"/currentResult.dat");
 
-    for(int e=0;e<nump;e++){    
-      dataP<< a * E_points[e] - b<<"  "<< real(final_data [e]);
-
-      if(e<nump/2)
-        dataP<<"  "<<e;
-      else
-        dataP<<"  "<<-(nump-e);
-
-      dataP<<"  "<<e<<std::endl;
-    }
+  for(int e=0;e<nump;e++)  
+    dataP<< a * E_points[e] - b<<"  "<< real(final_data [e])<<std::endl;
+    //dataP<< a * E_points[e] - b<<"  "<<  partial_result [e] <<std::endl;
 
   dataP.close();
+
 
 
   
   
   std::ofstream data;
-  data.open(run_dir+"conv_R_"+filename);
+  data.open("./" + filename+"/conv_R.dat");
 
-  for(int r=1;r<D*R;r++)  
-    data<< r <<"  "<< conv_R[ 2*(r-1) ]<<"  "<< conv_R[ 2*(r-1) + 1 ] <<std::endl;
+  for(int l = 1; l < r; l++)
+    data<< r <<"  "<< conv_R[ 2*(r-1) ]<<"  "<< conv_R[ 2*(r-1) + 1 ] <<std::endl;    
+  //data<< l <<"  "<< conv_R_max_[ ( l - 1 ) ]<<"  "<< conv_R_av_[ ( l - 1 ) ] <<std::endl;
 
   data.close();
+  
+
+ 
+  plot_data("./" + filename,"");
 
 
 }
@@ -573,12 +583,12 @@ void Kubo_solver_filtered::plot_data(std::string run_dir, std::string filename){
 
          "unset key  \n"
 
-         "set output '"+run_dir+filename+".png'                \n"
+         "set output '"+run_dir+"/currentResult.png'                \n"
 
          "set xlabel 'E[eV]'                                               \n"
          "set ylabel  'G [2e^2/h]'                                           \n"
-         
-        "plot '"+run_dir+"currentResult_"+filename+"' using 1:2 w p ls 7 ps 0.25 lc 2;  \n"
+       
+         "plot '"+run_dir+"/currentResult.dat'  using 1:2 w p ls 7 ps 0.25 lc 2;  \n"
          "EOF";
      
       char exeChar[exestring.size() + 1];

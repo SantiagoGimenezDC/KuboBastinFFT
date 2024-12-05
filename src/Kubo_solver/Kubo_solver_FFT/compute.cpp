@@ -127,6 +127,8 @@ void Kubo_solver_FFT::compute(){
       vec_base_->generate_vec_im( rand_vec_, r);       
       device_.rearrange_initial_vec( rand_vec_ ); //very hacky
 
+      device_.projector( rand_vec_ );
+
       reset_data(r_data_);
       
 

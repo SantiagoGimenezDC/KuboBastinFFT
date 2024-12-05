@@ -59,6 +59,8 @@ Kubo_solver_FFT::Kubo_solver_FFT(solver_vars& parameters, Device& device) : para
     vec_base_ = new Complex_Phase_real(device_.parameters(), parameters_.seed_);
   else if(parameters_.base_choice_ == 3 )
     vec_base_ = new FullTrace(device_.parameters(), parameters_.seed_);
+  else if(parameters_.base_choice_ == 4 )
+    vec_base_ = new projected_FullTrace(device_.parameters(), parameters_.seed_, device_.unit_cell_size());
 
   
   if(parameters_.kernel_choice_ == 0)

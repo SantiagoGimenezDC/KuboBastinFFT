@@ -20,6 +20,14 @@
 
 #include "../Kubo_solver/time_station_2.hpp"
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
+
 
 void KPM_base::initialize_device(){
 
@@ -58,6 +66,8 @@ KPM_base::KPM_base(solver_vars& parameters, Device& device) : parameters_(parame
     vec_base_ = new Complex_Phase_real(device_.parameters(), parameters_.seed_);
   else if(parameters_.base_choice_ == 3 )
     vec_base_ = new FullTrace(device_.parameters(), parameters_.seed_);
+  else if(parameters_.base_choice_ == 4 )
+    vec_base_ = new projected_FullTrace(device_.parameters(), parameters_.seed_, device_.unit_cell_size());
 
   
   if(parameters_.kernel_choice_ == 0)
@@ -275,7 +285,22 @@ DOS_output::DOS_output(device_vars& device_parameters, solver_vars& parent_solve
   
   for(int k=0; k<nump;k++)
     E_points_[k] = cos(M_PI * ( k + 0.5 ) / nump );
+
+
+
   
+  std::string filename = parent_solver_vars.filename_;
+
+
+  mkdir( ( "./" + filename ).c_str(), 0755);
+  mkdir( ( "./" + filename + "/"  + "vecs" ).c_str(), 0755);
+  
+
+  const std::string sourceFile = "./SimData.dat";  // Source file path
+  const std::string destinationFile =  "./" + filename + "/SimData.dat" ;  // Destination file path
+
+  fs::copy(sourceFile, destinationFile, fs::copy_options::overwrite_existing);
+
 };
 
 
@@ -377,6 +402,8 @@ void DOS_output::update_data(std::vector<type>& moments_r, std::vector<type>& mo
     }
   }
 
+
+  
   
   if( r > 1 ){
     conv_R_max_[ ( r - 1 ) ] = max;
@@ -388,14 +415,13 @@ void DOS_output::update_data(std::vector<type>& moments_r, std::vector<type>& mo
 
 
 
-  
-  //Writing the data
-  
+ 
+    
   std::ofstream dataR;
-  dataR.open(run_dir+"vecs/r"+std::to_string(r)+"_"+filename);
+  dataR.open("./" + filename+"/"+run_dir+"vecs/r"+std::to_string(r)+".dat" );
 
   for(int e=0;e<nump;e++)  
-    dataR<< a * E_points_[e] - b<<"  "<<  omega * r_data_ [e] <<"  "<< omega * new_partial_result [e]<<std::endl;
+    dataR<< a * E_points_[e] - b<<"  "<< omega * r_data_[e]<<"  "<<  omega * new_partial_result [e] <<std::endl;
 
   dataR.close();
   
@@ -403,29 +429,29 @@ void DOS_output::update_data(std::vector<type>& moments_r, std::vector<type>& mo
 
   
   std::ofstream dataP;
-  dataP.open(run_dir+"currentResult_"+filename);
+  dataP.open("./" + filename+"/currentResult.dat");
 
   for(int e=0;e<nump;e++)  
-    dataP<<  a * E_points_[e]-b<<"  "<< omega * new_partial_result [e] <<std::endl;
+    dataP<< a * E_points_[e] - b<<"  "<<  omega *  partial_result_ [e] <<std::endl;
 
   dataP.close();
 
 
 
+  
+  
   std::ofstream data;
-  data.open(run_dir+"conv_R_"+filename);
+  data.open("./" + filename+"/conv_R.dat");
 
   for(int l = 1; l < r; l++)  
     data<< l <<"  "<< conv_R_max_[ ( l - 1 ) ]<<"  "<< conv_R_av_[ ( l - 1 ) ] <<std::endl;
 
   data.close();
-
-
-
   
-  //plotting the data
-  
-  plot_data(run_dir,filename);  
+
+ 
+  plot_data("./" + filename,"");
+
 
 }
 
@@ -440,13 +466,16 @@ void DOS_output::plot_data(const std::string& run_dir, const std::string& filena
 
          "unset key  \n"
 
-         "set output '"+run_dir+filename+".png'                \n"
+       
+         "set output '"+run_dir+"/currentResult.png'                \n"
 
+       
          "set xlabel 'E[eV]'                                               \n"
-         "set ylabel  'G [2e^2/h]'                                           \n"
+         "set ylabel  'DOS [a.U.]'                                           \n"
          
-        "plot '"+run_dir+"currentResult_"+filename+"' using 1:2 w p ls 7 ps 0.25 lc 2;  \n"
-         "EOF";
+
+        "plot '"+run_dir+"/currentResult.dat'  using 1:2 w p ls 7 ps 0.25 lc 2;  \n"
+        "EOF";
      
       char exeChar[exestring.size() + 1];
       strcpy(exeChar, exestring.c_str());    

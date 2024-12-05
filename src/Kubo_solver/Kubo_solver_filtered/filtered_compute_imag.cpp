@@ -110,7 +110,7 @@ void Kubo_solver_filtered::compute_imag(){
          Ham_mem = device_.Hamiltonian_size()/ r_type( 1E9 ),
          Total = 0.0;
 
-  if(parameters_.base_choice_ == 1 )
+  //  if(parameters_.base_choice_ == 1 )
     buffer_mem*=2;
 
   if(double_buffer == true )
