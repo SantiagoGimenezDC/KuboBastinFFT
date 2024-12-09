@@ -243,8 +243,6 @@ void Kubo_solver_filtered::compute_imag(){
   
   for(int d = 1; d <= D; d++){
 
-    time_station_2 total_csrmv_time;
-    time_station_2 total_FFTs_time;
     
     
     device_.Anderson_disorder(dis_vec);
@@ -255,6 +253,10 @@ void Kubo_solver_filtered::compute_imag(){
 
     
     for(int r=1; r<=R;r++){
+
+
+      time_station_2 total_csrmv_time;
+      time_station_2 total_FFTs_time;
 
       time_station_2 randVec_time;
       randVec_time.start();
@@ -363,6 +365,7 @@ void Kubo_solver_filtered::compute_imag(){
 
 
 
+
       
       
       time_station_2 time_postProcess;
@@ -378,7 +381,6 @@ void Kubo_solver_filtered::compute_imag(){
         update_data_Sea(E_points, r_data, final_data, conv_R, ( d - 1 ) * R + r, run_dir, filename);
       
 	 
-      plot_data(run_dir,filename);
 
       time_postProcess.stop( "       Post-processing time:       ");
 

@@ -295,7 +295,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
   
   
   std::ofstream data2;
-  data2.open( "./" + filename + "Bastin_integrand.dat");
+  data2.open( "./" + filename + "/Bastin_integrand.dat");
 
   for(int e=0;e<nump;e++)  
     data2<< a * rearranged_E_points[e] - b<<"  "<<  integrand[e] <<std::endl;
@@ -459,7 +459,7 @@ void Kubo_solver_filtered::update_data_Sea(r_type E_points[], type r_data[], typ
   
   
   std::ofstream data2;
-  data2.open( "./" + filename + "Bastin_integrand.dat");
+  data2.open( "./" + filename + "/Bastin_integrand.dat");
 
   for(int e=0;e<nump;e++)  
     data2<< a * rearranged_E_points[e] - b<<"  "<<  integrand[e] <<std::endl;
@@ -467,7 +467,7 @@ void Kubo_solver_filtered::update_data_Sea(r_type E_points[], type r_data[], typ
   data2.close();
 
 
-  plot_data("./" + filename,"");
+   plot_data("./" + filename,"");
 
 
 }
