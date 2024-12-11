@@ -353,8 +353,9 @@ void Graphene::vel_op_otf (type vec[], type p_vec[] ){
       C  = this->parameters().C_;    
   
   r_type dx1 = 1.0,
-         dx2 = sin(M_PI/6.0),
-         tx1 = dx1 * t_standard_,
+         dx2 = sin(M_PI/6.0);
+
+  r_type tx1 = dx1 * t_standard_ ,
          tx2 = dx2 * t_standard_;
 
 

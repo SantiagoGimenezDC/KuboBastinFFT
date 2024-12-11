@@ -26,7 +26,7 @@ Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashb
   this->set_sysSubLength(Length);
   this->set_sysLength(Length);
       
-  //values in eVs; I still dont know why the strngths are normalized by t.
+  //values in eVs;
   r_type t = t_standard_,
          stgr_str_2 = stgr_str_ ,
          m_str_2 = m_str_ /4 ,
