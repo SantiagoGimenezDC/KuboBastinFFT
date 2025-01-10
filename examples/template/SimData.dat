@@ -1,0 +1,67 @@
+./
+
+7
+300 300 0 1.5 4.01
+0.0 1001
+
+0
+1
+1
+
+6000 1 1 1000 0.2
+1 4
+9.1 0
+-8.5  8.5
+-0.0
+0.000
+testie.dat
+filtered
+SEA
+0.1
+
+Viet
+
+0.0 1.0 0.1 0.25 0.0
+1 0
+0
+0
+
+
+40 8
+-0.0 0.9
+96
+
+
+
+device_choice  (0-ARM graph, 1-tbg, 2-read_LINQT_HAM, 3-read_con_table, 4-RashbaNanoribbon, 5-SupercellNanoribbonGraph, 6-SupercellRashba, 7-SuperGraphene)
+
+W LE C theta d_min
+dis_str dis_seed
+
+
+
+cap_choice 
+base_choice ( 0-direct, 1-complex )
+kernel_choice ( 0-none, 1-Jackson ) 
+
+M R D D_seed edge
+num_parts num_p
+E_min Emax
+Eta
+Emin_cap
+src_dir
+sym_type
+Kubo formula choice
+RAM/SSD ratio
+
+Read hamiltonian sourceDir
+
+stgr Exch Rashba Kanemele Haldane
+vel1 vel2
+B
+projector
+
+//Filter Vars:
+L/decRate decRate
+E_center cutoff
+att
