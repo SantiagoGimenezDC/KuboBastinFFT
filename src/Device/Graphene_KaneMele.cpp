@@ -27,17 +27,17 @@ Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashb
   this->set_sysLength(Length);
       
   //values in eVs;
-  r_type t = t_standard_,
-         stgr_str_2 = stgr_str_ ,
-         m_str_2 = m_str_ /4 ,
-         rashba_str_2 = rashba_str_ ,
-    KM_str_2 = -KM_str_ , //Unexplained minus sign here
-    HLD_str_2 = -HLD_str ; //Unexplained minus sign here
+  r_type t            = t_standard_,
+         stgr_str_2   = stgr_str_ ,
+         m_str_2      = - m_str_ /4 ,
+         rashba_str_2 = - rashba_str_ ,  //Unexplained minus sign here
+         KM_str_2     = KM_str_ ,
+         HLD_str_2    = HLD_str ;
   
 
-  std::complex<r_type> R_PF  = type(0,1.0) * rashba_str_2 / 3.0 , 
-    KM_PF  = type(0,1.0) * KM_str_2 / (6.0 * sqrt(3.0) ) ,
-    HLD_PF  = type(0,1.0) * HLD_str_2 / (6.0 * sqrt(3.0) ) ;
+  std::complex<r_type> R_PF    = type(0,1.0) * rashba_str_2 / 3.0 , 
+                       KM_PF   = type(0,1.0) * KM_str_2 / (6.0 * sqrt(3.0) ) ,
+                       HLD_PF  = type(0,1.0) * HLD_str_2 / (6.0 * sqrt(3.0) ) ;
 
   Eigen::Vector3d m{0.0,0.0,m_str_2};
   Eigen::Matrix4cd H_bare = Eigen::Matrix4cd::Zero(),
@@ -123,7 +123,7 @@ void Graphene_KaneMele::J (type* ket, type* p_ket, int dir){
     chosen_dir = sz;
 
   
-  
+
   Eigen::Map<Eigen::VectorXcd> eig_ket(ket,SUBDIM),
     eig_p_ket(p_ket, SUBDIM);
 
@@ -133,8 +133,8 @@ void Graphene_KaneMele::J (type* ket, type* p_ket, int dir){
     for(int i=0; i<W; i++){      
       int n1 = ( ( j + C ) * W + i ) * 4;
 
-      eig_ket.segment(n1,2)   = type(0.0,1.0) * chosen_dir * eig_p_ket.segment(n1,2);
-      eig_ket.segment(n1+2,2) = type(0.0,1.0) * chosen_dir * eig_p_ket.segment(n1+2,2);
+      eig_ket.segment(n1,2)   =  chosen_dir * eig_p_ket.segment(n1,2);
+      eig_ket.segment(n1+2,2) =  chosen_dir * eig_p_ket.segment(n1+2,2);
  
     }
  }
@@ -149,7 +149,7 @@ void Graphene_KaneMele::print_hamiltonian(){
   Eigen::MatrixXcd H_r(dim,dim), S(dim,dim);
 
   std::ofstream dataP;
-  dataP.open("velOpY_real.txt");
+  dataP.open("Ham_imag.txt");
   
     for(int j=0;j<dim;j++){
       for(int i=0;i<dim;i++){
@@ -163,16 +163,16 @@ void Graphene_KaneMele::print_hamiltonian(){
 
 
         //this->update_cheb(tmp.data(),term_j.data(),null.data());
-	//this->H_ket(tmp.data(),term_j.data());
+	this->H_ket(tmp.data(),term_j.data());
         //vel_op_x(tmp.data(),term_j.data());
-        vel_op_y(tmp.data(),term_j.data());
+        //vel_op_y(tmp.data(),term_j.data());
 	std::complex<double> termy = term_i.dot(tmp);
 
 	 H_r(i,j)=termy;
       }
     }
 
-    dataP<<H_r.real();
+    dataP<<H_r.imag();
 
     std::cout<<(H_r-H_r.adjoint()).norm()<<std::endl;
   dataP.close();
@@ -615,6 +615,10 @@ void Graphene_KaneMele::vel_op_y (type* ket, type* p_ket){
        
     }
  }   
+
+
+ //eig_ket*=sqrt(3)/3;
+ 
 };
 
 
@@ -711,7 +715,10 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
       eig_ket.segment( n1, 4 ) +=  H_4.adjoint() * eig_p_ket.segment(n2,4);
 
     }
- }   
+ }
+
+ //eig_ket *= sqrt(3)/3;
+ 
 };
 
 
