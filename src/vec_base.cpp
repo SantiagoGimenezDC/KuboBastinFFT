@@ -46,6 +46,8 @@ void generate_vec_im(int C, int W, int LE, std::complex<r_type> rand_vec[], int 
 
 
 
+
+
 void Complex_Phase_real::generate_vec_im( std::complex<r_type> rand_vec[], int ){
 
   int SUBDIM = this->parameters().SUBDIM_;
@@ -200,6 +202,11 @@ void projected_FullTrace::generate_vec_re( r_type rand_vec[], int r){
       rand_vec [j] = (2.0*this->rng().get() - 1.)*sqrt(3.0)/ sqrt(double(SUBDIM/stride_));   
    
 }
+
+
+
+
+
 
 
 

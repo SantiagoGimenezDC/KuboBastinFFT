@@ -13,6 +13,14 @@
 
 
 
+
+struct eigenSol {
+    Eigen::Vector4cd eigenvalues_;  // Complex vector with 4 entries
+    Eigen::Matrix4cd Uk_;  // 4x4 complex matrix
+};
+
+
+
 class Graphene_KaneMele: public Graphene{
 
   typedef Eigen::SparseMatrix<std::complex<r_type>,Eigen::RowMajor> SpMatrixXpc;
@@ -43,6 +51,51 @@ class Graphene_KaneMele: public Graphene{
       H_2_ = Eigen::Matrix4d::Zero(),
       H_3_ = Eigen::Matrix4d::Zero(),
       H_4_ = Eigen::Matrix4d::Zero();
+
+
+
+  
+    double sqrt3_ = std::sqrt(3.0);
+    double a_ = sqrt3_ * a0_;
+
+  
+    Eigen::Vector2d A1 = a_ * Eigen::Vector2d(1/2, sqrt3_/2);
+    Eigen::Vector2d A2 = a_ * Eigen::Vector2d(-1/2, sqrt3_/2);
+
+  
+    Eigen::Vector2d b1_ = ( 2.0 * M_PI / (sqrt3_ * a_)) * Eigen::Vector2d( sqrt3_, 1);
+    Eigen::Vector2d b2_ = ( 2.0 * M_PI / (sqrt3_ * a_)) * Eigen::Vector2d(-sqrt3_, 1);
+
+
+  
+      // Nearest-neighbor vectors
+    Eigen::Vector2d d1_ = a0_ * Eigen::Vector2d(sqrt3_ / 2, 1.0 / 2);
+    Eigen::Vector2d d2_ = a0_ * Eigen::Vector2d(-sqrt3_ / 2, 1.0 / 2);
+    Eigen::Vector2d d3_ = a0_ * Eigen::Vector2d(0, -1);
+    
+    Eigen::Vector2d d4_ = Eigen::Vector2d(0.5 * a_, sqrt3_ / 2 * a_);
+    Eigen::Vector2d d5_ = Eigen::Vector2d(0.5 * a_, -sqrt3_ / 2 * a_);
+    Eigen::Vector2d d6_ = Eigen::Vector2d(-a_, 0);
+
+
+    Eigen::Matrix4cd H_k0_R_1_ =  Eigen::Matrix4d::Zero(),
+                     H_k0_R_2_ = Eigen::Matrix4d::Zero(),
+                     H_k0_R_3_ = Eigen::Matrix4d::Zero();
+
+    
+    Eigen::Matrix4cd H_k0_ex_ = Eigen::Matrix4d::Zero(),
+                     H_k0_bare_ = Eigen::Matrix4cd::Zero(),
+                     H_k0_KM_ = Eigen::Matrix4cd::Zero(),
+                     H_k0_R_ = Eigen::Matrix4cd::Zero();
+
+
+
+    std::vector<eigenSol> diagonalized_Hk_;
+    Eigen::VectorXcd eigenvalues_k_;
+    Eigen::MatrixXcd H_k_, U_k_;
+
+    bool k_space = true;
+
   
   public:
     ~Graphene_KaneMele(){};
@@ -59,19 +112,49 @@ class Graphene_KaneMele: public Graphene{
 
     virtual void build_Hamiltonian(){};
 
-    void Hk(Eigen::Vector3d );
     //Rashba coupling Hamiltonian
-    virtual void H_ket  ( type* ket , type* p_ket ){ H_ket(this->a(),this->b(), ket, p_ket); }
-    virtual void H_ket  ( type* ket , type* p_ket, r_type*, r_type* ){ H_ket(this->a(), this->b(), ket, p_ket); }
+    virtual void H_ket  ( type* ket , type* p_ket ){
+      if(k_space)
+	Hk_ket(this->a(),this->b(), ket, p_ket);
+      else
+        H_ket(this->a(),this->b(), ket, p_ket);
+
+    }
+  
+    virtual void H_ket  ( type* ket , type* p_ket, r_type*, r_type* ){
+
+      if(k_space)
+        Hk_ket(this->a(), this->b(), ket, p_ket);
+      else
+	H_ket(this->a(), this->b(), ket, p_ket);
+    }
   
     virtual void H_ket  (r_type, r_type,  type*, type* );
     virtual void update_cheb ( type*, type*,  type*);
 
+
+  
     virtual void update_cheb_filtered ( type ket[], type p_ket[], type pp_ket[], r_type*, r_type*, type disp_factor){
       update_cheb_filtered ( ket, p_ket, pp_ket, disp_factor );
     };
-  
     void update_cheb_filtered ( type *, type *, type *,  type );
+
+
+
+  
+  
+    void diagonalize_kSpace();
+    eigenSol  Uk_single(Eigen::Vector2d );
+  
+    Eigen::Matrix4cd Hk_single(Eigen::Vector2d );
+  
+    void Hk_ket ( r_type, r_type, type*, type* );
+    void Uk_ket (  type*, type* );
+    void Hk_update_cheb ( type*, type*,  type*);
+  
+
+
+
   
     virtual void vel_op   ( type* ket, type* p_ket, int dir){
       if( dir == 0 )

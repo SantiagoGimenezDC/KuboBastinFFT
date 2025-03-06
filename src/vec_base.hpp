@@ -80,4 +80,7 @@ public:
 };
 
 
+
+
+
 #endif //RAND_BASE_HPP

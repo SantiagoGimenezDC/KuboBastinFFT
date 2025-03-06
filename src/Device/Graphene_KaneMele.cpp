@@ -1,6 +1,6 @@
 #include "Graphene_KaneMele.hpp"
 #include<fstream>
-
+#include <eigen3/Eigen/Eigenvalues>
 
 
 Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashba_str, r_type KM_str, r_type HLD_str, device_vars& parameters): Graphene(parameters), stgr_str_(stgr_str), m_str_(m_str), rashba_str_(rashba_str), KM_str_(KM_str){
@@ -93,14 +93,195 @@ Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashb
   H_4_ = H_KM_ + H_HLD_;
 
 
+
+
+
+  std::complex<double> I(0, 1);  // Imaginary unit
+
+  
+  H_k0_bare_(0, 2) = t_standard_; //removed the - sign???
+  H_k0_bare_(1, 3) = t_standard_;
+  
+  H_k0_ex_ = 4.0 * H_ex; //This 4.0 compensates for the /4 in the PF
+
+  H_k0_R_1_.block(0,2,2,2) = R_PF * sx; //Compensating for the unexplained - sign; same on both next lines.
+  H_k0_R_2_.block(0,2,2,2) = -R_PF * (sx - sqrt3_ * sy) / 2.0;
+  H_k0_R_3_.block(0,2,2,2) = -R_PF * (sx + sqrt3_ * sy) / 2.0;
+    
+  H_k0_KM_.block( 0, 0, 2, 2 ) =  ( KM_PF * sz / 2.0 );
+  H_k0_KM_.block( 2, 2, 2, 2 ) = -( KM_PF * sz / 2.0 );
+
+
+        
+
+
+
+
 };
 
 
-void Graphene_KaneMele::Hk(Eigen::Vector3d k){
 
+void Graphene_KaneMele::diagonalize_kSpace(){
 
+  int W = parameters().W_;
+  int Le = parameters().LE_;
+    
+  eigenvalues_k_.resize( W * Le * 4);
+  U_k_.resize(W*Le*4,4);
+
+  #pragma omp parallel for
+  for(int j=0; j<Le; j++){
+    for(int i=0; i<W; i++){
+      H_k_.block( (i+j*W)*4, (i+j*W+1)*4, 0, 4 ) = this->Hk_single(Eigen::Vector2d(i,j));
+	    
+      eigenSol sol = Uk_single(Eigen::Vector2d(i,j));
+      eigenvalues_k_.segment((i+j*W)*4, 4) = sol.eigenvalues_;
+      U_k_.block( (i+j*W)*4, (i+j*W+1)*4, 0, 4 ) = sol.Uk_ ;
+      H_k_.block( (i+j*W)*4, (i+j*W+1)*4, 0, 4 ) = this->Hk_single(Eigen::Vector2d(i,j));
+    }
+  }
 
 };
+
+
+
+
+
+void Graphene_KaneMele::Hk_ket (r_type a, r_type b, type* ket, type* p_ket){
+
+  int W = parameters().W_,
+    Le = parameters().LE_,
+    SUBDIM = parameters().SUBDIM_;
+
+  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,SUBDIM),
+    eig_p_ket(p_ket, SUBDIM);
+
+  Eigen::Matrix4cd Id = Eigen::Matrix4cd::Zero(); 
+
+  
+  #pragma omp parallel for
+  for(int j=0; j<Le; j++)
+    for(int i=0; i<W; i++)
+      eig_ket.segment( ( i + j * W ) * 4, 4 ) = ( H_k_.block( ( i + j * W ) * 4, ( i + j * W + 1 ) * 4, 0, 4 ) - b * Id ) / a   *   eig_p_ket.segment( ( i + j * W ) * 4, 4 );
+   
+};
+
+
+
+
+void Graphene_KaneMele::Hk_update_cheb ( type ket[], type p_ket[], type pp_ket[]){
+  int W = parameters().W_,
+    Le = parameters().LE_,
+    SUBDIM = parameters().SUBDIM_;
+
+  double a = this->a(),
+         b = this->b();
+    
+  
+  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,SUBDIM),
+    eig_p_ket(p_ket, SUBDIM),
+    eig_pp_ket(pp_ket, SUBDIM);
+
+  Eigen::Matrix4cd Id = Eigen::Matrix4cd::Zero(); 
+
+  
+  #pragma omp parallel for
+  for(int j=0; j<Le; j++)
+    for(int i=0; i<W; i++)
+      eig_ket.segment( ( i + j * W ) * 4, 4 ) =  2 * ( H_k_.block( ( i + j * W ) * 4, ( i + j * W + 1 ) * 4, 0, 4 ) - b * Id ) / a   *   eig_p_ket.segment( ( i + j * W ) * 4, 4 )  -   eig_pp_ket.segment( ( i + j * W ) * 4, 4 );
+
+
+  eig_pp_ket = eig_p_ket;
+  eig_p_ket = eig_ket;
+   
+};
+
+
+
+void Graphene_KaneMele::Uk_ket ( type* ket, type* p_ket){
+
+  int W = parameters().W_,
+    Le = parameters().LE_,
+    SUBDIM = parameters().SUBDIM_;
+
+  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,SUBDIM),
+    eig_p_ket(p_ket, SUBDIM);
+
+  
+  #pragma omp parallel for
+  for(int j=0; j<Le; j++)
+    for(int i=0; i<W; i++)
+      eig_ket.segment( ( i + j * W ) * 4, 4 ) =  U_k_.block( ( i + j * W ) * 4, ( i + j * W + 1 ) * 4, 0, 4 )    *   eig_p_ket.segment( ( i + j * W ) * 4, 4 );
+   
+};
+
+
+eigenSol Graphene_KaneMele::Uk_single(Eigen::Vector2d k) {
+
+  Eigen::Matrix4cd H_k = this->Hk_single(k).real();
+  eigenSol solution;
+
+
+  Eigen::ComplexEigenSolver<Eigen::Matrix4cd> solver(H_k, true);
+
+  solution.eigenvalues_ = solver.eigenvalues();
+  solution.Uk_ = solver.eigenvectors();
+
+  
+  return solution;
+};
+
+
+
+Eigen::Matrix4cd Graphene_KaneMele::Hk_single(Eigen::Vector2d k) {
+    
+    std::complex<double> I(0, 1);  // Imaginary unit
+
+    int W  = parameters().W_;
+    int Le = parameters().LE_;
+    
+    // Components of k-vector
+    double kx = ( k(0) * b1_(0) + k(1) * b2_(0) ) / W,
+           ky = ( k(0) * b1_(1) + k(1) * b2_(1) ) / Le;
+
+    // Nearest-neighbor hopping phase factors
+    std::complex<double> gamma1 = exp( I * ( kx * d1_(0) + ky * d1_(1) ) );
+    std::complex<double> gamma2 = exp( I * ( kx * d2_(0) + ky * d2_(1) ) );
+    std::complex<double> gamma3 = exp( I * ( kx * d3_(0) + ky * d3_(1) ) );
+
+    std::complex<double> gamma4 = exp( I * ( kx * d4_(0) + ky * d4_(1) ) );
+    std::complex<double> gamma5 = exp( I * ( kx * d5_(0) + ky * d5_(1) ) );
+    std::complex<double> gamma6 = exp( I * ( kx * d6_(0) + ky * d6_(1) ) );
+
+    
+    
+    // Hamiltonian H_k
+    Eigen::Matrix4cd H_k   = Eigen::Matrix4cd::Zero(),
+                     H_k_R = Eigen::Matrix4cd::Zero();
+
+    H_k_R  = H_k0_R_1_ * gamma3;
+    H_k_R += H_k0_R_2_ * gamma2;
+    H_k_R += H_k0_R_3_ * gamma1; 
+
+    H_k  = H_k0_ex_;
+    H_k += H_k0_bare_ * ( gamma1 + gamma2 + gamma3 );
+    H_k += H_k_R;
+    H_k += H_k0_KM_   * ( gamma4 + gamma5 + gamma6 );
+
+    
+    
+    Eigen::Matrix4cd H_k_adj = H_k.adjoint(); 
+    H_k = H_k  + H_k_adj; 
+
+
+    
+    return H_k;  
+}
+
+
+
+
+
 
 void Graphene_KaneMele::J (type* ket, type* p_ket, int dir){
 
