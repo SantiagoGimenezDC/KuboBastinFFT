@@ -92,7 +92,7 @@ class Graphene_KaneMele: public Graphene{
 
     std::vector<eigenSol> diagonalized_Hk_;
     Eigen::VectorXcd eigenvalues_k_;
-    Eigen::MatrixXcd H_k_, U_k_;
+    Eigen::MatrixXcd H_k_, U_k_, v_k_x_, v_k_y_, v_k_z_;
 
     bool k_space = true;
 
@@ -106,33 +106,43 @@ class Graphene_KaneMele: public Graphene{
     virtual void rearrange_initial_vec(type*){};
     virtual void traceover(type* , type* , int , int);
 
+    virtual bool isKspace(){ return k_space; };  
     virtual int unit_cell_size(){return 4;};  
     virtual void projector(type* );  
     virtual void J (type*, type*, int);
 
     virtual void build_Hamiltonian(){};
 
-    //Rashba coupling Hamiltonian
+    //Rashba coupling Hamiltonian //INTERFACE
     virtual void H_ket  ( type* ket , type* p_ket ){
       if(k_space)
 	Hk_ket(this->a(),this->b(), ket, p_ket);
       else
-        H_ket(this->a(),this->b(), ket, p_ket);
+        Hr_ket(this->a(),this->b(), ket, p_ket);
 
     }
   
     virtual void H_ket  ( type* ket , type* p_ket, r_type*, r_type* ){
-
       if(k_space)
         Hk_ket(this->a(), this->b(), ket, p_ket);
       else
-	H_ket(this->a(), this->b(), ket, p_ket);
+	Hr_ket(this->a(), this->b(), ket, p_ket);
     }
   
-    virtual void H_ket  (r_type, r_type,  type*, type* );
-    virtual void update_cheb ( type*, type*,  type*);
+    virtual void update_cheb ( type* ket, type* p_ket,  type* pp_ket){
+      if(k_space)
+        Hk_update_cheb( ket, p_ket, pp_ket);
+      else
+	Hr_update_cheb( ket, p_ket, pp_ket);
+    };
 
 
+
+
+  //Real space
+    
+    void Hr_ket  ( r_type, r_type, type*, type* );
+    void Hr_update_cheb ( type*, type*,  type* );
   
     virtual void update_cheb_filtered ( type ket[], type p_ket[], type pp_ket[], r_type*, r_type*, type disp_factor){
       update_cheb_filtered ( ket, p_ket, pp_ket, disp_factor );
@@ -142,26 +152,36 @@ class Graphene_KaneMele: public Graphene{
 
 
   
-  
+    //K space
     void diagonalize_kSpace();
     eigenSol  Uk_single(Eigen::Vector2d );
   
     Eigen::Matrix4cd Hk_single(Eigen::Vector2d );
+    Eigen::MatrixXcd vk_single(Eigen::Vector2d );
   
     void Hk_ket ( r_type, r_type, type*, type* );
-    void Uk_ket (  type*, type* );
+    virtual void Uk_ket (  type*, type* );
     void Hk_update_cheb ( type*, type*,  type*);
-  
+
+    void k_vel_op_x (type*, type* );
+    void k_vel_op_y (type*, type* );  
 
 
 
   
     virtual void vel_op   ( type* ket, type* p_ket, int dir){
-      if( dir == 0 )
-        vel_op_x( ket, p_ket);
-      if( dir == 1 )
-        vel_op_y( ket, p_ket);
-
+      if( dir == 0 ){
+	if(k_space)
+	  k_vel_op_x( ket, p_ket);
+	else
+	  vel_op_x( ket, p_ket);
+      }
+      if( dir == 1 ){
+	if(k_space)
+	  k_vel_op_y( ket, p_ket);
+	else
+          vel_op_y( ket, p_ket);
+      }
 
       
       

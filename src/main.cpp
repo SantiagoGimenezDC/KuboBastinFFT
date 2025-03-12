@@ -155,7 +155,7 @@ int main(int , char **argv){
     device = new Graphene_KaneMele(stgr_str, m_str,rashba_str,KM_str, HLD_str, graphene_vars);
 
   
-  Graphene_KaneMele test(stgr_str, m_str, rashba_str, KM_str,  HLD_str, graphene_vars);
+  //Graphene_KaneMele test(stgr_str, m_str, rashba_str, KM_str,  HLD_str, graphene_vars);
   //test.print_hamiltonian();
   
   //Graphene_supercell test( graphene_vars);

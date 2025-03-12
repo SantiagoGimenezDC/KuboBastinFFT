@@ -24,6 +24,8 @@
 #include <sys/types.h>
 
 #include <filesystem>
+#include "../Device/Graphene_KaneMele.hpp"
+
 
 namespace fs = std::filesystem;
 
@@ -90,6 +92,16 @@ KPM_base::~KPM_base(){
   delete cap_;
   delete vec_base_;
 }
+
+type cdot(type* vec_1, type* vec_2, int D){
+  type result = 0;
+  
+  //#pragma omp parallel for
+  for(int i = 0; i<D; i++)
+    result += conj(vec_1[i]) * vec_2[i];
+  
+  return result;
+};
 
 
 void KPM_base::compute(){
@@ -173,10 +185,15 @@ void KPM_base::compute(){
       std::cout<<std::endl<< std::to_string( ( d - 1 ) * R + r)+"/"+std::to_string( D * R )+"-Vector/disorder realization;"<<std::endl;
 
       vec_base_->generate_vec_im( rand_vec_, r);       
-
-	
       device_.rearrange_initial_vec( rand_vec_ ); //very hacky
+
       
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() )
+      	device_.Uk_ket(rand_vec_, rand_vec_);	
+      
+      
+      
+
 
       compute_rand_vec( ( d - 1 ) * R + r );
 
@@ -202,15 +219,6 @@ void KPM_DOS_solver::allocate_memory(){
 }
 
 
-type cdot(type* vec_1, type* vec_2, int D){
-  type result = 0;
-  
-  //#pragma omp parallel for
-  for(int i = 0; i<D; i++)
-    result += conj(vec_1[i]) * vec_2[i];
-  
-  return result;
-};
 
 
 void KPM_DOS_solver::compute_rand_vec(int r){
@@ -226,8 +234,7 @@ void KPM_DOS_solver::compute_rand_vec(int r){
   
   
   cheb_vectors_.reset( rand_vec() );
-  
-
+      
 //=================================KPM Step 0======================================//
   moments_r_[0] = cdot ( l_r_vec.data() , (cheb_vectors_)(0), device().parameters().DIM_ );
 

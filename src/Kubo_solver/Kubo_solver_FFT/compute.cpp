@@ -19,7 +19,8 @@
 #include "Kubo_solver_FFT.hpp"
 #include "../time_station.hpp"
 #include "../time_station_2.hpp"
-
+#include "../../Device/Device.hpp"
+#include "../../Device/Graphene_KaneMele.hpp"
 
 
 
@@ -126,6 +127,13 @@ void Kubo_solver_FFT::compute(){
 
       vec_base_->generate_vec_im( rand_vec_, r);       
       device_.rearrange_initial_vec( rand_vec_ ); //very hacky
+
+
+
+      
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() && parameters_.base_choice_ == 0)
+      	device_.Uk_ket(rand_vec_, rand_vec_);
+      
 
       device_.projector( rand_vec_ );
 

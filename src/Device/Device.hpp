@@ -54,7 +54,8 @@ public:
   r_type* dis(){ return dis_; };
   r_type* damp_op(){ return damp_; };
   virtual void projector(type*){};
-
+  virtual bool isKspace(){ return false; };
+  virtual void Uk_ket(  type*, type*){};
   
   virtual r_type Hamiltonian_size() = 0;  
 
