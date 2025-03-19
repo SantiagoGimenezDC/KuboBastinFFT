@@ -88,13 +88,13 @@ class Graphene_KaneMele: public Graphene{
                      H_k0_KM_ = Eigen::Matrix4cd::Zero(),
                      H_k0_R_ = Eigen::Matrix4cd::Zero();
 
-
+    Eigen::MatrixXcd phases_;
 
     std::vector<eigenSol> diagonalized_Hk_;
     Eigen::VectorXcd eigenvalues_k_;
     Eigen::MatrixXcd H_k_, U_k_, v_k_x_, v_k_y_, v_k_z_;
 
-    bool k_space = true;
+    bool k_space = false;
 
   
   public:
@@ -153,6 +153,7 @@ class Graphene_KaneMele: public Graphene{
 
   
     //K space
+    virtual void to_kSpace(type* , const type*, int );
     void diagonalize_kSpace();
     eigenSol  Uk_single(Eigen::Vector2d );
   

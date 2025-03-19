@@ -56,6 +56,7 @@ public:
   virtual void projector(type*){};
   virtual bool isKspace(){ return false; };
   virtual void Uk_ket(  type*, type*){};
+  virtual void to_kSpace(type* , const type*, int ){};
   
   virtual r_type Hamiltonian_size() = 0;  
 

@@ -1,7 +1,7 @@
 #include "Graphene_KaneMele.hpp"
 #include<fstream>
 #include <eigen3/Eigen/Eigenvalues>
-
+#include<fftw3.h>
 
 Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashba_str, r_type KM_str, r_type HLD_str, device_vars& parameters): Graphene(parameters), stgr_str_(stgr_str), m_str_(m_str), rashba_str_(rashba_str), KM_str_(KM_str){
     
@@ -117,6 +117,18 @@ Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashb
   this->diagonalize_kSpace();
         
 
+  
+  int W  = parameters.W_,
+      Le = parameters.LE_;
+    
+  phases_.resize(W,Le);
+  for (int i = 0; i < W; ++i) 
+    for (int j = 0; j < Le; ++j){
+      
+       double ky = ( i * b1_(1) + j * b2_(1) ) / Le;
+	  phases_(i, j) = std::exp(std::complex<double>(0, -a0_ * ky ) );
+    }
+    
 
 };
 
@@ -607,6 +619,68 @@ void Graphene_KaneMele::rearrange_initial_vec(type r_vec[]){ //supe duper hacky
 
 }
 */
+
+
+
+void Graphene_KaneMele::to_kSpace(type ket[], const type p_ket[], int dir) {
+  
+  int num_subvectors = 4;
+  int W = this->parameters().W_,
+      LE = this->parameters().LE_;
+  
+  double norm = std::sqrt( double(W) * double(LE));
+
+  fftw_complex *fft_input = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * LE );
+  fftw_complex *fft_output = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * LE );
+  fftw_plan fftw_plan;// = fftw_plan_dft_2d(W, LE, fft_input, fft_output, FFTW_BACKWARD, FFTW_ESTIMATE);
+
+  Eigen::MatrixXcd local_phases = phases_;
+  
+  if( dir == 1 )//real space to kSpace
+    fftw_plan = fftw_plan_dft_2d(W, LE, fft_input, fft_output, FFTW_BACKWARD, FFTW_ESTIMATE);
+  else if( dir == -1 ){//kSpace to real space
+    fftw_plan = fftw_plan_dft_2d(W, LE, fft_input, fft_output, FFTW_FORWARD, FFTW_ESTIMATE);
+    local_phases = phases_.adjoint();
+  }
+
+    for (int i = 0; i < num_subvectors; i++) {       
+
+#pragma omp parallel for
+      for (int y = 0; y < LE; y++) {
+          for (int x = 0; x < W; x++) {
+	    if( ( i == 2 || i == 3 ) && dir == 1 ){
+	      fft_input[y * W + x][0] = ( p_ket[ ( y * W + x + i ) * num_subvectors] * local_phases(x,y) ).real(); 
+              fft_input[y * W + x][1] = ( p_ket[ ( y * W + x + i ) * num_subvectors] * local_phases(x,y) ).imag(); 
+	    }
+	    else{
+	      fft_input[y * W + x][0] = p_ket[ ( y * W + x + i ) * num_subvectors].real(); 
+              fft_input[y * W + x][1] = p_ket[ ( y * W + x + i ) * num_subvectors].imag(); 
+	    }
+	 }
+      }
+
+        fftw_execute(fftw_plan); 
+
+#pragma omp parallel for
+    for (int y = 0; y < LE; y++) 
+      for (int x = 0; x < W ; x++) {
+	std::complex<double> res = std::complex<double> (fft_output[y * W + x][0], fft_output[y * W + x][1]);
+	if( ( i == 2 || i == 3 ) && dir == -1 )
+	  res *= local_phases(x,y);
+	
+	ket[ ( x + y * W + i ) * num_subvectors] =  res / norm;
+      }
+    }
+
+
+       
+    fftw_destroy_plan(fftw_plan);
+    fftw_free(fft_input);
+    fftw_free(fft_output);
+
+
+}
+
 
 
 
