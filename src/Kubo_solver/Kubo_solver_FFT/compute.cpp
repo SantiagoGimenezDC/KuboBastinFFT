@@ -132,27 +132,12 @@ void Kubo_solver_FFT::compute(){
 
       
       if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() && parameters_.base_choice_ == 0)
-      	device_.Uk_ket(rand_vec_, rand_vec_);
+	device_.Uk_ket(rand_vec_, rand_vec_);
 
-      if(dynamic_cast<Graphene_KaneMele*>(&device_) && !device_.isKspace() && parameters_.base_choice_ == 4){
-
-	int DIM=W*LE*4;
-	type ref[DIM];
-
-	
-
-	for(int i = 0; i<DIM;i++)
-	  ref[i] = rand_vec_[i];
-	
-	
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) && !device_.isKspace() && parameters_.base_choice_ == 4)	
       	device_.to_kSpace(rand_vec_, rand_vec_, -1);
-      	device_.to_kSpace(rand_vec_, rand_vec_, 1);
-	
-	for(int i = 0; i<DIM;i++)
-	  std::cout<< ( ref[i] - rand_vec_[i] ) <<"       "<< abs(ref[i])<<"  "<< abs(rand_vec_[i])<<std::endl;
-	
-      }
-
+      
+      
       
 
       device_.projector( rand_vec_ );

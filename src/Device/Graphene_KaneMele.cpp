@@ -29,7 +29,7 @@ Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashb
   //values in eVs;
   r_type t            = t_standard_,
          stgr_str_2   = stgr_str_ ,
-         m_str_2      = - m_str_ /4 ,
+         m_str_2      = - m_str_ ,
          rashba_str_2 = - rashba_str_ ,  //Unexplained minus sign here
          KM_str_2     = KM_str_ ,
          HLD_str_2    = HLD_str ;
@@ -104,7 +104,7 @@ Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashb
   H_k0_bare_(0, 2) = t_standard_; //removed the - sign???
   H_k0_bare_(1, 3) = t_standard_;
   
-  H_k0_ex_ = 4.0 * H_ex; //This 4.0 compensates for the /4 in the PF
+  H_k0_ex_ =  H_ex; // should be a This 4.0 compensates for the /4 in the PF
 
   H_k0_R_1_.block(0,2,2,2) = R_PF * sx; //Compensating for the unexplained - sign; same on both next lines.
   H_k0_R_2_.block(0,2,2,2) = -R_PF * (sx - sqrt3_ * sy) / 2.0;
@@ -114,7 +114,8 @@ Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashb
   H_k0_KM_.block( 2, 2, 2, 2 ) = -( KM_PF * sz / 2.0 );
 
 
-  this->diagonalize_kSpace();
+  //  if(k_space){
+    this->diagonalize_kSpace();
         
 
   
@@ -129,7 +130,8 @@ Graphene_KaneMele::Graphene_KaneMele(r_type stgr_str, r_type m_str, r_type rashb
 	  phases_(i, j) = std::exp(std::complex<double>(0, -a0_ * ky ) );
     }
     
-
+  //}
+  
 };
 
 
@@ -476,10 +478,11 @@ void Graphene_KaneMele::print_hamiltonian(){
   int dim = this->parameters().DIM_;
   int DIM = this->parameters().DIM_;
 
-  Eigen::MatrixXcd H_r(dim,dim), S(dim,dim);
+  Eigen::MatrixXcd H_r(dim,dim), H_r_2(dim,dim), S(dim,dim);
 
   std::ofstream dataP;
-  dataP.open("Ham_imag.txt");
+  dataP.open("Ham_Ham_2.txt");
+
   
     for(int j=0;j<dim;j++){
       for(int i=0;i<dim;i++){
@@ -495,10 +498,13 @@ void Graphene_KaneMele::print_hamiltonian(){
 	term_j(j)=1;
 
 
+	Eigen::Vector<std::complex<double>, -1> term_i_2=term_i, term_j_2=term_j;
+
+
         
 	//this->Uk_ket(term_j.data(),term_j.data());
-	//this->Hk_ket(1.0, 0.0, tmp.data(),term_j.data());
-	this->Hk_update_cheb(tmp.data(),term_j.data(),null.data());
+	this->Hr_ket(1.0, 0.0, tmp.data(),term_j.data());
+	//this->Hk_update_cheb(tmp.data(),term_j.data(),null.data());
 	//this->Uk_ket(term_i.data(),term_i.data());
 
 	
@@ -508,10 +514,25 @@ void Graphene_KaneMele::print_hamiltonian(){
 	std::complex<double> termy = term_i.dot(tmp);
 
 	 H_r(i,j)=termy;
+
+
+	to_kSpace(term_j_2.data(), term_j_2.data(), -1);
+	this->Hk_ket(1.0, 0.0, tmp.data(),term_j_2.data());
+	to_kSpace(tmp.data(), tmp.data(), 1);
+	
+	std::complex<double> termy2 = term_i_2.dot(tmp);
+
+	
+	if(abs(real(termy2)) < 0.00001)
+	  termy2=std::complex<double>(0.0, imag(termy2));
+	if(abs(imag(termy2)) < 0.00001)
+	  termy2=std::complex<double>(real(termy2), 0.0);
+	
+	H_r_2(i,j)=termy2-termy;
       }
     }
 
-    dataP<<H_r.real();
+    dataP<<(H_r_2).real();
 
     std::cout<<(H_r-H_r.adjoint()).norm()<<std::endl;
   dataP.close();
@@ -649,12 +670,12 @@ void Graphene_KaneMele::to_kSpace(type ket[], const type p_ket[], int dir) {
       for (int y = 0; y < LE; y++) {
           for (int x = 0; x < W; x++) {
 	    if( ( i == 2 || i == 3 ) && dir == 1 ){
-	      fft_input[y * W + x][0] = ( p_ket[ ( y * W + x + i ) * num_subvectors] * local_phases(x,y) ).real(); 
-              fft_input[y * W + x][1] = ( p_ket[ ( y * W + x + i ) * num_subvectors] * local_phases(x,y) ).imag(); 
+	      fft_input[y * W + x][0] = ( p_ket[ ( y * W + x ) * num_subvectors + i] * local_phases(x,y) ).real(); 
+              fft_input[y * W + x][1] = ( p_ket[ ( y * W + x ) * num_subvectors + i] * local_phases(x,y) ).imag(); 
 	    }
 	    else{
-	      fft_input[y * W + x][0] = p_ket[ ( y * W + x + i ) * num_subvectors].real(); 
-              fft_input[y * W + x][1] = p_ket[ ( y * W + x + i ) * num_subvectors].imag(); 
+	      fft_input[y * W + x][0] = p_ket[ ( y * W + x ) * num_subvectors + i ].real(); 
+              fft_input[y * W + x][1] = p_ket[ ( y * W + x ) * num_subvectors + i ].imag(); 
 	    }
 	 }
       }
@@ -668,7 +689,7 @@ void Graphene_KaneMele::to_kSpace(type ket[], const type p_ket[], int dir) {
 	if( ( i == 2 || i == 3 ) && dir == -1 )
 	  res *= local_phases(x,y);
 	
-	ket[ ( x + y * W + i ) * num_subvectors] =  res / norm;
+	ket[ ( y * W + x ) * num_subvectors + i] =  res / norm;
       }
     }
 
@@ -693,7 +714,7 @@ void Graphene_KaneMele::Hr_ket (r_type a, r_type b, type* ket, type* p_ket){
 
   r_type b_a = b/a;
 
-          
+
   Eigen::Matrix4cd Id = Eigen::Matrix4d::Identity(),H_1, H_2, H_3, H_4;
 
   H_1 = H_1_/a + b_a*Id;
@@ -766,7 +787,8 @@ void Graphene_KaneMele::Hr_update_cheb ( type ket[], type p_ket[], type pp_ket[]
 
   r_type b_a = b/a;
   
-          
+
+
   Eigen::Matrix4cd
     Id = Eigen::Matrix4d::Identity(), H_1, H_2, H_3, H_4;
 

@@ -186,12 +186,35 @@ class Graphene_KaneMele: public Graphene{
 
       
       
-      if( dir == 2 )
-        this->J( ket, p_ket, 0);
-      if( dir == 3 )
+      if( dir == 2 ){
+	if(k_space){
+	  to_kSpace(p_ket, p_ket, -1);
+	  this->J( ket, p_ket, 0);
+	  to_kSpace(ket, ket, 1);
+	}
+      }
+	else
+          this->J( ket, p_ket, 0);
+      
+      if( dir == 3 ){
+	if(k_space){
+	  to_kSpace(p_ket, p_ket, -1);
+	  this->J( ket, p_ket, 1);
+	  to_kSpace(ket, ket, 1);
+	}
+      }
+      else
         this->J( ket, p_ket, 1);
-      if( dir == 4 )
-        this->J( ket, p_ket, 2);
+      
+      if( dir == 4 ){
+	if(k_space){
+	  to_kSpace(p_ket, p_ket, -1);
+	  this->J( ket, p_ket, 2);
+	  to_kSpace(ket, ket, 1);
+	}
+      }
+      else
+	this->J( ket, p_ket, 2);
     
     };
   
