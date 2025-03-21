@@ -185,7 +185,7 @@ class Graphene_KaneMele: public Graphene{
       }
 
       
-      
+      /*      
       if( dir == 2 ){
 	if(k_space){
 	  to_kSpace(p_ket, p_ket, -1);
@@ -215,7 +215,7 @@ class Graphene_KaneMele: public Graphene{
       }
       else
 	this->J( ket, p_ket, 2);
-    
+      */
     };
   
     virtual void vel_op_x   ( type*, type*);

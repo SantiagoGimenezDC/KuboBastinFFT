@@ -64,7 +64,6 @@ int main(int , char **argv){
   Input>>sim_type;
   Input>>sim_equation;
 
-
   
   if(sim_equation == "GREENWOOD")
     s_vars.sim_equation_ = KUBO_GREENWOOD;
@@ -101,6 +100,7 @@ int main(int , char **argv){
   Input>>s_vars.vel_dir_1_;
   Input>>s_vars.vel_dir_2_;
 
+  std::cout<<"HEERE:   "<<s_vars.vel_dir_1_<<"  "<<s_vars.vel_dir_2_<<std::endl;
   
   Input>>graphene_vars.Bz_;
   Input>>graphene_vars.projector_option_;
