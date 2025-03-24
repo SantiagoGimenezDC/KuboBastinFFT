@@ -141,6 +141,7 @@ void Graphene_KaneMele::diagonalize_kSpace(){
 
   int W = parameters().W_;
   int Le = parameters().LE_;
+  int subdim = 0;
     
   eigenvalues_k_.resize( W * Le * 4);
   U_k_.resize(4, W*Le*4);
@@ -149,17 +150,50 @@ void Graphene_KaneMele::diagonalize_kSpace(){
   v_k_x_.resize(4, W*Le*4);
   v_k_y_.resize(4, W*Le*4);
 
+  std::vector<Eigen::Vector2d> nonZeroList;
   
+  Eigen::Vector2d  dirac_1 = 2.0 * M_PI / ( 3.0 * a_ ) * Eigen::Vector2d(  1, 3.0/sqrt(3.0) );
+  Eigen::Vector2d  dirac_2 = 2.0 * M_PI / ( 3.0 * a_ ) * Eigen::Vector2d( -1, 3.0/sqrt(3.0) );
+
+  /*
+    k_points_2 = np.zeros((grid_size*grid_size,2))
+        
+    for y in range(grid_size ):
+        for x in range(grid_size):
+            new_vec = x * b1 / grid_size + y * b2 / grid_size
+            dist1 = np.abs(new_vec - dirac_1)
+            dist2 = np.abs(new_vec - dirac_2)
+  */
+		
   //#pragma omp parallel for
   for(int j=0; j<Le; j++){
     for(int i=0; i<W; i++){
 
-      H_k_.block( 0, (i+j*W)*4, 4, 4 ) = this->Hk_single(Eigen::Vector2d(i,j));
+      
+      double kx = ( i * b1_(0) + j * b2_(0) ) / W,
+             ky = ( i * b1_(1) + j * b2_(1) ) / Le;
+      
+      Eigen::Vector2d k_vec = Eigen::Vector2d(kx, ky);
+    
+      double dist_1 = (k_vec - dirac_1).norm(),
+	dist_2 = (k_vec - dirac_2).norm(),
+	nullify=0.0;
+
+      
+
+      
+      if( dist_1 < 800 || dist_2 < 800 ){
+        nullify = 1.0;
+	subdim++;
+	nonZeroList_.push_back(Eigen::Vector2d(i, j));
+      }
+	
+      H_k_.block( 0, ( i + j * W ) * 4, 4, 4 ) = nullify * this->Hk_single(Eigen::Vector2d(i,j));
       
       eigenSol sol = Uk_single(Eigen::Vector2d(i,j));
-      eigenvalues_k_.segment((i+j*W)*4, 4) = sol.eigenvalues_;
-      U_k_.block( 0, (i+j*W)*4, 4, 4 ) = sol.Uk_ ;
-      H_k_.block( 0, (i+j*W)*4, 4, 4 ) = this->Hk_single(Eigen::Vector2d(i,j));
+      eigenvalues_k_.segment((i+j*W)*4, 4) = nullify * sol.eigenvalues_;
+      U_k_.block( 0, (i+j*W)*4, 4, 4 ) = nullify * sol.Uk_ ;
+      H_k_.block( 0, (i+j*W)*4, 4, 4 ) = nullify * this->Hk_single(Eigen::Vector2d(i,j));
       
       //       std::cout<< sol.Uk_.adjoint()   *  this->Hk_single(Eigen::Vector2d(i,j))   *   sol.Uk_  <<std::endl<<std::endl<<std::endl;
       //       std::cout<< this->Hk_single(Eigen::Vector2d(i,j))  <<std::endl<<std::endl<<std::endl;
@@ -167,11 +201,32 @@ void Graphene_KaneMele::diagonalize_kSpace(){
       
       
       Eigen::MatrixXcd vk = vk_single( Eigen::Vector2d(i,j) );
-      v_k_x_.block( 0, (i+j*W)*4, 4, 4 ) = vk.block(0,0,4,4);
-      v_k_y_.block( 0, (i+j*W)*4, 4, 4 ) = vk.block(0,4,4,4);
+      v_k_x_.block( 0, (i+j*W)*4, 4, 4 ) = nullify*vk.block(0,0,4,4);
+      v_k_y_.block( 0, (i+j*W)*4, 4, 4 ) = nullify*vk.block(0,4,4,4);
 
     }
   }
+
+
+  H_k_cut_.resize(4, subdim*4);
+  v_k_x_cut_.resize(4, subdim*4);
+  v_k_y_cut_.resize(4, subdim*4);
+  
+  
+  for (size_t i = 0; i < nonZeroList_.size(); i++) {
+    const auto& vec = nonZeroList_[i]; 
+    int i2 = vec(0);
+    int j2 = vec(1);
+    
+    H_k_cut_.block(0, i * 4, 4, 4)   = this->Hk_single(Eigen::Vector2d(i2,j2));
+
+    Eigen::MatrixXcd vk = vk_single( Eigen::Vector2d(i2,j2) );
+    v_k_x_cut_.block(0, i * 4, 4, 4) = vk.block(0,0,4,4);
+    v_k_y_cut_.block(0, i * 4, 4, 4) = vk.block(0,4,4,4);
+  }
+
+  
+  parameters().SUBDIM_ = 4 * subdim;
 
 };
 
@@ -244,6 +299,10 @@ void Graphene_KaneMele::Hk_ket (r_type a, r_type b, type* ket, type* p_ket){
 
 
 
+
+
+
+
 void Graphene_KaneMele::Hk_update_cheb ( type ket[], type p_ket[], type pp_ket[]){
   int W = parameters().W_,
     Le = parameters().LE_,
@@ -272,6 +331,123 @@ void Graphene_KaneMele::Hk_update_cheb ( type ket[], type p_ket[], type pp_ket[]
   eig_p_ket = eig_ket;
    
 };
+
+
+
+
+
+
+
+void Graphene_KaneMele::Hk_ket_cut (r_type a, r_type b, type* ket, type* p_ket){
+
+  int W = parameters().W_,
+    DIM = parameters().DIM_;
+
+  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,DIM),
+    eig_p_ket(p_ket, DIM);
+
+  Eigen::Matrix4cd Id = Eigen::Matrix4cd::Zero(); 
+
+#pragma omp parallel for  
+  for (size_t i = 0; i < nonZeroList_.size(); i++) {
+    const auto& vec = nonZeroList_[i]; 
+    int i2 = vec(0);
+    int j2 = vec(1);
+      eig_ket.segment( ( i2 + j2 * W ) * 4, 4 ) = ( H_k_cut_.block( 0, i* 4, 4, 4 ) - b * Id ) / a   *   eig_p_ket.segment( ( i2 + j2 * W ) * 4, 4 );
+  }
+ 
+};
+
+
+
+
+
+void Graphene_KaneMele::Hk_update_cheb_cut (type* ket, type* p_ket, type* pp_ket){
+
+  int W = parameters().W_,
+    DIM = parameters().DIM_;
+
+  r_type a = this->a();
+  r_type b = this->b(); 
+
+  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,DIM),
+    eig_p_ket(p_ket, DIM),
+    eig_pp_ket(pp_ket, DIM);
+
+  Eigen::Matrix4cd Id = Eigen::Matrix4cd::Zero(); 
+
+#pragma omp parallel for  
+  for (size_t i = 0; i < nonZeroList_.size(); i++) {
+    const auto& vec = nonZeroList_[i]; 
+    int i2 = vec(0);
+    int j2 = vec(1); 
+    eig_ket.segment( ( i2 + j2 * W ) * 4, 4 ) = 2.0 * ( H_k_cut_.block( 0, i * 4, 4, 4 ) - b * Id ) / a   *   eig_p_ket.segment( ( i2 + j2 * W ) * 4, 4 )  -  eig_pp_ket.segment( ( i2 + j2 * W ) * 4, 4 );
+  }
+
+  eig_pp_ket = eig_p_ket;
+  eig_p_ket = eig_ket;
+ 
+};
+
+
+
+
+void Graphene_KaneMele::k_vel_op_x_cut (type* ket, type* p_ket){
+
+  int W = parameters().W_,
+    DIM = parameters().DIM_;
+
+  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,DIM),
+    eig_p_ket(p_ket, DIM);
+
+  Eigen::Matrix4cd Id = Eigen::Matrix4cd::Zero(); 
+
+#pragma omp parallel for  
+  for (auto it = nonZeroList_.begin(); it != nonZeroList_.end(); ++it) {
+    int i = (*it)(0);
+    int j = (*it)(1);
+    eig_ket.segment( ( i + j * W ) * 4, 4 ) = v_k_x_cut_.block( 0, i* 4, 4, 4 )  *   eig_p_ket.segment( ( i + j * W ) * 4, 4 );
+  }
+ 
+};
+
+
+
+void Graphene_KaneMele::k_vel_op_y_cut (type* ket, type* p_ket){
+
+  int W = parameters().W_,
+    DIM = parameters().DIM_;
+
+  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,DIM),
+    eig_p_ket(p_ket, DIM);
+
+  Eigen::Matrix4cd Id = Eigen::Matrix4cd::Zero(); 
+
+#pragma omp parallel for  
+  for (size_t i = 0; i < nonZeroList_.size(); i++) {
+    const auto& vec = nonZeroList_[i]; 
+    int i2 = vec(0);
+    int j2 = vec(1); 
+    eig_ket.segment( ( i2 + j2 * W ) * 4, 4 ) = v_k_y_cut_.block( 0, i * 4, 4, 4 )   *   eig_p_ket.segment( ( i2 + j2 * W ) * 4, 4 );
+  }
+ 
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

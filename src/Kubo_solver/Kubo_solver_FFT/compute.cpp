@@ -130,13 +130,13 @@ void Kubo_solver_FFT::compute(){
 
 
 
-      /*      
+            
       if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() && parameters_.base_choice_ == 0)
 	device_.Uk_ket(rand_vec_, rand_vec_);
 
       if(dynamic_cast<Graphene_KaneMele*>(&device_) && !device_.isKspace() && parameters_.base_choice_ == 4)	
-      	device_.to_kSpace(rand_vec_, rand_vec_, -1);
-      */
+      	device_.to_kSpace(rand_vec_, rand_vec_, 1);
+      
       
       
 

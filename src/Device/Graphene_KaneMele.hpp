@@ -92,9 +92,12 @@ class Graphene_KaneMele: public Graphene{
 
     std::vector<eigenSol> diagonalized_Hk_;
     Eigen::VectorXcd eigenvalues_k_;
-    Eigen::MatrixXcd H_k_, U_k_, v_k_x_, v_k_y_, v_k_z_;
+    Eigen::MatrixXcd H_k_, U_k_, v_k_x_, v_k_y_, v_k_z_,
+      H_k_cut_, v_k_x_cut_, v_k_y_cut_;
 
-    bool k_space = false;
+    bool k_space = true;
+
+    std::vector<Eigen::Vector2d> nonZeroList_;
 
   
   public:
@@ -116,7 +119,7 @@ class Graphene_KaneMele: public Graphene{
     //Rashba coupling Hamiltonian //INTERFACE
     virtual void H_ket  ( type* ket , type* p_ket ){
       if(k_space)
-	Hk_ket(this->a(),this->b(), ket, p_ket);
+	Hk_ket_cut(this->a(),this->b(), ket, p_ket);
       else
         Hr_ket(this->a(),this->b(), ket, p_ket);
 
@@ -124,14 +127,14 @@ class Graphene_KaneMele: public Graphene{
   
     virtual void H_ket  ( type* ket , type* p_ket, r_type*, r_type* ){
       if(k_space)
-        Hk_ket(this->a(), this->b(), ket, p_ket);
+        Hk_ket_cut(this->a(), this->b(), ket, p_ket);
       else
 	Hr_ket(this->a(), this->b(), ket, p_ket);
     }
   
     virtual void update_cheb ( type* ket, type* p_ket,  type* pp_ket){
       if(k_space)
-        Hk_update_cheb( ket, p_ket, pp_ket);
+        Hk_update_cheb_cut( ket, p_ket, pp_ket);
       else
 	Hr_update_cheb( ket, p_ket, pp_ket);
     };
@@ -161,11 +164,17 @@ class Graphene_KaneMele: public Graphene{
     Eigen::MatrixXcd vk_single(Eigen::Vector2d );
   
     void Hk_ket ( r_type, r_type, type*, type* );
+    void Hk_ket_cut ( r_type, r_type, type*, type* );
+
     virtual void Uk_ket (  type*, type* );
     void Hk_update_cheb ( type*, type*,  type*);
+    void Hk_update_cheb_cut ( type*, type*,  type*);
 
     void k_vel_op_x (type*, type* );
     void k_vel_op_y (type*, type* );  
+
+    void k_vel_op_x_cut (type*, type* );
+    void k_vel_op_y_cut (type*, type* );  
 
 
 
@@ -173,7 +182,7 @@ class Graphene_KaneMele: public Graphene{
     virtual void vel_op   ( type* ket, type* p_ket, int dir){
       if( dir == 0 ){
 	if(k_space)
-	  k_vel_op_x( ket, p_ket);
+	  k_vel_op_x_cut( ket, p_ket);
 	else
 	  vel_op_x( ket, p_ket);
       }
@@ -185,37 +194,39 @@ class Graphene_KaneMele: public Graphene{
       }
 
       
-      /*      
+            
       if( dir == 2 ){
 	if(k_space){
-	  to_kSpace(p_ket, p_ket, -1);
+	  to_kSpace(p_ket, p_ket, 1);
 	  this->J( ket, p_ket, 0);
-	  to_kSpace(ket, ket, 1);
+	  to_kSpace(ket, ket, -1);
 	}
-      }
 	else
           this->J( ket, p_ket, 0);
       
+      }
+
       if( dir == 3 ){
 	if(k_space){
-	  to_kSpace(p_ket, p_ket, -1);
+	  to_kSpace(p_ket, p_ket, 1);
 	  this->J( ket, p_ket, 1);
-	  to_kSpace(ket, ket, 1);
+	  to_kSpace(ket, ket, -1);
 	}
+	else
+          this->J( ket, p_ket, 1);
+      
       }
-      else
-        this->J( ket, p_ket, 1);
       
       if( dir == 4 ){
 	if(k_space){
-	  to_kSpace(p_ket, p_ket, -1);
+	  to_kSpace(p_ket, p_ket, 1);
 	  this->J( ket, p_ket, 2);
-	  to_kSpace(ket, ket, 1);
+	  to_kSpace(ket, ket, -1);
 	}
+        else
+	  this->J( ket, p_ket, 2);
       }
-      else
-	this->J( ket, p_ket, 2);
-      */
+      
     };
   
     virtual void vel_op_x   ( type*, type*);
