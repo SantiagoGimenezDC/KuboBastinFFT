@@ -28,12 +28,12 @@ private:
 public:
   ~Device(){ delete []dis_; };
   Device( device_vars& device_vars ) : device_vars_( device_vars ), rng_( device_vars.dis_seed_ ){
-    dis_ = new r_type[ 4*device_vars_.SUBDIM_ ]; // the 4 is a hack to make it work with the RashbaSOC!!
+    dis_ = new r_type[ 4*device_vars_.DIM_ ]; // the 4 is a hack to make it work with the RashbaSOC!!
     damp_ = new r_type[ device_vars_.DIM_ ];
 
     
     #pragma omp parallel for
-    for(int i=0; i<4*device_vars_.SUBDIM_; i++)// the 4 is a hack to make it work with the RashbaSOC!!
+    for(int i=0; i<4*device_vars_.DIM_; i++)// the 4 is a hack to make it work with the RashbaSOC!!
       dis_[i] = 0.0;
     
     #pragma omp parallel for

@@ -17,6 +17,8 @@
 
 #include "../../States.hpp"
 
+#include "../../Device/Device.hpp"
+#include "../../Device/Graphene_KaneMele.hpp"
 
 
 class Kubo_solver_FFT{

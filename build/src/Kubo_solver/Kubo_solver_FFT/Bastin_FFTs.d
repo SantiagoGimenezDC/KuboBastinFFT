@@ -20,6 +20,7 @@ build/src/Kubo_solver/Kubo_solver_FFT/Bastin_FFTs.o: \
  src/Kubo_solver/Kubo_solver_FFT/../solver_vars.hpp \
  src/Kubo_solver/Kubo_solver_FFT/../../static_vars.hpp \
  src/Kubo_solver/Kubo_solver_FFT/../../States.hpp \
+ src/Kubo_solver/Kubo_solver_FFT/../../Device/Graphene_KaneMele.hpp \
  src/Kubo_solver/Kubo_solver_FFT/../fftw_wrapper.hpp
 src/Kubo_solver/Kubo_solver_FFT/Kubo_solver_FFT.hpp:
 src/Kubo_solver/Kubo_solver_FFT/../../static_vars.hpp:
@@ -41,4 +42,5 @@ src/Kubo_solver/Kubo_solver_FFT/../../Random.hpp:
 src/Kubo_solver/Kubo_solver_FFT/../solver_vars.hpp:
 src/Kubo_solver/Kubo_solver_FFT/../../static_vars.hpp:
 src/Kubo_solver/Kubo_solver_FFT/../../States.hpp:
+src/Kubo_solver/Kubo_solver_FFT/../../Device/Graphene_KaneMele.hpp:
 src/Kubo_solver/Kubo_solver_FFT/../fftw_wrapper.hpp:

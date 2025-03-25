@@ -19,8 +19,6 @@
 #include "Kubo_solver_FFT.hpp"
 #include "../time_station.hpp"
 #include "../time_station_2.hpp"
-#include "../../Device/Device.hpp"
-#include "../../Device/Graphene_KaneMele.hpp"
 
 
 
@@ -109,10 +107,19 @@ void Kubo_solver_FFT::compute(){
 
     time_station_2 total_csrmv_time;
     time_station_2 total_FFTs_time;
-	
+
+
+
+    
+    int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) )
+        device_.parameters().SUBDIM_=device_.parameters().DIM_;
+    
     //device_.Anderson_disorder(dis_vec_);
     device_.update_dis( dmp_op_);
 
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) ) //god forbid
+        device_.parameters().SUBDIM_=subdim;
 
 
 
@@ -125,18 +132,29 @@ void Kubo_solver_FFT::compute(){
       
       std::cout<<std::endl<< std::to_string( ( d - 1 ) * R + r)+"/"+std::to_string( D * R )+"-Vector/disorder realization;"<<std::endl;
 
+
+      //--------------------------------All hacks sesh------------------------------//
+      int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) )
+        device_.parameters().SUBDIM_=device_.parameters().DIM_;
+      
       vec_base_->generate_vec_im( rand_vec_, r);       
       device_.rearrange_initial_vec( rand_vec_ ); //very hacky
 
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) ) //god forbid
+        device_.parameters().SUBDIM_=subdim;
 
 
+
+
+      
             
       if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() && parameters_.base_choice_ == 0)
 	device_.Uk_ket(rand_vec_, rand_vec_);
 
       if(dynamic_cast<Graphene_KaneMele*>(&device_) && !device_.isKspace() && parameters_.base_choice_ == 4)	
       	device_.to_kSpace(rand_vec_, rand_vec_, 1);
-      
+      //--------------------------------All hacks sesh------------------------------//      
       
       
 
