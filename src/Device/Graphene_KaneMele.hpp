@@ -91,7 +91,7 @@ class Graphene_KaneMele: public Graphene{
     Eigen::MatrixXcd phases_;
 
     std::vector<eigenSol> diagonalized_Hk_;
-    Eigen::VectorXcd eigenvalues_k_;
+  Eigen::VectorXcd eigenvalues_k_, projector_;
     Eigen::MatrixXcd H_k_, U_k_, v_k_x_, v_k_y_, v_k_z_,
       H_k_cut_, v_k_x_cut_, v_k_y_cut_;
 
@@ -111,7 +111,8 @@ class Graphene_KaneMele: public Graphene{
 
     virtual bool isKspace(){ return k_space; };  
     virtual int unit_cell_size(){return 4;};  
-    virtual void projector(type* );  
+    virtual void projector(type* );
+    void project(type* );
     virtual void J (type*, type*, int);
 
     virtual void build_Hamiltonian(){};
@@ -124,6 +125,7 @@ class Graphene_KaneMele: public Graphene{
         Hr_ket(this->a(),this->b(), ket, p_ket);
 
     }
+
   
     virtual void H_ket  ( type* ket , type* p_ket, r_type*, r_type* ){
       if(k_space)
