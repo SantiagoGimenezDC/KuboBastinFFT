@@ -95,7 +95,7 @@ class Graphene_KaneMele: public Graphene{
     Eigen::MatrixXcd H_k_, U_k_, v_k_x_, v_k_y_, v_k_z_,
       H_k_cut_, v_k_x_cut_, v_k_y_cut_;
 
-    bool k_space = false;
+    bool k_space = true;
 
     std::vector<Eigen::Vector2d> nonZeroList_;
 
