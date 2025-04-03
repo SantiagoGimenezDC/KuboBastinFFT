@@ -8,11 +8,13 @@
 
 namespace fs = std::filesystem;
   
-  
+
+
 Kubo_solver_FFT_postProcess::Kubo_solver_FFT_postProcess(Kubo_solver_FFT& parent_solver): parent_solver_(parent_solver){
   int nump = parent_solver_.parameters().num_p_,
     D = parent_solver_.parameters().dis_real_,
     R = parent_solver_.parameters().R_;
+
   
   E_points_.resize(nump);
 
@@ -187,7 +189,7 @@ void Kubo_solver_FFT_postProcess::Sea_postProcess(const std::vector<type>& final
   
   
   int nump = parent_solver_.parameters().num_p_;
-  int SUBDIM = parent_solver_.device().parameters().SUBDIM_;    
+  size_t SUBDIM = parent_solver_.device().parameters().SUBDIM_;    
 
   r_type a = parent_solver_.parameters().a_,
     b = parent_solver_.parameters().b_,
@@ -353,7 +355,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
   
   
   int nump = parent_solver_.parameters().num_p_;
-  int SUBDIM = parent_solver_.device().parameters().SUBDIM_;    
+  size_t SUBDIM = parent_solver_.device().parameters().SUBDIM_;    
 
   r_type a = parent_solver_.parameters().a_,
     b = parent_solver_.parameters().b_,
@@ -522,7 +524,7 @@ void Kubo_solver_FFT_postProcess::Greenwood_postProcess(const std::vector<type>&
   //    R = parameters_.R_,
   //  D = parameters_.dis_real_;
   
-  int SUBDIM = parent_solver_.device().parameters().SUBDIM_;    
+  size_t SUBDIM = parent_solver_.device().parameters().SUBDIM_;    
 
   r_type a = parent_solver_.parameters().a_,
          b = parent_solver_.parameters().b_,

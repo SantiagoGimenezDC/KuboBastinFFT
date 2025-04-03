@@ -39,7 +39,7 @@ void Kubo_solver_filtered::compute_imag(){
 
   device_.setup_velOp();
   
-  if(parameters_.a_ == 1.0){
+  if(parameters_.a_ == -1.0){
     r_type Emin = 0, Emax = 0;
     device_.minMax_EigenValues(300, Emax,Emin);
 
@@ -201,6 +201,7 @@ void Kubo_solver_filtered::compute_imag(){
 
 /*-----------------------------------------------*/  
 
+  
 
  
 
@@ -218,6 +219,7 @@ void Kubo_solver_filtered::compute_imag(){
   for( int r = 0; r < D * R; r++ )
     conv_R [r] = 0.0;
 
+
   
   for(int e=0; e<nump;e++){
     E_points   [e] = 0.0;
@@ -229,9 +231,10 @@ void Kubo_solver_filtered::compute_imag(){
 
   compute_E_points(E_points);  
 
-  
+ if(!dynamic_cast<Graphene_KaneMele*>(&device_) ){   
   cap_->create_CAP(W, C, LE,  dmp_op);
   device_.damp(dmp_op);
+ }
 
   /*-----------------------------------------------*/  
   
@@ -246,11 +249,16 @@ void Kubo_solver_filtered::compute_imag(){
   for(int d = 1; d <= D; d++){
 
     
-    
+    int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
+    if(dynamic_cast<Graphene_KaneMele*>(&device_) )
+    device_.parameters().SUBDIM_=device_.parameters().DIM_;
+        
     device_.Anderson_disorder(dis_vec);
     device_.update_dis(dis_vec, dmp_op);
-
    
+    if(dynamic_cast<Graphene_KaneMele*>(&device_) ) //god forbid
+     device_.parameters().SUBDIM_=subdim;
+
 
 
     
@@ -265,13 +273,22 @@ void Kubo_solver_filtered::compute_imag(){
       
       std::cout<<std::endl<< std::to_string( ( d - 1 ) * R + r)+"/"+std::to_string( D * R )+"-Vector/disorder realization;"<<std::endl;
        
+
+      //--------------------------------All hacks sesh------------------------------//
+      int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) )
+        device_.parameters().SUBDIM_ = device_.parameters().DIM_;
       
        vec_base_->generate_vec_im( rand_vec, r);       
        device_.rearrange_initial_vec(rand_vec); //very hacky
-  
-            
-      if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() && parameters_.base_choice_ == 0)
-	device_.Uk_ket(rand_vec, rand_vec);
+
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) ) //god forbid
+        device_.parameters().SUBDIM_ = subdim;
+       
+
+      
+      //if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() && parameters_.base_choice_ == 0)
+      //device_.Uk_ket(rand_vec, rand_vec);
 
       if(dynamic_cast<Graphene_KaneMele*>(&device_) && !device_.isKspace() && parameters_.base_choice_ == 4)	
       	device_.to_kSpace(rand_vec, rand_vec, 1);
@@ -685,7 +702,11 @@ void Kubo_solver_filtered::filtered_polynomial_cycle_direct_doubleBuffer_imag(ty
     device_.update_cheb( vec, p_vec, pp_vec );
 
     filter_doubleBuffer_imag( m, vec, poly_buffer_re, poly_buffer_im,  d_poly_buffer_re, d_poly_buffer_im, tmp, tmp_velOp, s, vel_op );
-    
+
+
+    if ( ( m + 1 ) % 50 == 0 || m == M - 1 ) 
+      std::cout << "\r        Computed: " << m+1 << "/" << M <<" moments."<< std::flush;
+
   }
       
     delete []vec;

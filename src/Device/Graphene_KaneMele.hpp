@@ -91,25 +91,28 @@ class Graphene_KaneMele: public Graphene{
     Eigen::MatrixXcd phases_;
 
     std::vector<eigenSol> diagonalized_Hk_;
-  Eigen::VectorXcd eigenvalues_k_, projector_;
+    Eigen::VectorXcd eigenvalues_k_, projector_;
     Eigen::MatrixXcd H_k_, U_k_, v_k_x_, v_k_y_, v_k_z_,
       H_k_cut_, v_k_x_cut_, v_k_y_cut_;
 
-    bool k_space = true;
+    bool k_space_ = false;
 
+    r_type range_ = 1.0;
+
+  
     std::vector<Eigen::Vector2d> nonZeroList_;
 
   
   public:
     ~Graphene_KaneMele(){};
     Graphene_KaneMele();
-    Graphene_KaneMele(r_type, r_type, r_type , r_type, r_type, device_vars&);
+    Graphene_KaneMele(int, r_type, r_type, r_type, r_type , r_type, r_type, device_vars&);
 
     void print_hamiltonian();
     virtual void rearrange_initial_vec(type*){};
     virtual void traceover(type* , type* , int , int);
 
-    virtual bool isKspace(){ return k_space; };  
+    virtual bool isKspace(){ return k_space_; };  
     virtual int unit_cell_size(){return 4;};  
     virtual void projector(type* );
     void project(type* );
@@ -119,24 +122,38 @@ class Graphene_KaneMele: public Graphene{
 
     //Rashba coupling Hamiltonian //INTERFACE
     virtual void H_ket  ( type* ket , type* p_ket ){
-      if(k_space)
-	Hk_ket_cut(this->a(),this->b(), ket, p_ket);
+      if(k_space_){
+	    if(this->parameters().dis_str_ == 0.0)
+	      Hk_ket_cut_clean(this->a(),this->b(), ket, p_ket);
+	    else
+	      Hk_ket_cut(this->a(),this->b(), ket, p_ket);
+      }
       else
         Hr_ket(this->a(),this->b(), ket, p_ket);
 
     }
 
   
+  
     virtual void H_ket  ( type* ket , type* p_ket, r_type*, r_type* ){
-      if(k_space)
-        Hk_ket_cut(this->a(), this->b(), ket, p_ket);
-      else
+      if(k_space_){
+	    if(this->parameters().dis_str_ == 0.0)
+	      	Hk_ket_cut_clean(this->a(), this->b(), ket, p_ket);
+	    else
+   	        Hk_ket_cut(this->a(), this->b(), ket, p_ket);
+
+      }
+	else
 	Hr_ket(this->a(), this->b(), ket, p_ket);
     }
   
     virtual void update_cheb ( type* ket, type* p_ket,  type* pp_ket){
-      if(k_space)
-        Hk_update_cheb_cut( ket, p_ket, pp_ket);
+      if(k_space_){
+	if(this->parameters().dis_str_ == 0.0)
+          Hk_update_cheb_cut_clean( ket, p_ket, pp_ket);
+	else
+	  Hk_update_cheb_cut( ket, p_ket, pp_ket);
+      }
       else
 	Hr_update_cheb( ket, p_ket, pp_ket);
     };
@@ -156,10 +173,12 @@ class Graphene_KaneMele: public Graphene{
 
 
 
+
   
     //K space
     virtual void to_kSpace(type* , const type*, int );
     void diagonalize_kSpace();
+    void build_Hk();
     eigenSol  Uk_single(Eigen::Vector2d );
   
     Eigen::Matrix4cd Hk_single(Eigen::Vector2d );
@@ -167,10 +186,13 @@ class Graphene_KaneMele: public Graphene{
   
     void Hk_ket ( r_type, r_type, type*, type* );
     void Hk_ket_cut ( r_type, r_type, type*, type* );
+    void Hk_ket_cut_clean ( r_type, r_type, type*, type* );
 
+  
     virtual void Uk_ket (  type*, type* );
     void Hk_update_cheb ( type*, type*,  type*);
     void Hk_update_cheb_cut ( type*, type*,  type*);
+    void Hk_update_cheb_cut_clean ( type*, type*,  type*);
 
     void k_vel_op_x (type*, type* );
     void k_vel_op_y (type*, type* );  
@@ -178,56 +200,47 @@ class Graphene_KaneMele: public Graphene{
     void k_vel_op_x_cut (type*, type* );
     void k_vel_op_y_cut (type*, type* );  
 
+    void k_vel_op_x_cut_clean (type*, type* );
+    void k_vel_op_y_cut_clean (type*, type* );  
+
 
 
   
     virtual void vel_op   ( type* ket, type* p_ket, int dir){
       if( dir == 0 ){
-	if(k_space)
-	  k_vel_op_x_cut( ket, p_ket);
-	else
+	if(k_space_){
+	    if(this->parameters().dis_str_ == 0.0)
+	      k_vel_op_x_cut_clean( ket, p_ket);
+	    else
+	      k_vel_op_x_cut( ket, p_ket);
+	}
+	else{
 	  vel_op_x( ket, p_ket);
+	}
       }
       if( dir == 1 ){
-	if(k_space)
-	  k_vel_op_y_cut( ket, p_ket);
-	else
+	if(k_space_){
+	  if(this->parameters().dis_str_ == 0.0)
+	      k_vel_op_y_cut_clean( ket, p_ket);
+	    else	  
+	      k_vel_op_y_cut( ket, p_ket);
+	}
+	else{
           vel_op_y( ket, p_ket);
+	}
       }
 
       
             
-      if( dir == 2 ){
-	if(k_space){
-	  to_kSpace(p_ket, p_ket, 1);
-	  this->J( ket, p_ket, 0);
-	  to_kSpace(ket, ket, -1);
-	}
-	else
-          this->J( ket, p_ket, 0);
-      
-      }
+      if( dir == 2 )
+        this->J( ket, p_ket, 0);
 
-      if( dir == 3 ){
-	if(k_space){
-	  to_kSpace(p_ket, p_ket, 1);
-	  this->J( ket, p_ket, 1);
-	  to_kSpace(ket, ket, -1);
-	}
-	else
-          this->J( ket, p_ket, 1);
+      if( dir == 3 )
+	this->J( ket, p_ket, 1);
       
-      }
+      if( dir == 4 )
+	this->J( ket, p_ket, 2);
       
-      if( dir == 4 ){
-	if(k_space){
-	  to_kSpace(p_ket, p_ket, 1);
-	  this->J( ket, p_ket, 2);
-	  to_kSpace(ket, ket, -1);
-	}
-        else
-	  this->J( ket, p_ket, 2);
-      }
       
     };
   

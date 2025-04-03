@@ -8,7 +8,7 @@
 
 void Device::Anderson_disorder(r_type disorder_vec[]){
 
-  int SUBDIM = device_vars_.SUBDIM_;
+  size_t SUBDIM = device_vars_.SUBDIM_;
   r_type str = device_vars_.dis_str_;
   
   for(int i=0;i<SUBDIM; i++){
@@ -24,7 +24,7 @@ void Device::Anderson_disorder(r_type disorder_vec[]){
 
 void Device::Anderson_disorder(){
 
-  int SUBDIM = device_vars_.SUBDIM_;
+  size_t SUBDIM = device_vars_.SUBDIM_;
   r_type str = device_vars_.dis_str_;
   
   for(int i=0;i<SUBDIM; i++){
@@ -36,32 +36,32 @@ void Device::Anderson_disorder(){
 }
 
 void Device::rearrange_initial_vec(type r_vec[]){ //supe duper hacky; Standard for 2-terminal devices.
-  int Dim = this->parameters().DIM_,
+  size_t Dim = this->parameters().DIM_,
     subDim = this->parameters().SUBDIM_;
 
-  int C   = this->parameters().C_,
+  size_t C   = this->parameters().C_,
       Le  = this->parameters().LE_,
       W   = this->parameters().W_;
 
   type tmp[subDim];
 
 #pragma omp parallel for
-    for(int n=0;n<subDim;n++)
+    for(size_t n=0;n<subDim;n++)
       tmp[n]=r_vec[n];
 
 #pragma omp parallel for
-    for(int n=0;n<Dim;n++)
+    for(size_t n=0;n<Dim;n++)
       r_vec[n] = 0;
         
 
 #pragma omp parallel for
-    for(int n=0;n<Le*W;n++)
+    for(size_t n=0;n<Le*W;n++)
       r_vec[C*W + n ]=tmp[ n];
 
 }
 
 void Device::traceover(type* traced, type* full_vec, int s, int num_reps){ //standard for 2-terminal devices.
-  int subDim = this->parameters().SUBDIM_,
+  size_t subDim = this->parameters().SUBDIM_,
       C   = this->parameters().C_,
       W   = this->parameters().W_,
       sec_size = subDim/num_reps,
@@ -72,7 +72,7 @@ void Device::traceover(type* traced, type* full_vec, int s, int num_reps){ //sta
 
       
 #pragma omp parallel for 
-      for(int i=0;i<buffer_length;i++)
+      for(size_t i=0;i<buffer_length;i++)
         traced[i] = full_vec[s*sec_size + i+C*W];
 
   };

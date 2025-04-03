@@ -18,7 +18,8 @@ void Kubo_solver_FFT::Kubo_sea_FFTs( storageType bras, storageType kets, std::ve
       size = parameters_.SECTION_SIZE_,
        nump = parameters_.num_p_,
        num_parts = parameters_.num_parts_;
-  
+
+
 
 
 

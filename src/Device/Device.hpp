@@ -7,7 +7,7 @@
 
 
 struct device_vars{
-  int W_, LE_, C_, DIM_, SUBDIM_,  dis_seed_, projector_option_;
+  size_t W_, LE_, C_, DIM_, SUBDIM_,  dis_seed_, projector_option_;
   r_type dis_str_, theta_, d_min_, Bz_;
 
   
@@ -33,11 +33,11 @@ public:
 
     
     #pragma omp parallel for
-    for(int i=0; i<4*device_vars_.DIM_; i++)// the 4 is a hack to make it work with the RashbaSOC!!
+    for(size_t i=0; i<4*device_vars_.DIM_; i++)// the 4 is a hack to make it work with the RashbaSOC!!
       dis_[i] = 0.0;
     
     #pragma omp parallel for
-    for(int i=0; i<device_vars_.DIM_; i++)
+    for(size_t i=0; i<device_vars_.DIM_; i++)
       damp_[i] = 1.0;
   };
 

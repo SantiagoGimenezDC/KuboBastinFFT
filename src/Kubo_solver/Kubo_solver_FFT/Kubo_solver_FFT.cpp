@@ -24,7 +24,7 @@ void Kubo_solver_FFT::initialize_device(){
   device_.build_Hamiltonian();
   device_.setup_velOp();
   
-  if(parameters_.a_ == 1.0){
+  if(parameters_.a_ == -1.0){
     r_type Emin, Emax;
     device_.minMax_EigenValues(300, Emax,Emin);
 

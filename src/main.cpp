@@ -3,6 +3,7 @@
 #include<string>
 
 
+
 #include "static_vars.hpp"
 #include "Device/Device.hpp"
 #include "Device/Graphene.hpp"
@@ -90,6 +91,21 @@ int main(int , char **argv){
   graphene_vars.run_dir_ = s_vars.run_dir_;
 
   r_type stgr_str, m_str, rashba_str, KM_str, HLD_str;
+  std::string string_is_k_space;
+
+  int is_k_space;
+  r_type range;
+
+  Input>>string_is_k_space;
+  if( string_is_k_space == "imag" )
+    is_k_space = true;
+  else
+    is_k_space = false;
+
+
+      
+  Input>> range;
+  
   Input>>stgr_str;
   Input>>m_str;
   Input>>rashba_str;
@@ -99,8 +115,6 @@ int main(int , char **argv){
   
   Input>>s_vars.vel_dir_1_;
   Input>>s_vars.vel_dir_2_;
-
-  std::cout<<"HEERE:   "<<s_vars.vel_dir_1_<<"  "<<s_vars.vel_dir_2_<<std::endl;
   
   Input>>graphene_vars.Bz_;
   Input>>graphene_vars.projector_option_;
@@ -134,7 +148,7 @@ int main(int , char **argv){
   std::cout<<"The min max eigv are fixed;"<<std::endl;
   std::cout<<"REAL filtered randVec does not work with complex Hamiltonian! Same issue as general imag vector i think, we lose the imag part of the Hamiltonian"<<std::endl<<std::endl; 
   std::cout<<"Are KaneMele velocities missing a sqrt(3.0)/3.0 factor??"<<std::endl; 
-  std::cout<<"Why are KaneMele strengths divided by t??"<<std::endl;
+  
 
   
   if(device_choice==0)
@@ -152,10 +166,10 @@ int main(int , char **argv){
   if(device_choice==6)
     device = new SupercellGraph_RashbaSOC(m_str,rashba_str,graphene_vars);
   if(device_choice==7)
-    device = new Graphene_KaneMele(stgr_str, m_str,rashba_str,KM_str, HLD_str, graphene_vars);
+    device = new Graphene_KaneMele(is_k_space, range, stgr_str, m_str,rashba_str,KM_str, HLD_str, graphene_vars);
 
   
-  //Graphene_KaneMele test(stgr_str, m_str, rashba_str, KM_str,  HLD_str, graphene_vars);
+  //Graphene_KaneMele test(is_k_space, range, stgr_str, m_str, rashba_str, KM_str,  HLD_str, graphene_vars);
   //test.print_hamiltonian();
   
   //Graphene_supercell test( graphene_vars);

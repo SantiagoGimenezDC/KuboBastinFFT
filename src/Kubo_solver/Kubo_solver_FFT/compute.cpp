@@ -51,7 +51,7 @@ void Kubo_solver_FFT::compute(){
       
   
   
-  int SUBDIM   = device_.parameters().SUBDIM_,
+  size_t SUBDIM   = device_.parameters().SUBDIM_,
       W      = device_.parameters().W_,
       C      = device_.parameters().C_,
       LE     = device_.parameters().LE_;
@@ -87,9 +87,11 @@ void Kubo_solver_FFT::compute(){
   reset_Chebyshev_buffers();
 
   
-  cap_->create_CAP(W, C, LE,  dmp_op_);
-  device_.damp(dmp_op_);
-
+   if(!dynamic_cast<Graphene_KaneMele*>(&device_) ){ 
+     cap_->create_CAP(W, C, LE,  dmp_op_);
+     device_.damp(dmp_op_);
+   }
+  
   
   Kubo_solver_FFT_postProcess postProcess( (*this) );
 
@@ -110,17 +112,22 @@ void Kubo_solver_FFT::compute(){
 
 
 
+
     
-    int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
+    if(device_.parameters().dis_str_ != 0.0){
+      int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
       if(dynamic_cast<Graphene_KaneMele*>(&device_) )
         device_.parameters().SUBDIM_=device_.parameters().DIM_;
     
-    //device_.Anderson_disorder(dis_vec_);
-    device_.update_dis( dmp_op_);
+    
+      device_.update_dis( dmp_op_);
 
       if(dynamic_cast<Graphene_KaneMele*>(&device_) ) //god forbid
         device_.parameters().SUBDIM_=subdim;
+    }
 
+
+    
 
 
     
@@ -136,28 +143,32 @@ void Kubo_solver_FFT::compute(){
       //--------------------------------All hacks sesh------------------------------//
       int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
       if(dynamic_cast<Graphene_KaneMele*>(&device_) )
-        device_.parameters().SUBDIM_=device_.parameters().DIM_;
+        device_.parameters().SUBDIM_ = device_.parameters().DIM_;
       
       vec_base_->generate_vec_im( rand_vec_, r);       
       device_.rearrange_initial_vec( rand_vec_ ); //very hacky
 
       if(dynamic_cast<Graphene_KaneMele*>(&device_) ) //god forbid
-        device_.parameters().SUBDIM_=subdim;
+        device_.parameters().SUBDIM_ = subdim;
+
 
 
 
 
       
+      
             
-      if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() && parameters_.base_choice_ == 0)
-	device_.Uk_ket(rand_vec_, rand_vec_);
+      //if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() && parameters_.base_choice_ == 0)
+      //device_.Uk_ket(rand_vec_, rand_vec_);
 
-      if(dynamic_cast<Graphene_KaneMele*>(&device_) && !device_.isKspace() && parameters_.base_choice_ == 4)	
-      	device_.to_kSpace(rand_vec_, rand_vec_, 1);
+      if(dynamic_cast<Graphene_KaneMele*>(&device_)   &&   !device_.isKspace()   &&   parameters_.base_choice_ == 4  )
+	device_.to_kSpace(rand_vec_, rand_vec_, 1);
+      
       //--------------------------------All hacks sesh------------------------------//      
       
       
 
+      
       device_.projector( rand_vec_ );
 
       reset_data(r_data_);
@@ -290,7 +301,7 @@ void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states& ch
 //=================================KPM Steps 2 and on===============================//
     
   for( int m = 2; m < M; m++ ){
-
+    
     cheb_vectors.update();
 
     if(vel){
@@ -299,6 +310,11 @@ void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states& ch
     }
     else
       device_.traceover(polys[m], cheb_vectors(2), s, num_parts);      
+
+
+    if ( ( m + 1 ) % 50 == 0 || m == M-1 ) 
+      std::cout << "\r        Computed: " << m+1 << "/" << M <<" moments."<< std::flush;
+
   }
 }
 

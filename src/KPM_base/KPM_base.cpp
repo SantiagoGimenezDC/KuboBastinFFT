@@ -187,8 +187,11 @@ void KPM_base::compute(){
       vec_base_->generate_vec_im( rand_vec_, r);       
       device_.rearrange_initial_vec( rand_vec_ ); //very hacky
 
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) && !device_.isKspace() && parameters_.base_choice_ == 4)
+	device_.to_kSpace(rand_vec_, rand_vec_, 1);
+
       
-      if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() )
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() && parameters_.base_choice_ == 1 )
       	device_.Uk_ket(rand_vec_, rand_vec_);	
       
       
