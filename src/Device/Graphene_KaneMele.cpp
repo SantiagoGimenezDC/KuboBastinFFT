@@ -204,19 +204,20 @@ void Graphene_KaneMele::build_Hk(){
 
   
 
-  Eigen::Vector3d v1{ this->parameters().W_* 0.5 * sqrt(3.0),   this->parameters().W_* 3.0/2,  0 },
-	          v2{ -this->parameters().LE_* 0.5 * sqrt(3.0),    this->parameters().LE_ * 3.0 /2,  0 },
+  Eigen::Vector3d v1{ double(this->parameters().W_* 0.5 * sqrt(3.0) ),   double(this->parameters().W_) * 3.0/2.0,  0 },
+    v2{ -double(this->parameters().LE_* 0.5 * sqrt(3.0)),    double(this->parameters().LE_) * 3.0 /2.0,  0 },
 	          cross_p = v1.cross(v2);
       
   r_type Length = a0_ * sqrt( abs(cross_p(2)) );
 
-  
+
   if(this->parameters().dis_str_ == 0.0){
       parameters().DIM_ = 4 * subdim;
   }
   else{
      Length *= sqrt( double( this->parameters().SUBDIM_ ) / double( this->parameters().DIM_ ) );
   }
+
 
   
   this->set_sysSubLength(Length);
