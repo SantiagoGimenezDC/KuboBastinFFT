@@ -10,7 +10,7 @@
 #include <eigen3/Eigen/Dense>
 #include "Coordinates.hpp"
 #include <iostream>
-
+#include <fftw3.h>
 
 
 
@@ -91,7 +91,7 @@ class Graphene_KaneMele: public Graphene{
     Eigen::MatrixXcd phases_;
 
     std::vector<eigenSol> diagonalized_Hk_;
-    Eigen::VectorXcd eigenvalues_k_, projector_;
+  Eigen::VectorXcd eigenvalues_k_, projector_, eig_ket_re_;
     Eigen::MatrixXcd H_k_, U_k_, v_k_x_, v_k_y_, v_k_z_,
       H_k_cut_, v_k_x_cut_, v_k_y_cut_;
 
@@ -102,9 +102,21 @@ class Graphene_KaneMele: public Graphene{
   
     std::vector<Eigen::Vector2d> nonZeroList_;
 
+    fftw_complex *fft_input_;// = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * LE );
+    fftw_complex *fft_output_;// = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * LE );
+    fftw_plan fftw_plan_FORWD_, fftw_plan_BACK_;// = fftw_plan_dft_2d(W, LE, fft_input, fft_output, FFTW_BACKWARD, FFTW_ESTIMATE);
+
+  
   
   public:
-    ~Graphene_KaneMele(){};
+    ~Graphene_KaneMele(){
+        if(k_space_){
+          fftw_destroy_plan(fftw_plan_FORWD_);
+	  fftw_destroy_plan(fftw_plan_FORWD_);
+          fftw_free(fft_input_);
+          fftw_free(fft_output_);
+        }
+      };
     Graphene_KaneMele();
     Graphene_KaneMele(int, r_type, r_type, r_type, r_type , r_type, r_type, device_vars&);
 

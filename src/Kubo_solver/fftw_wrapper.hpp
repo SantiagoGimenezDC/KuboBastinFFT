@@ -30,7 +30,10 @@ public:
   };
 
   
-  inline void create() { plan_ = fftw_plan_dft_1d(nump_, output_, output_, dir_, FFTW_ESTIMATE); };//NOT thread safe
+  inline void create() {
+    void fftw_plan_with_nthreads(int nthreads = 1);
+
+    plan_ = fftw_plan_dft_1d(nump_, output_, output_, dir_, FFTW_ESTIMATE); };//NOT thread safe
 
   inline void execute(){ fftw_execute( plan_ ); };
 
@@ -69,7 +72,10 @@ public:
   };
 
   
-  inline void create()  { plan_ = fftw_plan_dft_1d(nump_, input_, output_, dir_, FFTW_ESTIMATE); };//NOT thread safe
+  inline void create()  {
+    void fftw_plan_with_nthreads(int nthreads = 1);
+    plan_ = fftw_plan_dft_1d(nump_, input_, output_, dir_, FFTW_ESTIMATE);
+  };//NOT thread safe
   inline void execute() { fftw_execute( plan_ ); };
 
 
@@ -128,7 +134,10 @@ public:
   };
 
   
-  inline void create(){ plan_ = fftw_plan_r2r_1d(nump_, input_, output_, FFTW_REDFT01, FFTW_ESTIMATE); };//NOT thread safe
+  inline void create(){
+    void fftw_plan_with_nthreads(int nthreads = 1);
+    plan_ = fftw_plan_r2r_1d(nump_, input_, output_, FFTW_REDFT01, FFTW_ESTIMATE);
+  };//NOT thread safe
 
   
   inline void execute() { fftw_execute( plan_ ); };

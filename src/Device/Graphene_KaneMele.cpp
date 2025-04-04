@@ -2,6 +2,9 @@
 #include<fstream>
 #include <eigen3/Eigen/Eigenvalues>
 #include<fftw3.h>
+#include<omp.h>
+//#include<fftw_threads.h>
+
 
 
 Graphene_KaneMele::Graphene_KaneMele(int is_k_space, r_type range, r_type stgr_str, r_type m_str, r_type rashba_str, r_type KM_str, r_type HLD_str, device_vars& parameters): Graphene(parameters), stgr_str_(stgr_str), m_str_(m_str), rashba_str_(rashba_str), KM_str_(KM_str){
@@ -124,21 +127,24 @@ Graphene_KaneMele::Graphene_KaneMele(int is_k_space, r_type range, r_type stgr_s
 
   if(k_space_)
     this->build_Hk();
-  
+
 
   
 
-  /*    
-  size_t W  = parameters.W_,
-      Le = parameters.LE_;
+  size_t W = this->parameters().W_;
+  size_t Le = this->parameters().LE_;
+ 
+  int fftw_threads_init(void);
     
-  phases_.resize(W,Le);
-  for (size_t i = 0; i < W; ++i) 
-    for (size_t j = 0; j < Le; ++j){
-      double ky = ( i * b1_(1) + j * b2_(1) ) / Le;
-      phases_(i, j) = std::exp(std::complex<double>(0, -a0_ * ky ) );
-    }
-  */
+  void fftw_plan_with_nthreads(int nthreads = omp_get_max_threads());
+
+  fft_input_  = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * Le );
+  fft_output_ = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * Le );
+
+  fftw_plan_FORWD_= fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_BACKWARD, FFTW_ESTIMATE),
+  fftw_plan_BACK_ = fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_BACKWARD, FFTW_ESTIMATE);// 
+
+
 };
 
 void Graphene_KaneMele::build_Hk(){
@@ -216,8 +222,11 @@ void Graphene_KaneMele::build_Hk(){
       parameters().DIM_ = 4 * subdim;
   }
   else{
-     Length *= sqrt( double( this->parameters().SUBDIM_ ) / double( this->parameters().DIM_ ) );
+    eig_ket_re_.resize(parameters().DIM_);
+    Length *= sqrt( double( this->parameters().SUBDIM_ ) / double( this->parameters().DIM_ ) );
   }
+
+
 
 
   
@@ -424,14 +433,14 @@ void Graphene_KaneMele::Hk_ket_cut (r_type a, r_type b, type* ket, type* p_ket){
 
   
   r_type * disorder_potential = dis();
-  Eigen::Map<Eigen::VectorXd>dis(disorder_potential,DIM);
+  //  Eigen::Map<Eigen::VectorXd>dis(disorder_potential,DIM);
 
   
   Eigen::Map<Eigen::VectorXcd>
     eig_ket(ket,DIM),
     eig_p_ket(p_ket, DIM);
 
-  Eigen::VectorXcd eig_ket_re = eig_p_ket;//Eigen::VectorXcd::Zero(DIM);
+
 
 
 
@@ -439,20 +448,20 @@ void Graphene_KaneMele::Hk_ket_cut (r_type a, r_type b, type* ket, type* p_ket){
 
     #pragma omp parallel for
     for(size_t i = 0; i < DIM; i++)
-      eig_ket_re[i] = projector_[i] * eig_ket_re[i] / a;
+      eig_ket_re_[i] = projector_[i] * eig_p_ket[i] ;
 
   
-    to_kSpace(eig_ket_re.data(), eig_ket_re.data(), 1);  
+    to_kSpace(eig_ket_re_.data(), eig_ket_re_.data(), 1);  
 
     #pragma omp parallel for
     for(size_t i = 0; i < DIM; i++)
-      eig_ket_re[i] = disorder_potential[i] * eig_ket_re[i] / a;
+      eig_ket_re_[i] = disorder_potential[i] * eig_ket_re_[i] / a;
 
-    to_kSpace(eig_ket_re.data(), eig_ket_re.data(), -1);
+    to_kSpace(eig_ket_re_.data(), eig_ket_re_.data(), -1);
 
     #pragma omp parallel for
     for(size_t i = 0; i < DIM; i++)
-      eig_ket_re[i] = projector_[i] * eig_ket_re[i] / a;
+      eig_ket_re_[i] = projector_[i] * eig_ket_re_[i];
     
     //   eig_ket_re = projector_.asDiagonal() * eig_ket_re;
 
@@ -467,7 +476,7 @@ void Graphene_KaneMele::Hk_ket_cut (r_type a, r_type b, type* ket, type* p_ket){
       eig_ket.segment( ( i2 + j2 * W ) * 4, 4 ) = ( H_k_cut_.block( 0, i* 4, 4, 4 ) - b * Id ) / a   *   eig_p_ket.segment( ( i2 + j2 * W ) * 4, 4 );
   }
 
-  eig_ket += eig_ket_re;
+  eig_ket += eig_ket_re_;
   
 };
 
@@ -497,7 +506,7 @@ void Graphene_KaneMele::Hk_ket_cut_clean (r_type a, r_type b, type* ket, type* p
 
 void Graphene_KaneMele::Hk_update_cheb_cut (type* ket, type* p_ket, type* pp_ket){
 
-  int W = parameters().W_,
+  size_t W = parameters().W_,
     DIM = parameters().DIM_;
 
   r_type a = this->a();
@@ -513,28 +522,28 @@ void Graphene_KaneMele::Hk_update_cheb_cut (type* ket, type* p_ket, type* pp_ket
     eig_p_ket(p_ket, DIM),
     eig_pp_ket(pp_ket, DIM);
 
-  Eigen::VectorXcd eig_ket_re = Eigen::VectorXcd::Zero(DIM);
+
 
 
   //eig_ket_re = projector_.asDiagonal() * eig_ket_re;
 
     #pragma omp parallel for
     for(size_t i = 0; i < DIM; i++)
-      eig_ket_re[i] = projector_[i] * eig_ket_re[i] / a;
+      eig_ket_re_[i] = projector_[i] * eig_p_ket[i] ;
 
   
-    to_kSpace(eig_ket_re.data(), eig_ket_re.data(), 1);  
+    to_kSpace(eig_ket_re_.data(), eig_ket_re_.data(), 1);  
 
     #pragma omp parallel for
     for(size_t i = 0; i < DIM; i++)
-      eig_ket_re[i] = disorder_potential[i] * eig_ket_re[i] / a;
+      eig_ket_re_[i] = disorder_potential[i] * eig_ket_re_[i] / a;
     //eig_ket_re = dis.asDiagonal() * eig_ket_re / a;
  
-    to_kSpace(eig_ket_re.data(), eig_ket_re.data(), -1);
+    to_kSpace(eig_ket_re_.data(), eig_ket_re_.data(), -1);
 
     #pragma omp parallel for
     for(size_t i = 0; i < DIM; i++)
-      eig_ket_re[i] = projector_[i] * eig_ket_re[i] / a;
+      eig_ket_re_[i] = projector_[i] * eig_ket_re_[i];
     
     //   eig_ket_re = projector_.asDiagonal() * eig_ket_re;
 
@@ -562,7 +571,7 @@ void Graphene_KaneMele::Hk_update_cheb_cut (type* ket, type* p_ket, type* pp_ket
   }
 
   
-  eig_ket += 2.0 * eig_ket_re;
+  eig_ket += 2.0 * eig_ket_re_;
 
   
   eig_pp_ket = eig_p_ket;
@@ -1096,29 +1105,8 @@ void Graphene_KaneMele::to_kSpace(type ket[], const type p_ket[], int dir) {
       LE = this->parameters().LE_;
   
   double norm = std::sqrt( double(W) * double(LE));
-  int fftw_threads_init(void);
 
-  
-  void fftw_plan_with_nthreads(int nthreads = omp_get_max_threads());
-
-
-  fftw_complex *fft_input = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * LE );
-  fftw_complex *fft_output = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * LE );
-  fftw_plan fftw_plan;// = fftw_plan_dft_2d(W, LE, fft_input, fft_output, FFTW_BACKWARD, FFTW_ESTIMATE);
-
-  Eigen::MatrixXcd local_phases = phases_;
-  
-  if( dir == 1 )//real space to kSpace
-    fftw_plan = fftw_plan_dft_2d(W, LE, fft_input, fft_output, FFTW_BACKWARD, FFTW_ESTIMATE);
-  else if( dir == -1 ){//kSpace to real space
-    fftw_plan = fftw_plan_dft_2d(W, LE, fft_input, fft_output, FFTW_FORWARD, FFTW_ESTIMATE);
-    local_phases = phases_.adjoint();
-  }
-
-    for (size_t i = 0; i < num_subvectors; i++) {       
-
-
-
+  for (size_t i = 0; i < num_subvectors; i++) {       
   
 #pragma omp parallel for
       for (size_t y = 0; y < LE; y++) {
@@ -1127,39 +1115,35 @@ void Graphene_KaneMele::to_kSpace(type ket[], const type p_ket[], int dir) {
 	      double ky = ( x * b1_(1) + y * b2_(1) ) / double(LE);
 	      type phase = std::exp(std::complex<double>(0, -a0_ * ky ) );
 
-	      fft_input[y * W + x][0] = ( p_ket[ ( y * W + x ) * num_subvectors + i] * phase ).real(); 
-              fft_input[y * W + x][1] = ( p_ket[ ( y * W + x ) * num_subvectors + i] * phase).imag(); 
+	      fft_input_[y * W + x][0] = ( p_ket[ ( y * W + x ) * num_subvectors + i] * phase ).real(); 
+              fft_input_[y * W + x][1] = ( p_ket[ ( y * W + x ) * num_subvectors + i] * phase).imag(); 
 	    }
 	    else{
-	      fft_input[y * W + x][0] = p_ket[ ( y * W + x ) * num_subvectors + i ].real(); 
-              fft_input[y * W + x][1] = p_ket[ ( y * W + x ) * num_subvectors + i ].imag(); 
+	      fft_input_[y * W + x][0] = p_ket[ ( y * W + x ) * num_subvectors + i ].real(); 
+              fft_input_[y * W + x][1] = p_ket[ ( y * W + x ) * num_subvectors + i ].imag(); 
 	    }
 	 }
       }
+      if( dir == 1 )
+         fftw_execute(fftw_plan_FORWD_); 
+      if( dir == -1 )
+         fftw_execute(fftw_plan_BACK_);
 
-        fftw_execute(fftw_plan); 
-
+      
 #pragma omp parallel for
     for (size_t y = 0; y < LE; y++) 
       for (size_t x = 0; x < W ; x++) {
-	std::complex<double> res = std::complex<double> (fft_output[y * W + x][0], fft_output[y * W + x][1]);
+	std::complex<double> res = std::complex<double> (fft_output_[y * W + x][0], fft_output_[y * W + x][1]);
 	if( ( i == 2 || i == 3 ) && dir == -1 ){
-	  double ky = ( x * b1_(1) + y * b2_(1) ) / double(LE);
+	  double ky = ( y * b1_(1) + x * b2_(1) ) / double(LE);
 	  type phase = std::exp(std::complex<double>(0, -a0_ * ky ) );
 
-	  res *= phase;
+	  res *= conj(phase);
 	}
 	
 	ket[ ( y * W + x ) * num_subvectors + i] =  res / norm;
       }
     }
-
-
-       
-    fftw_destroy_plan(fftw_plan);
-    fftw_free(fft_input);
-    fftw_free(fft_output);
-
 
 }
 
