@@ -119,8 +119,15 @@ class Graphene_KaneMele: public Graphene{
     virtual void J (type*, type*, int);
 
     virtual void build_Hamiltonian(){};
+    virtual r_type Hamiltonian_size(){
+      if(k_space_)
+	return ( 3.0 * double(this->parameters().SUBDIM_) * 4 + 4.0 * double(this->parameters().DIM_) ) * sizeof(type);
+      
 
-    //Rashba coupling Hamiltonian //INTERFACE
+      return 0.0;
+    };  
+
+  //Rashba coupling Hamiltonian //INTERFACE
     virtual void H_ket  ( type* ket , type* p_ket ){
       if(k_space_){
 	    if(this->parameters().dis_str_ == 0.0)
