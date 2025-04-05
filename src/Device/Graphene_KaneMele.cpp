@@ -1254,7 +1254,7 @@ void Graphene_KaneMele::to_rSpace_pruned_2(type ket[], const type p_ket[]) {
 
   
 #pragma omp parallel for
-    for (size_t ks = 0; ks < SUBDIM; ks++ ) {
+    for (size_t ks = 0; ks < SUBDIM/4; ks++ ) {
       const auto& vec = nonZeroList_[i]; 
       size_t kx = vec(0);
       size_t ky = vec(1);
@@ -1279,19 +1279,12 @@ void Graphene_KaneMele::to_rSpace_pruned_2(type ket[], const type p_ket[]) {
       
       fftw_execute(fftw_plan_FORWD_);
 
+
       
 #pragma omp parallel for
     for (size_t y = 0; y < LE; y++) 
       for (size_t x = 0; x < W ; x++) {
-	std::complex<double> res = std::complex<double> (fft_output_[y * W + x][0], fft_output_[y * W + x][1]);
-	if( ( i == 2 || i == 3 ) ){
-	  double ky = ( y * b1_(1) + x * b2_(1) ) / double(LE);
-	  type phase = std::exp(std::complex<double>(0, -a0_ * ky ) );
-
-
-	  res *= conj(phase);
-	}
-	
+	std::complex<double> res = std::complex<double> (fft_output_[y * W + x][0], fft_output_[y * W + x][1]);	
 	ket[ ( y * W + x ) * num_subvectors + i] =  res / norm;
       }
     }
@@ -1324,8 +1317,9 @@ void Graphene_KaneMele::to_kSpace_pruned_2(type ket[], const type p_ket[]) {
 
 
       
+      
 #pragma omp parallel for
-    for (size_t ks = 0; ks < SUBDIM; ks++ ) {
+    for (size_t ks = 0; ks < SUBDIM/4; ks++ ) {
       const auto& vec = nonZeroList_[i]; 
       size_t kx = vec(0);
       size_t ky = vec(1);
