@@ -54,13 +54,14 @@ class Graphene_KaneMele: public Graphene{
 
 
 
-  
+
+    size_t DIS_DIM_;
     double sqrt3_ = std::sqrt(3.0);
     double a_ = sqrt3_ * a0_;
 
   
-    Eigen::Vector2d A1 = a_ * Eigen::Vector2d(1/2, sqrt3_/2);
-    Eigen::Vector2d A2 = a_ * Eigen::Vector2d(-1/2, sqrt3_/2);
+    Eigen::Vector2d A1_ = a_ * Eigen::Vector2d(1/2, sqrt3_/2);
+    Eigen::Vector2d A2_ = a_ * Eigen::Vector2d(-1/2, sqrt3_/2);
 
   
     Eigen::Vector2d b1_ = ( 2.0 * M_PI / (sqrt3_ * a_)) * Eigen::Vector2d( sqrt3_, 1);
@@ -91,7 +92,7 @@ class Graphene_KaneMele: public Graphene{
     Eigen::MatrixXcd phases_;
 
     std::vector<eigenSol> diagonalized_Hk_;
-  Eigen::VectorXcd eigenvalues_k_, projector_, eig_ket_re_;
+  Eigen::VectorXcd eigenvalues_k_, projector_, eig_ket_re_, eig_ket_re_sub_;
     Eigen::MatrixXcd H_k_, U_k_, v_k_x_, v_k_y_, v_k_z_,
       H_k_cut_, v_k_x_cut_, v_k_y_cut_;
 
@@ -145,7 +146,7 @@ class Graphene_KaneMele: public Graphene{
 	    if(this->parameters().dis_str_ == 0.0)
 	      Hk_ket_cut_clean(this->a(),this->b(), ket, p_ket);
 	    else
-	      Hk_ket_cut(this->a(),this->b(), ket, p_ket);
+	      Hk_ket_cut_2(this->a(),this->b(), ket, p_ket);
       }
       else
         Hr_ket(this->a(),this->b(), ket, p_ket);
@@ -159,7 +160,7 @@ class Graphene_KaneMele: public Graphene{
 	    if(this->parameters().dis_str_ == 0.0)
 	      	Hk_ket_cut_clean(this->a(), this->b(), ket, p_ket);
 	    else
-   	        Hk_ket_cut(this->a(), this->b(), ket, p_ket);
+   	        Hk_ket_cut_2(this->a(), this->b(), ket, p_ket);
 
       }
 	else
@@ -171,7 +172,7 @@ class Graphene_KaneMele: public Graphene{
 	if(this->parameters().dis_str_ == 0.0)
           Hk_update_cheb_cut_clean( ket, p_ket, pp_ket);
 	else
-	  Hk_update_cheb_cut( ket, p_ket, pp_ket);
+	  Hk_update_cheb_cut_2( ket, p_ket, pp_ket);
       }
       else
 	Hr_update_cheb( ket, p_ket, pp_ket);
@@ -196,6 +197,12 @@ class Graphene_KaneMele: public Graphene{
   
     //K space
     virtual void to_kSpace(type* , const type*, int );
+    void to_rSpace_pruned(type*, const type*);  
+    void to_kSpace_pruned(type*, const type*);
+    void to_rSpace_pruned_2(type*, const type*);  
+    void to_kSpace_pruned_2(type*, const type*);
+
+  
     void diagonalize_kSpace();
     void build_Hk();
     eigenSol  Uk_single(Eigen::Vector2d );
@@ -205,12 +212,14 @@ class Graphene_KaneMele: public Graphene{
   
     void Hk_ket ( r_type, r_type, type*, type* );
     void Hk_ket_cut ( r_type, r_type, type*, type* );
+    void Hk_ket_cut_2 ( r_type, r_type, type*, type* );
     void Hk_ket_cut_clean ( r_type, r_type, type*, type* );
 
   
     virtual void Uk_ket (  type*, type* );
     void Hk_update_cheb ( type*, type*,  type*);
     void Hk_update_cheb_cut ( type*, type*,  type*);
+    void Hk_update_cheb_cut_2 ( type*, type*,  type*);
     void Hk_update_cheb_cut_clean ( type*, type*,  type*);
 
     void k_vel_op_x (type*, type* );
@@ -228,7 +237,7 @@ class Graphene_KaneMele: public Graphene{
     virtual void vel_op   ( type* ket, type* p_ket, int dir){
       if( dir == 0 ){
 	if(k_space_){
-	    if(this->parameters().dis_str_ == 0.0)
+	    if(this->parameters().dis_str_ == 0.0 || true)
 	      k_vel_op_x_cut_clean( ket, p_ket);
 	    else
 	      k_vel_op_x_cut( ket, p_ket);
@@ -239,7 +248,7 @@ class Graphene_KaneMele: public Graphene{
       }
       if( dir == 1 ){
 	if(k_space_){
-	  if(this->parameters().dis_str_ == 0.0)
+	  if(this->parameters().dis_str_ == 0.0  || true)
 	      k_vel_op_y_cut_clean( ket, p_ket);
 	    else	  
 	      k_vel_op_y_cut( ket, p_ket);

@@ -87,7 +87,7 @@ void Kubo_solver_FFT::compute(){
   reset_Chebyshev_buffers();
 
   
-   if(!dynamic_cast<Graphene_KaneMele*>(&device_) ){ 
+  if(!dynamic_cast<Graphene_KaneMele*>(&device_) || ( dynamic_cast<Graphene_KaneMele*>(&device_) && !device_.isKspace())  ){ 
      cap_->create_CAP(W, C, LE,  dmp_op_);
      device_.damp(dmp_op_);
    }
@@ -101,6 +101,7 @@ void Kubo_solver_FFT::compute(){
 
   
 
+  
 
 
   
