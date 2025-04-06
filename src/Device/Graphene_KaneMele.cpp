@@ -144,7 +144,33 @@ Graphene_KaneMele::Graphene_KaneMele(int is_k_space, r_type range, r_type stgr_s
   fftw_plan_FORWD_= fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_BACKWARD, FFTW_ESTIMATE),
   fftw_plan_BACK_ = fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_BACKWARD, FFTW_ESTIMATE);// 
 
+  #pragma omp parallel for
+  for(size_t i=0; i<W*Le;i++){
+    fft_input_[i][0] = 0.0;
+    fft_input_[i][1] = 0.0;
+  }
 
+  std::cout<<"TEEEST:   "<<std::endl;
+
+  eig_ket_re_.setZero();
+
+  eig_ket_re_sub_.setZero();
+  eig_ket_re_sub_=Eigen::VectorXcd::Random(this->parameters().SUBDIM_);
+
+  
+  Eigen::VectorXcd eig_2 = eig_ket_re_sub_;
+  
+  to_rSpace_pruned_2(eig_ket_re_.data(), eig_ket_re_sub_.data());  
+
+  to_kSpace_pruned_2(eig_ket_re_sub_.data(), eig_ket_re_.data());
+
+  Eigen::MatrixXcd mat(this->parameters().SUBDIM_, 2 );
+  mat.col(0) = eig_ket_re_;
+  mat.col(1) = eig_2;
+    
+  std::cout<<"TEEEST:   "<<(eig_ket_re_sub_ - eig_2).norm()<<std::endl;
+  std::cout<<mat<<std::endl<<std::endl;
+  
 };
 
 void Graphene_KaneMele::build_Hk(){
@@ -500,7 +526,7 @@ void Graphene_KaneMele::Hk_ket_cut_2 (r_type a, r_type b, type* ket, type* p_ket
   
   Eigen::Matrix4cd Id = Eigen::Matrix4cd::Zero(); 
 
-
+  eig_ket_re_.setZero();
   to_rSpace_pruned_2(eig_ket_re_.data(), eig_p_ket.data());  
 
   #pragma omp parallel for
@@ -637,7 +663,7 @@ void Graphene_KaneMele::Hk_update_cheb_cut_2 (type* ket, type* p_ket, type* pp_k
   
   Eigen::Matrix4cd Id = Eigen::Matrix4cd::Zero(); 
 
-
+  eig_ket_re_.setZero();
   to_rSpace_pruned_2(eig_ket_re_.data(), eig_p_ket.data());  
 
   #pragma omp parallel for
@@ -1233,7 +1259,7 @@ void Graphene_KaneMele::to_kSpace(type ket[], const type p_ket[], int dir) {
 	
 	ket[ ( y * W + x ) * num_subvectors + i] =  res / norm;
       }
-    }
+  }
 
 }
 
@@ -1255,7 +1281,7 @@ void Graphene_KaneMele::to_rSpace_pruned_2(type ket[], const type p_ket[]) {
   
 #pragma omp parallel for
     for (size_t ks = 0; ks < SUBDIM/4; ks++ ) {
-      const auto& vec = nonZeroList_[i]; 
+      const auto& vec = nonZeroList_[ks]; 
       size_t kx = vec(0);
       size_t ky = vec(1);
 
@@ -1263,21 +1289,20 @@ void Graphene_KaneMele::to_rSpace_pruned_2(type ket[], const type p_ket[]) {
 	double k_phase = ( kx * b1_(1) + ky * b2_(1) ) / double(LE);
 	type phase = std::exp(std::complex<double>(0, -a0_ * k_phase ) );
 
-	      fft_input_[ky * W + kx][0] = ( p_ket[ ks * num_subvectors + i] * phase ).real(); 
-              fft_input_[ky * W + kx][1] = ( p_ket[ ks * num_subvectors + i] * phase ).imag(); 
-	    }
-	    else{
-	      fft_input_[ky * W + kx][0] = p_ket[ ks * num_subvectors + i ].real(); 
-              fft_input_[ky * W + kx][1] = p_ket[ ks * num_subvectors + i ].imag(); 
-	    }
 
-
+	fft_input_[ky * W + kx][0] = ( p_ket[ ks * num_subvectors + i] * phase ).real(); 
+	fft_input_[ky * W + kx][1] = ( p_ket[ ks * num_subvectors + i] * phase ).imag(); 
+      }
+      else{
+	fft_input_[ky * W + kx][0] = p_ket[ ks * num_subvectors + i ].real(); 
+	fft_input_[ky * W + kx][1] = p_ket[ ks * num_subvectors + i ].imag(); 
+      }
     }
 
     
 
-      
-      fftw_execute(fftw_plan_FORWD_);
+fftw_execute(fftw_plan_BACK_);      
+//fftw_execute(fftw_plan_FORWD_);
 
 
       
@@ -1287,7 +1312,7 @@ void Graphene_KaneMele::to_rSpace_pruned_2(type ket[], const type p_ket[]) {
 	std::complex<double> res = std::complex<double> (fft_output_[y * W + x][0], fft_output_[y * W + x][1]);	
 	ket[ ( y * W + x ) * num_subvectors + i] =  res / norm;
       }
-    }
+  }
 }
 
 
@@ -1312,15 +1337,15 @@ void Graphene_KaneMele::to_kSpace_pruned_2(type ket[], const type p_ket[]) {
 	  }
     }
 
-    
-      fftw_execute(fftw_plan_BACK_);
+      fftw_execute(fftw_plan_FORWD_);    
+      //fftw_execute(fftw_plan_BACK_);
 
 
       
       
 #pragma omp parallel for
     for (size_t ks = 0; ks < SUBDIM/4; ks++ ) {
-      const auto& vec = nonZeroList_[i]; 
+      const auto& vec = nonZeroList_[ks]; 
       size_t kx = vec(0);
       size_t ky = vec(1);
 
@@ -1334,8 +1359,7 @@ void Graphene_KaneMele::to_kSpace_pruned_2(type ket[], const type p_ket[]) {
       }
       ket[ ks * num_subvectors + i] =  res / norm;
     }
-}
-
+  }
 }
 
 
@@ -1370,7 +1394,7 @@ void Graphene_KaneMele::to_rSpace_pruned(type ket[], const type p_ket[]) {
               Eigen::Vector2d R = x * A1_ + y * A2_; 
 
 	      for (size_t ks = 0; i < SUBDIM; ks++ ) {
-		const auto& vec = nonZeroList_[i]; 
+		const auto& vec = nonZeroList_[ks]; 
 		size_t kx = vec(0);
 		size_t ky = vec(1);
 		Eigen::Vector2d k = ( kx * b1_ + ky * b2_ ) / double(LE);
@@ -1383,7 +1407,7 @@ void Graphene_KaneMele::to_rSpace_pruned(type ket[], const type p_ket[]) {
               Eigen::Vector2d R = x * A1_ + y * A2_; 
 
 	      for (size_t ks = 0; i < SUBDIM; ks++ ) {
-		const auto& vec = nonZeroList_[i]; 
+		const auto& vec = nonZeroList_[ks]; 
 		size_t kx = vec(0);
 		size_t ky = vec(1);
 		Eigen::Vector2d k = ( kx * b1_ + ky * b2_ ) / double(LE);
