@@ -141,37 +141,13 @@ Graphene_KaneMele::Graphene_KaneMele(int is_k_space, r_type range, r_type stgr_s
   fft_input_  = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * Le );
   fft_output_ = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * Le );
 
-  fftw_plan_FORWD_= fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_BACKWARD, FFTW_ESTIMATE),
+  fftw_plan_FORWD_= fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_FORWARD, FFTW_ESTIMATE),
   fftw_plan_BACK_ = fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_BACKWARD, FFTW_ESTIMATE);// 
-
-  #pragma omp parallel for
-  for(size_t i=0; i<W*Le;i++){
-    fft_input_[i][0] = 0.0;
-    fft_input_[i][1] = 0.0;
-  }
-
-  std::cout<<"TEEEST:   "<<std::endl;
-
-  eig_ket_re_.setZero();
-
-  eig_ket_re_sub_.setZero();
-  eig_ket_re_sub_=Eigen::VectorXcd::Random(this->parameters().SUBDIM_);
-
-  
-  Eigen::VectorXcd eig_2 = eig_ket_re_sub_;
-  
-  to_rSpace_pruned_2(eig_ket_re_.data(), eig_ket_re_sub_.data());  
-
-  to_kSpace_pruned_2(eig_ket_re_sub_.data(), eig_ket_re_.data());
-
-  Eigen::MatrixXcd mat(this->parameters().SUBDIM_, 2 );
-  mat.col(0) = eig_ket_re_;
-  mat.col(1) = eig_2;
-    
-  std::cout<<"TEEEST:   "<<(eig_ket_re_sub_ - eig_2).norm()<<std::endl;
-  std::cout<<mat<<std::endl<<std::endl;
   
 };
+
+
+
 
 void Graphene_KaneMele::build_Hk(){
   size_t W = parameters().W_;
@@ -250,7 +226,7 @@ void Graphene_KaneMele::build_Hk(){
   }
   else{
     DIS_DIM_ = this->parameters().DIM_;
-    eig_ket_re_.resize(parameters().DIM_);
+    eig_ket_re_.resize(DIS_DIM_);
     eig_ket_re_sub_.resize(parameters().SUBDIM_);
     //    Length *= sqrt( double( this->parameters().SUBDIM_ ) / double( this->parameters().DIM_ ) );
     parameters().DIM_ = 4 * subdim; //TO USE cut_1, just erase this.
@@ -530,9 +506,10 @@ void Graphene_KaneMele::Hk_ket_cut_2 (r_type a, r_type b, type* ket, type* p_ket
   to_rSpace_pruned_2(eig_ket_re_.data(), eig_p_ket.data());  
 
   #pragma omp parallel for
-  for(size_t i = 0; i < DIS_DIM_; i++)
-    eig_ket_re_[i] = disorder_potential[i] * eig_ket_re_[i] / a;
-
+  for(size_t i = 0; i < DIS_DIM_/2; i++){
+    eig_ket_re_[2*i] = disorder_potential[i] * eig_ket_re_[2*i] / a;
+    eig_ket_re_[2*i+1] = disorder_potential[i] * eig_ket_re_[2*i+1] / a;
+  }
   to_kSpace_pruned_2(eig_ket_re_sub_.data(), eig_ket_re_.data());
 
 
@@ -667,8 +644,10 @@ void Graphene_KaneMele::Hk_update_cheb_cut_2 (type* ket, type* p_ket, type* pp_k
   to_rSpace_pruned_2(eig_ket_re_.data(), eig_p_ket.data());  
 
   #pragma omp parallel for
-  for(size_t i = 0; i < DIS_DIM_; i++)
-    eig_ket_re_[i] = disorder_potential[i] * eig_ket_re_[i] / a;
+  for(size_t i = 0; i < DIS_DIM_/2; i++){
+    eig_ket_re_[2*i] = disorder_potential[i] * eig_ket_re_[2*i] / a;
+    eig_ket_re_[2*i+1] = disorder_potential[i] * eig_ket_re_[2*i+1] / a;
+  }
 
   to_kSpace_pruned_2(eig_ket_re_sub_.data(), eig_ket_re_.data());
 
@@ -981,9 +960,6 @@ void Graphene_KaneMele::J (type* ket, type* p_ket, int dir){
 
   int SUBDIM = this->parameters().SUBDIM_;
   
-  int C   = this->parameters().C_,
-      Le  = this->parameters().LE_,
-      W   = this->parameters().W_;
 
   
   Eigen::Matrix2cd sx{{0,1},{1,0}}, sy{{0,-type(0,1)}, {type(0,1), 0}}, sz{{1,0}, {0, -1}}, chosen_dir;
@@ -1002,7 +978,19 @@ void Graphene_KaneMele::J (type* ket, type* p_ket, int dir){
   Eigen::Map<Eigen::VectorXcd> eig_ket(ket,SUBDIM),
     eig_p_ket(p_ket, SUBDIM);
 
+#pragma omp parallel for 
+ for(int i=0; i<SUBDIM/4; i++){
     
+      eig_ket.segment(i,2)   =  chosen_dir * eig_p_ket.segment(i,2);
+      eig_ket.segment(i+2,2) =  chosen_dir * eig_p_ket.segment(i+2,2);
+ 
+    }
+
+  /*
+  int C   = this->parameters().C_,
+      Le  = this->parameters().LE_,
+      W   = this->parameters().W_;
+
 #pragma omp parallel for 
  for(int j=0; j<Le; j++){
     for(int i=0; i<W; i++){      
@@ -1012,7 +1000,7 @@ void Graphene_KaneMele::J (type* ket, type* p_ket, int dir){
       eig_ket.segment(n1+2,2) =  chosen_dir * eig_p_ket.segment(n1+2,2);
  
     }
- }
+    }*/
  
 };
 
@@ -1057,13 +1045,13 @@ void Graphene_KaneMele::print_hamiltonian(){
 	 H_r(i,j)=termy;
 
 
-	to_kSpace(term_j_2.data(), term_j_2.data(), -1);
+	to_kSpace_pruned_2(term_j_2.data(), term_j_2.data());
 	//this->Hk_ket_cut(1.0, 0.0, tmp.data(),term_j_2.data()); //k_vel_op_x_cut(tmp.data(),term_j_2.data());//
 	//this->Hk_update_cheb_cut(tmp.data(),term_j_2.data(),null2.data());
 	k_vel_op_x_cut(tmp.data(),term_j_2.data());
         //k_vel_op_y_cut(tmp.data(),term_j_2.data());
 	
-	to_kSpace(tmp.data(), tmp.data(), 1);
+	to_rSpace_pruned_2(tmp.data(), tmp.data());
 	
 	std::complex<double> termy2 = term_i_2.dot(tmp);
 
@@ -1240,10 +1228,9 @@ void Graphene_KaneMele::to_kSpace(type ket[], const type p_ket[], int dir) {
       }
       
       if( dir == 1 )
-         fftw_execute(fftw_plan_FORWD_); 
+         fftw_execute(fftw_plan_BACK_); 
       if( dir == -1 )
-         fftw_execute(fftw_plan_BACK_);
-      
+         fftw_execute(fftw_plan_FORWD_);
       
 #pragma omp parallel for
     for (size_t y = 0; y < LE; y++) 
@@ -1252,18 +1239,14 @@ void Graphene_KaneMele::to_kSpace(type ket[], const type p_ket[], int dir) {
 	if( ( i == 2 || i == 3 ) && dir == -1 ){
 	  double ky = ( y * b1_(1) + x * b2_(1) ) / double(LE);
 	  type phase = std::exp(std::complex<double>(0, -a0_ * ky ) );
-
-
+	  
 	  res *= conj(phase);
 	}
 	
 	ket[ ( y * W + x ) * num_subvectors + i] =  res / norm;
       }
   }
-
 }
-
-
 
 
 void Graphene_KaneMele::to_rSpace_pruned_2(type ket[], const type p_ket[]) {
@@ -1275,8 +1258,15 @@ void Graphene_KaneMele::to_rSpace_pruned_2(type ket[], const type p_ket[]) {
   
   double norm = std::sqrt( double(W) * double(LE));
 
+  
   for (size_t i = 0; i < num_subvectors; i++) {       
   
+#pragma omp parallel for
+    for(size_t i=0; i<W*LE;i++){//Its not clear to me if I have to reinitilize input all times.
+      fft_input_[i][0] = 0.0;
+      fft_input_[i][1] = 0.0;
+    }
+
 
   
 #pragma omp parallel for
@@ -1301,8 +1291,8 @@ void Graphene_KaneMele::to_rSpace_pruned_2(type ket[], const type p_ket[]) {
 
     
 
-fftw_execute(fftw_plan_BACK_);      
-//fftw_execute(fftw_plan_FORWD_);
+
+    fftw_execute(fftw_plan_BACK_);
 
 
       
@@ -1314,6 +1304,7 @@ fftw_execute(fftw_plan_BACK_);
       }
   }
 }
+
 
 
 
@@ -1337,8 +1328,8 @@ void Graphene_KaneMele::to_kSpace_pruned_2(type ket[], const type p_ket[]) {
 	  }
     }
 
-      fftw_execute(fftw_plan_FORWD_);    
-      //fftw_execute(fftw_plan_BACK_);
+    fftw_execute(fftw_plan_FORWD_);    
+    
 
 
       
@@ -1526,12 +1517,18 @@ void Graphene_KaneMele::Hr_ket (r_type a, r_type b, type* ket, type* p_ket){
     }
  }
 
-
- 
+ if( disorder_potential != NULL ){
+  #pragma omp parallel for
+ for(size_t i = 0; i < this->parameters().DIM_/2; i++){
+    eig_ket[2*i] += disorder_potential[i] * eig_p_ket[2*i] / a;
+    eig_ket[2*i+1] += disorder_potential[i] * eig_p_ket[2*i+1] / a;
+  }
+}
+  /*
  if( disorder_potential != NULL )
    for( size_t i = 0; i < 2 * W * Le ; i ++ )
      eig_ket.segment(i,2) += dmp_op[i/2] * disorder_potential[ i ] * eig_p_ket.segment(i,2) / a;
-   
+  */
 };
 
 
@@ -1609,12 +1606,18 @@ void Graphene_KaneMele::Hr_update_cheb ( type ket[], type p_ket[], type pp_ket[]
     }
  }
 
-
- 
+ if( disorder_potential != NULL ){
+  #pragma omp parallel for
+ for(size_t i = 0; i < this->parameters().DIM_/2; i++){
+    eig_ket[2*i] += 2.0 * disorder_potential[i] * eig_p_ket[2*i] / a;
+    eig_ket[2*i+1] += 2.0 * disorder_potential[i] * eig_p_ket[2*i+1] / a;
+  }
+ }
+ /*
  if( disorder_potential != NULL )
    for( size_t i = 0; i < 2 * W * Le ; i ++ )
-     eig_ket.segment(i,2) += dmp_op[i] * disorder_potential[ i ] * eig_p_ket.segment(i,2) / a;
-
+     eig_ket.segment(i,2) += 2.0 * dmp_op[i] * disorder_potential[ i ] * eig_p_ket.segment(i,2) / a;
+ */
  
  eig_p_ket = eig_ket;
  
@@ -1699,7 +1702,7 @@ void Graphene_KaneMele::update_cheb_filtered ( type ket[], type p_ket[], type pp
  
  if( disorder_potential != NULL )
    for( size_t i = 0; i < 2 * W * Le ; i ++ )
-     eig_ket.segment(i,2) += dmp_op[i] * disorder_potential[ i ] * eig_p_ket.segment(i,2)/a;
+     eig_ket.segment(i,2) += 2.0 * dmp_op[i] * disorder_potential[ i ] * eig_p_ket.segment(i,2)/a;
 
  
  eig_p_ket = eig_ket;

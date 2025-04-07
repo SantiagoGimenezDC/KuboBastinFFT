@@ -28,6 +28,9 @@ int main(int , char **argv){
   std::ifstream Input;
   Input.open(argv[1]);
 
+  s_vars.para_file_ = std::string(argv[1]);
+
+  
   Input>>s_vars.run_dir_;
 
 
@@ -146,8 +149,6 @@ int main(int , char **argv){
   std::cout<<"Read_Hamiltonian only works for COMPLEX Hamiltonian;"<<std::endl;
   std::cout<<"Min max eigenvalues is using H_ket with the 4 entries;"<<std::endl;
   std::cout<<"The min max eigv are fixed;"<<std::endl;
-  std::cout<<"REAL filtered randVec does not work with complex Hamiltonian! Same issue as general imag vector i think, we lose the imag part of the Hamiltonian"<<std::endl<<std::endl; 
-  std::cout<<"Are KaneMele velocities missing a sqrt(3.0)/3.0 factor??"<<std::endl; 
   
 
   

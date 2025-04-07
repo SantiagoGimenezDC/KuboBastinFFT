@@ -37,8 +37,9 @@ Kubo_solver_FFT_postProcess::Kubo_solver_FFT_postProcess(Kubo_solver_FFT& parent
   mkdir( ( "./" + filename + "/"  + "vecs" ).c_str(), 0755);
   
 
-  const std::string sourceFile = "./SimData.dat";  // Source file path
-  const std::string destinationFile =  "./" + filename + "/SimData.dat" ;  // Destination file path
+  const std::string sourceFile = "./" + parent_solver_.parameters().para_file_ ;  // Source file path
+  const std::string destinationFile =  "./" + filename + "/" +  parent_solver_.parameters().para_file_;  // Destination file path
+
 
   fs::copy(sourceFile, destinationFile, fs::copy_options::overwrite_existing);
 
@@ -331,7 +332,7 @@ void Kubo_solver_FFT_postProcess::Sea_postProcess(const std::vector<type>& final
   
   
   std::ofstream data2;
-  data2.open( "./" + filename + "Bastin_integrand.dat");
+  data2.open( "./" + filename + "/Sea_integrand.dat");
 
   for(int e=0;e<nump;e++)  
     data2<< a * rearranged_E_points[e] - b<<"  "<<  integrand[e] <<std::endl;
@@ -495,7 +496,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
   
   
   std::ofstream data2;
-  data2.open( "./" + filename + "Bastin_integrand.dat");
+  data2.open( "./" + filename + "/Bastin_integrand.dat");
 
   for(int e=0;e<nump;e++)  
     data2<< a * rearranged_E_points[e] - b<<"  "<<  integrand[e] <<std::endl;
