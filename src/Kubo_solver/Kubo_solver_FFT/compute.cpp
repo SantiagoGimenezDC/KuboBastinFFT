@@ -118,8 +118,9 @@ void Kubo_solver_FFT::compute(){
     if(device_.parameters().dis_str_ != 0.0){
       int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
       if(dynamic_cast<Graphene_KaneMele*>(&device_) )
-        device_.parameters().SUBDIM_=device_.parameters().DIM_;
-    
+        device_.parameters().SUBDIM_=device_.parameters().DIS_DIM_;
+
+      
     
       device_.update_dis( dmp_op_);
 
@@ -141,10 +142,12 @@ void Kubo_solver_FFT::compute(){
       std::cout<<std::endl<< std::to_string( ( d - 1 ) * R + r)+"/"+std::to_string( D * R )+"-Vector/disorder realization;"<<std::endl;
 
 
+
+      
       //--------------------------------All hacks sesh------------------------------//
       int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
       if(dynamic_cast<Graphene_KaneMele*>(&device_) )
-        device_.parameters().SUBDIM_ = device_.parameters().DIM_;
+        device_.parameters().SUBDIM_ = device_.parameters().DIS_DIM_;
       
       vec_base_->generate_vec_im( rand_vec_, r);       
       device_.rearrange_initial_vec( rand_vec_ ); //very hacky
@@ -238,7 +241,7 @@ void Kubo_solver_FFT::compute(){
       time_postProcess.start();
       
       update_data(final_data_, r_data_, ( d - 1 ) * R + r );
-      postProcess(final_data_, r_data_, r);
+      postProcess(final_data_, r_data_, ( d - 1 ) * R + r );
 
       time_postProcess.stop( "       Post-processing time:       ");
 

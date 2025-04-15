@@ -217,7 +217,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
   time_station time_integration;
       
   integration_linqt(rearranged_E_points, rvec_integrand, rvec_partial_result);  
-  /*integration_linqt*/ interpolated_integration(rearranged_E_points, integrand, partial_result);    
+  integration_linqt(rearranged_E_points, integrand, partial_result);    
 
   time_integration.stop("       Integration time:           ");
 
@@ -383,7 +383,7 @@ void Kubo_solver_filtered::update_data_Sea(r_type E_points[], type r_data[], typ
   time_station time_integration;
       
   integration_linqt(rearranged_E_points, rvec_integrand, rvec_partial_result);  
-  /*integration_linqt*/ interpolated_integration(rearranged_E_points, integrand, partial_result);    
+  integration_linqt(rearranged_E_points, integrand, partial_result);    
 
   time_integration.stop("       Integration time:           ");
 

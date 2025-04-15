@@ -160,8 +160,8 @@ void KPM_base::compute(){
   dmp_op_ = new r_type[ DIM ];
   rand_vec_ = new type[ SUBDIM ];
 
-  cap().create_CAP(W, C, LE,  dmp_op_);
-  device().damp(dmp_op_);
+  //cap().create_CAP(W, C, LE,  dmp_op_);
+  //device().damp(dmp_op_);
   //-------------------This shouldnt be heeere--------------//  
 
 
@@ -306,8 +306,8 @@ DOS_output::DOS_output(device_vars& device_parameters, solver_vars& parent_solve
   mkdir( ( "./" + filename + "/"  + "vecs" ).c_str(), 0755);
   
 
-  const std::string sourceFile = "./SimData.dat";  // Source file path
-  const std::string destinationFile =  "./" + filename + "/SimData.dat" ;  // Destination file path
+  const std::string sourceFile = "./"+ parent_solver_vars.para_file_ ;  // Source file path
+  const std::string destinationFile =  "./" + filename + "/"+  parent_solver_vars.para_file_;  // Destination file path
 
   fs::copy(sourceFile, destinationFile, fs::copy_options::overwrite_existing);
 

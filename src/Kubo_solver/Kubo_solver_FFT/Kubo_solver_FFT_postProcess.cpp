@@ -89,15 +89,13 @@ void Kubo_solver_FFT_postProcess::integration(const std::vector<r_type>& E_point
   int M     = parent_solver_.parameters().M_,
     nump = parent_solver_.parameters().num_p_;
   
-  r_value_t edge = 1.0 - parent_solver_.parameters().edge_;
+  //  r_value_t edge = 1.0 - parent_solver_.parameters().edge_;
 
   //#pragma omp parallel for 
-  for(int k=0; k<nump - int( M * edge / 4.0 ); k++ ){  //At the very edges of the energy plot the weight function diverges, hence integration should start a little after and a little before the edge.
-                                       //The safety factor guarantees that the conductivity is zero way before reaching the edge. In fact, the safety factor should be used to determine
-                                      //the number of points to be ignored in the future;
-    for(int j=k; j<nump-int(M*edge/4.0); j++ ){//IMPLICIT PARTITION FUNCTION. Energies are decrescent with e (bottom of the band structure is at e=M);
-      r_value_t ej  = E_points[j],
-	ej1      = E_points[j+1],
+  for(int k=0; k<nump-1 ; k++ ){                                                            
+    for(int j=0; j<k; j++ ){//IMPLICIT PARTITION FUNCTION. Energies are decrescent with e (bottom of the band structure is at e=M);
+      r_value_t ej  = E_points[j+1],
+	ej1      = E_points[j],
 	de       = ej-ej1,
         integ    = ( integrand[j+1] + integrand[j] )/2;     
       
@@ -554,7 +552,7 @@ void Kubo_solver_FFT_postProcess::Greenwood_postProcess(const std::vector<type>&
       
   
   for(int k=0; k < nump; k++){
-    rvec_partial_result[k] = omega * real( r_data[k] )     / (1.0 - E_points_[k] * E_points_[k] ); //The minus sign represents the conjugation of vx being applied to the bra
+    rvec_partial_result[k] = omega * real( r_data[k] )     / (1.0 - E_points_[k] * E_points_[k] );
     partial_result[k]      = omega * real( final_data[k] ) / (1.0 - E_points_[k] * E_points_[k] );
   }
   

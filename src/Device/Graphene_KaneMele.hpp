@@ -55,13 +55,15 @@ class Graphene_KaneMele: public Graphene{
 
 
 
-    size_t DIS_DIM_;
+
     double sqrt3_ = std::sqrt(3.0);
     double a_ = sqrt3_ * a0_;
 
   
+  
     Eigen::Vector2d A1_ = a_ * Eigen::Vector2d(1/2, sqrt3_/2);
     Eigen::Vector2d A2_ = a_ * Eigen::Vector2d(-1/2, sqrt3_/2);
+
 
   
     Eigen::Vector2d b1_ = ( 2.0 * M_PI / (sqrt3_ * a_)) * Eigen::Vector2d( sqrt3_, 1);
@@ -122,7 +124,7 @@ class Graphene_KaneMele: public Graphene{
     Graphene_KaneMele(int, r_type, r_type, r_type, r_type , r_type, r_type, device_vars&);
 
     void print_hamiltonian();
-    virtual void rearrange_initial_vec(type*){};
+    virtual void rearrange_initial_vec(type*);
     virtual void traceover(type* , type* , int , int);
 
     virtual bool isKspace(){ return k_space_; };  
@@ -134,7 +136,7 @@ class Graphene_KaneMele: public Graphene{
     virtual void build_Hamiltonian(){};
     virtual r_type Hamiltonian_size(){
       if(k_space_)
-	return ( 3.0 * double(this->parameters().SUBDIM_) * 4 + 4.0 * double(this->parameters().DIM_) ) * sizeof(type);
+	return ( (3.0 + 1.0/4.0)* double(this->parameters().SUBDIM_) * 4 + 3.0 * double(this->parameters().W_ * this->parameters().LE_) ) * sizeof(type);
       
 
       return 0.0;
@@ -236,26 +238,19 @@ class Graphene_KaneMele: public Graphene{
   
     virtual void vel_op   ( type* ket, type* p_ket, int dir){
       if( dir == 0 ){
-	if(k_space_){
-	    if(this->parameters().dis_str_ == 0.0 || true)
-	      k_vel_op_x_cut_clean( ket, p_ket);
-	    else
-	      k_vel_op_x_cut( ket, p_ket);
-	}
-	else{
+	if(k_space_)
+	  k_vel_op_x_cut_clean( ket, p_ket);	  
+	else
 	  vel_op_x( ket, p_ket);
-	}
+	
       }
+      
       if( dir == 1 ){
-	if(k_space_){
-	  if(this->parameters().dis_str_ == 0.0  || true)
-	      k_vel_op_y_cut_clean( ket, p_ket);
-	    else	  
-	      k_vel_op_y_cut( ket, p_ket);
-	}
-	else{
+	if(k_space_)
+	  k_vel_op_y_cut_clean( ket, p_ket);
+	else
           vel_op_y( ket, p_ket);
-	}
+	
       }
 
       
@@ -268,7 +263,20 @@ class Graphene_KaneMele: public Graphene{
       
       if( dir == 4 )
 	this->J( ket, p_ket, 2);
-      
+
+      if( dir == 5 ){
+
+	type* tmp = new type [this->parameters().DIM_];
+	
+	this->J( tmp, p_ket, 2);
+
+	if(k_space_)
+	  k_vel_op_y_cut_clean( ket, tmp );
+	else
+          vel_op_y( ket, tmp );
+
+	delete [] tmp;
+      }
       
     };
   

@@ -158,7 +158,11 @@ void Kubo_solver_FFT::allocate_memory(){
   
   
   //Recursion Vectors
-  rand_vec_ = new type [ DIM ];
+  if(dynamic_cast<Graphene_KaneMele*>(&device_) )
+    rand_vec_ = new type [ device_.parameters().DIS_DIM_ ];
+  else
+    rand_vec_ = new type [ DIM ];
+
   tmp_      = new type [ DIM ];
   
   //Disorder and CAP vectors

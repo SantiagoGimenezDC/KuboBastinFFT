@@ -253,8 +253,8 @@ void Kubo_solver_filtered::compute_imag(){
     if(dynamic_cast<Graphene_KaneMele*>(&device_) )
     device_.parameters().SUBDIM_=device_.parameters().DIM_;
         
-    device_.Anderson_disorder(dis_vec);
-    device_.update_dis(dis_vec, dmp_op);
+    //device_.Anderson_disorder(dis_vec);
+    device_.update_dis( dmp_op);
    
     if(dynamic_cast<Graphene_KaneMele*>(&device_) ) //god forbid
      device_.parameters().SUBDIM_=subdim;

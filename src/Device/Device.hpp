@@ -7,7 +7,7 @@
 
 
 struct device_vars{
-  size_t W_, LE_, C_, DIM_, SUBDIM_,  dis_seed_, projector_option_;
+  size_t W_, LE_, C_, DIM_, SUBDIM_,  DIS_DIM_, dis_seed_, projector_option_;
   r_type dis_str_, theta_, d_min_, Bz_;
 
   
