@@ -5,7 +5,7 @@
 #include "../CAP.hpp"
 #include "../Random.hpp"
 #include "Device.hpp"
-#include <Eigen/Sparse>
+#include <eigen3/Eigen/Sparse>
 #include "Coordinates.hpp"
 #include <iostream>
 
