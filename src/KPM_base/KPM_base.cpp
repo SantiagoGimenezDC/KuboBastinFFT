@@ -178,7 +178,18 @@ void KPM_base::compute(){
   
   for(int d = 1; d <= D; d++){
 
-    device_.update_dis( dmp_op_);
+    if(device_.parameters().dis_str_ != 0.0){
+      int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) )
+        device_.parameters().SUBDIM_=device_.parameters().DIS_DIM_;
+
+      device_.update_dis( dmp_op_);
+
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) ) //god forbid
+        device_.parameters().SUBDIM_=subdim;
+    }
+
+
     
     for(int r = 1; r <= R; r++){
 
