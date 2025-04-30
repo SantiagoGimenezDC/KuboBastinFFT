@@ -161,11 +161,7 @@ Graphene_KaneMele::Graphene_KaneMele(int is_k_space, r_type range, r_type stgr_s
 
   
 
-  /*
-  std::cout<< "SUBDIM:  "<<this->parameters().SUBDIM_<<std::endl;
-  std::cout<< "DIM:  "<< this->parameters().DIM_<<std::endl;
-  std::cout<< "DIS_DIM:  "<< this->parameters().DIS_DIM_<<std::endl;
-  */
+  
 
 
   
@@ -194,8 +190,8 @@ void Graphene_KaneMele::build_Hk(){
 
       
       
-      double kx = ( i * b1_(0) + j * b2_(0) ) / W,
-             ky = ( i * b1_(1) + j * b2_(1) ) / Le;
+      double kx = ( i * b1_(0) + j * b2_(0) ) / double(W),
+	ky = ( i * b1_(1) + j * b2_(1) ) / double(Le);
       
       Eigen::Vector2d k_vec = Eigen::Vector2d(kx, ky);
     
@@ -278,7 +274,7 @@ for (int t = 0; t < omp_get_max_threads(); ++t) {
 
   parameters().SUBDIM_ = 4 * subdim;
 
-
+  
   
 
   Eigen::Vector3d v1{ double(this->parameters().W_* 0.5 * sqrt(3.0) ),   double(this->parameters().W_) * 3.0/2.0,  0 },
@@ -288,6 +284,13 @@ for (int t = 0; t < omp_get_max_threads(); ++t) {
   r_type Length = a0_ * sqrt( abs(cross_p(2)) );
 
 
+  std::cout<< "SUBDIM:  "<<this->parameters().SUBDIM_<<std::endl;
+  std::cout<< "DIM:  "<< this->parameters().DIM_<<std::endl;
+  std::cout<< "DIS_DIM:  "<< this->parameters().DIS_DIM_<<std::endl;
+  std::cout<< "AREA:  "<< Length * Length <<std::endl;
+
+
+  
   eig_ket_re_.resize(this->parameters().DIS_DIM_);
   eig_ket_re_sub_.resize(this->parameters().SUBDIM_);
 
@@ -1198,7 +1201,6 @@ void Graphene_KaneMele::rearrange_initial_vec(type* r_vec){
   
   size_t subDim = this->parameters().SUBDIM_,
          dis_dim = this->parameters().DIS_DIM_,
-         C   = this->parameters().C_,
          W   = this->parameters().W_;
   
  
