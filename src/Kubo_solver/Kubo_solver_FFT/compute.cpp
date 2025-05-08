@@ -51,7 +51,7 @@ void Kubo_solver_FFT::compute(){
       
   
   
-  size_t SUBDIM   = device_.parameters().SUBDIM_,
+  size_t
       W      = device_.parameters().W_,
       C      = device_.parameters().C_,
       LE     = device_.parameters().LE_;
@@ -87,7 +87,7 @@ void Kubo_solver_FFT::compute(){
   reset_Chebyshev_buffers();
 
   
-  if(!dynamic_cast<Graphene_KaneMele*>(&device_) || ( dynamic_cast<Graphene_KaneMele*>(&device_) && !device_.isKspace())  ){ 
+  if(!dynamic_cast<Graphene_KaneMele*>(&device_) ){ 
      cap_->create_CAP(W, C, LE,  dmp_op_);
      device_.damp(dmp_op_);
    }
@@ -116,11 +116,10 @@ void Kubo_solver_FFT::compute(){
 
     
     if(device_.parameters().dis_str_ != 0.0){
+
       int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
       if(dynamic_cast<Graphene_KaneMele*>(&device_) )
         device_.parameters().SUBDIM_=device_.parameters().DIS_DIM_;
-
-      
     
       device_.update_dis( dmp_op_);
 
@@ -146,25 +145,28 @@ void Kubo_solver_FFT::compute(){
       
       //--------------------------------All hacks sesh------------------------------//
       int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
-      if(dynamic_cast<Graphene_KaneMele*>(&device_) )
+      bool do_test=false;
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) && do_test )
         device_.parameters().SUBDIM_ = device_.parameters().DIS_DIM_;
       
-      vec_base_->generate_vec_im( rand_vec_, r);       
-      device_.rearrange_initial_vec( rand_vec_ ); //very hacky
+      vec_base_->generate_vec_im( rand_vec_, r);
+      
 
-      if(dynamic_cast<Graphene_KaneMele*>(&device_) ) //god forbid
+
+
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) && do_test ){ //god forbid
+        device_.rearrange_initial_vec( rand_vec_ ); //very hacky
         device_.parameters().SUBDIM_ = subdim;
+      }
 
 
 
 
-
-      
-      
-            
+          
       //if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() && parameters_.base_choice_ == 0)
       //device_.Uk_ket(rand_vec_, rand_vec_);
 
+      //The next will only work if I initialize the FFTs insize KaneMele.
       if(dynamic_cast<Graphene_KaneMele*>(&device_)   &&   !device_.isKspace()   &&   parameters_.base_choice_ == 4  )
 	device_.to_kSpace(rand_vec_, rand_vec_, 1);
       

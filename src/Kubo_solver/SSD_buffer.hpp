@@ -7,7 +7,7 @@
 
 #include<string>
 #include"../static_vars.hpp"
-#include<eigen-3.4.0/Eigen/Core>
+#include<eigen3/Eigen/Core>
 #include<fcntl.h>
 #include<unistd.h>
 #include <cstdio>

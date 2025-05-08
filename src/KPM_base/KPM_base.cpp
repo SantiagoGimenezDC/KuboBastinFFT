@@ -86,7 +86,9 @@ KPM_base::~KPM_base(){
 /*------------Delete everything--------------*/
 
   delete []rand_vec_;
-  delete []dmp_op_;
+  
+  if(!dynamic_cast<Graphene_KaneMele*>(&device_))
+    delete []dmp_op_;
    
   delete kernel_;
   delete cap_;
@@ -143,10 +145,7 @@ void KPM_base::compute(){
 
   //This should just be initialization of the CAP object
   //-------------------This shouldnt be heeere--------------//
-  int W      = device().parameters().W_,
-      C      = device().parameters().C_,
-      LE     = device().parameters().LE_,
-    DIM    = device().parameters().DIM_,
+  int DIM    = device().parameters().DIM_,
     SUBDIM    = device().parameters().SUBDIM_;
 
   r_type a       = parameters_.a_,
@@ -157,9 +156,11 @@ void KPM_base::compute(){
   eta   /= a;
 
 
-  dmp_op_ = new r_type[ DIM ];
+  if(!dynamic_cast<Graphene_KaneMele*>(&device_)) 
+    dmp_op_ = new r_type[ DIM ];
 
-  if(dynamic_cast<Graphene_KaneMele*>(&device_) )
+  bool do_test = false;
+  if(dynamic_cast<Graphene_KaneMele*>(&device_) && do_test )
     rand_vec_ = new type[ device_.parameters().DIS_DIM_ ];
   else
     rand_vec_ = new type[ SUBDIM ];
@@ -203,25 +204,29 @@ void KPM_base::compute(){
             
       //--------------------------------All hacks sesh------------------------------//
       int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
-      if(dynamic_cast<Graphene_KaneMele*>(&device_) )
+      
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) && do_test )
         device_.parameters().SUBDIM_ = device_.parameters().DIS_DIM_;
 
       
       vec_base_->generate_vec_im( rand_vec_, r);       
-      device_.rearrange_initial_vec( rand_vec_ ); //very hacky
+
 
       
-      if(dynamic_cast<Graphene_KaneMele*>(&device_) ) //god forbid
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) && do_test ){ //god forbid
+        device_.rearrange_initial_vec( rand_vec_ ); //very hacky
         device_.parameters().SUBDIM_ = subdim;
+      }
 
+
+
+      //if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() && parameters_.base_choice_ == 1 )
+      //	device_.Uk_ket(rand_vec_, rand_vec_);	
 
       
       if(dynamic_cast<Graphene_KaneMele*>(&device_) && !device_.isKspace() && parameters_.base_choice_ == 4)
 	device_.to_kSpace(rand_vec_, rand_vec_, 1);
 
-      
-      //if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() && parameters_.base_choice_ == 1 )
-      //	device_.Uk_ket(rand_vec_, rand_vec_);	
       
       
       
@@ -343,6 +348,23 @@ DOS_output::DOS_output(device_vars& device_parameters, solver_vars& parent_solve
 };
 
 
+void integration( int nump, const std::vector<r_type>& E_points, const std::vector<r_type>& integrand, std::vector<r_type>& result){
+  
+  //  r_value_t edge = 1.0 - parent_solver_.parameters().edge_;
+
+  //#pragma omp parallel for 
+  for(int k=0; k<nump-1 ; k++ ){                                                            
+    for(int j=0; j<k; j++ ){//IMPLICIT PARTITION FUNCTION. Energies are decrescent with e (bottom of the band structure is at e=M);
+      double ej  = E_points[j+1],
+	ej1      = E_points[j],
+	de       = ej-ej1,
+        integ    = ( integrand[j+1] + integrand[j] )/2;     
+      
+      result[k] +=  de * integ;
+    }
+  }
+}
+
 void DOS_output::update_data(std::vector<type>& moments_r, std::vector<type>& moments_acc, int r){
 
   const std::complex<double> im(0,1);  
@@ -356,12 +378,18 @@ void DOS_output::update_data(std::vector<type>& moments_r, std::vector<type>& mo
   int M = parameters_.M_,
       nump = parameters_.num_p_;
   
-  int SUBDIM = device_parameters_.SUBDIM_;    
+
 
   r_type a = parameters_.a_,
          b = parameters_.b_;
 
-  r_type omega =  SUBDIM / ( a * M_PI );//Dimensional and normalizing constant
+
+
+  
+  r_type DOS_corr = device_parameters_.DOS_corr_;
+  
+  r_type omega =  DOS_corr / (  M_PI * a );//Dimensional and normalizing constant
+
 
 
   
@@ -449,6 +477,15 @@ void DOS_output::update_data(std::vector<type>& moments_r, std::vector<type>& mo
     conv_R_av_ [ ( r - 1 ) ] = av;
   }
 
+  /*
+  std::vector<r_type> E_points_2(nump);
+
+  for(int i=0; i<nump;i++)
+    E_points_2[i]=a * E_points_[nump-1-i];
+  
+  integration( nump, E_points_2, new_partial_result, partial_result_);
+  */
+  
   partial_result_ = new_partial_result;
   r_data_ = new_r_data;  
 

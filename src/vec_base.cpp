@@ -18,7 +18,7 @@ void generate_vec(int C, int W, int LE, type rand_vec[], int seed, int r){
   for(int m=0; m < DIM; m++)
     rand_vec[m] = 0;
   
-  rand_vec[random_site+C*W] = 1.0;
+  rand_vec[random_site+C*W] = DIM * 1.0;
   
 }
 
@@ -39,7 +39,7 @@ void generate_vec_im(int C, int W, int LE, std::complex<r_type> rand_vec[], int 
 
   for( int j=C*W; j<C*W+SUBDIM; j++ ){
     double    phase = 2.0 * M_PI * double(dis(gen)) / SUBDIM;
-    rand_vec[j] = std::polar(1.0,phase)/sqrt(double(SUBDIM));
+    rand_vec[j] = std::polar(1.0,phase);///sqrt(double(SUBDIM));
   }
 }
 
@@ -54,7 +54,7 @@ void Complex_Phase_real::generate_vec_im( std::complex<r_type> rand_vec[], int )
 
 
   for( int j = 0; j <  SUBDIM; j++ )
-    rand_vec [j] = (2.0*this->rng().get() - 1.)*sqrt(3.0)/ sqrt(double(SUBDIM));   
+    rand_vec [j] = (2.0*this->rng().get() - 1.)*sqrt(3.0);/// sqrt(double(SUBDIM));   
   
 }
 
@@ -65,7 +65,7 @@ void Complex_Phase_real::generate_vec_re( r_type rand_vec[], int ){
 
 
   for( int j = 0; j <  SUBDIM; j++ )
-    rand_vec [j] = (2.0*this->rng().get() - 1.)*sqrt(3.0)/ sqrt(double(SUBDIM));   
+    rand_vec [j] = (2.0*this->rng().get() - 1.)*sqrt(3.0); /// sqrt(double(SUBDIM));   
   
 }
 
@@ -80,7 +80,7 @@ void Complex_Phase::generate_vec_im( std::complex<r_type> rand_vec[], int ){
 
   for( int j = 0; j <  SUBDIM; j++ ){
     double phase = 2.0 * M_PI * this->rng().get() ;
-    rand_vec [j] = std::polar( 1.0, phase ) / sqrt(double(SUBDIM));
+    rand_vec [j] = std::polar( 1.0, phase );// / sqrt(double(SUBDIM));
   }
   
 }
@@ -91,7 +91,7 @@ void Complex_Phase::generate_vec_re( r_type rand_vec[], int ){
 
   
   for( int j = 0; j <  SUBDIM; j++ )
-    rand_vec [j] = (2.0*this->rng().get() - 1.)*sqrt(3.0)/ sqrt(double(SUBDIM));   
+    rand_vec [j] = (2.0*this->rng().get() - 1.)*sqrt(3.0);/// sqrt(double(SUBDIM));   
   
 }
 
@@ -114,7 +114,7 @@ void Direct::generate_vec_im( std::complex<r_type> rand_vec[], int ){
 
   int random_site = SUBDIM * this->rng().get();
   
-  rand_vec[random_site] = 1.0;
+  rand_vec[random_site] = SUBDIM * 1.0;
   
 }
 
@@ -132,7 +132,7 @@ void Direct::generate_vec_re( r_type rand_vec[], int ){
 
   int random_site = SUBDIM * this->rng().get();
   
-  rand_vec[random_site] = 1.0;
+  rand_vec[random_site] = SUBDIM * 1.0;
   
 }
 
@@ -151,7 +151,7 @@ void FullTrace::generate_vec_im( std::complex<r_type> rand_vec[], int r){
     rand_vec[m] = 0;
 
 
-  rand_vec[r+SUBDIM/2] = 1.0;
+  rand_vec[r+SUBDIM/2] = SUBDIM * 1.0;
   
 }
 
@@ -159,7 +159,8 @@ void FullTrace::generate_vec_im( std::complex<r_type> rand_vec[], int r){
 
 void FullTrace::generate_vec_re( r_type rand_vec[], int r){
 
-  int DIM = this->parameters().DIM_;
+  int DIM = this->parameters().DIM_,
+    SUBDIM = this->parameters().SUBDIM_    ;
 
 
   
@@ -168,7 +169,7 @@ void FullTrace::generate_vec_re( r_type rand_vec[], int r){
     rand_vec[m] = 0;
 
 
-  rand_vec[r] = 1.0;
+  rand_vec[r] = SUBDIM * 1.0;
   
 }
 
@@ -185,7 +186,7 @@ void projected_FullTrace::generate_vec_im( std::complex<r_type> rand_vec[], int 
     rand_vec [j] = 0;
     if( ( j - ( r - 1 ) ) % stride_ == 0){
       double phase = 2.0 * M_PI * this->rng().get() ;
-      rand_vec [j] = std::polar( 1.0, phase ) / sqrt(double(SUBDIM/stride_));
+      rand_vec [j] = std::polar( 1.0, phase ) / sqrt(double(1.0/stride_));
     }
 
   }
@@ -199,7 +200,7 @@ void projected_FullTrace::generate_vec_re( r_type rand_vec[], int r){
   
   for( size_t j = 0; j <  SUBDIM; j++ )
     if( ( j - ( r - 1 ) ) % stride_ == 0)
-      rand_vec [j] = (2.0*this->rng().get() - 1.)*sqrt(3.0)/ sqrt(double(SUBDIM/stride_));   
+      rand_vec [j] = (2.0*this->rng().get() - 1.)*sqrt(3.0)/ sqrt(double(1.0/stride_));   
    
 }
 

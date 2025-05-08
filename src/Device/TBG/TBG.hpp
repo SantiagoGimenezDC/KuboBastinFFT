@@ -1,8 +1,8 @@
 #ifndef TBG_H
 #define TBG_H
 
-#include<eigen-3.4.0/Eigen/Core>
-#include<eigen-3.4.0/Eigen/SparseCore>
+#include<eigen3/Eigen/Core>
+#include<eigen3/Eigen/SparseCore>
 
 #include "../../static_vars.hpp"
 #include "../Coordinates.hpp"

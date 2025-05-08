@@ -152,7 +152,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
     R = parameters_.R_,
     D = parameters_.dis_real_;
   
-  int SUBDIM = device_.parameters().SUBDIM_;    
+
 
   r_type a = parameters_.a_,
     b = parameters_.b_,
@@ -160,7 +160,7 @@ void Kubo_solver_filtered::update_data_Bastin(r_type E_points[], type r_data[], 
   
   int decRate = filter_.parameters().decRate_;   
   
-  r_type omega = 2.0 * decRate * decRate * SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.(REMOVED)
+  r_type omega = 2.0 * decRate * decRate /( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.(REMOVED)
   //DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
   
   //r_value_t tmp, max=0, av=0;
@@ -318,7 +318,7 @@ void Kubo_solver_filtered::update_data_Sea(r_type E_points[], type r_data[], typ
     R = parameters_.R_,
     D = parameters_.dis_real_;
   
-  int SUBDIM = device_.parameters().SUBDIM_;    
+
 
   r_type a = parameters_.a_,
     b = parameters_.b_,
@@ -326,7 +326,7 @@ void Kubo_solver_filtered::update_data_Sea(r_type E_points[], type r_data[], typ
   
   int decRate = filter_.parameters().decRate_;   
   
-  r_type omega = 2.0 * decRate * decRate * SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.(REMOVED)
+  r_type omega = 2.0 * decRate * decRate /( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.(REMOVED)
   //DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
   
   //r_value_t tmp, max=0, av=0;
@@ -482,15 +482,13 @@ void Kubo_solver_filtered::update_data(r_type E_points[],  type r_data[], type f
       D = parameters_.dis_real_;
 
 
-  int SUBDIM = device_.parameters().SUBDIM_;    
-
   r_type a = parameters_.a_,
     b = parameters_.b_,
     sysSubLength = device_.sysSubLength();
 
 
   
-  r_type omega = SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/ ;//Dimensional and normalizing constant(REMOVED MINUS SIGN)
+  r_type omega = 1.0/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/ ;//Dimensional and normalizing constant(REMOVED MINUS SIGN)
   
   r_type tmp, max=0, av=0;
 

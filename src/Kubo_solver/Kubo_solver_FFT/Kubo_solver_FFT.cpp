@@ -91,7 +91,8 @@ Kubo_solver_FFT::~Kubo_solver_FFT(){
   delete []tmp_;
   
   //Auxiliary - disorder and CAP vectors
-  delete []dmp_op_;
+  if(!dynamic_cast<Graphene_KaneMele*>(&device_))
+    delete []dmp_op_;
 
   //Single Shot vectors
   for(int m=0;m<M;m++){
@@ -158,7 +159,8 @@ void Kubo_solver_FFT::allocate_memory(){
   
   
   //Recursion Vectors
-  if(dynamic_cast<Graphene_KaneMele*>(&device_) )
+  bool do_test=false;//This is only for comparing with the real space method.
+  if(dynamic_cast<Graphene_KaneMele*>(&device_) && do_test )
     rand_vec_ = new type [ device_.parameters().DIS_DIM_ ];
   else
     rand_vec_ = new type [ DIM ];
@@ -166,7 +168,8 @@ void Kubo_solver_FFT::allocate_memory(){
   tmp_      = new type [ DIM ];
   
   //Disorder and CAP vectors
-  dmp_op_  = new r_type [ DIM ];
+  if(!dynamic_cast<Graphene_KaneMele*>(&device_))  
+    dmp_op_  = new r_type [ DIM ];
 /*-----------------------------------------------*/
 
 
@@ -182,7 +185,7 @@ void Kubo_solver_FFT::allocate_memory(){
   
 #pragma omp parallel for	
   for(int k=0; k < DIM; k++){
-    dmp_op_   [k] = 1.0;
+    //dmp_op_   [k] = 1.0;
     rand_vec_ [k] = 0.0;
   }
     

@@ -188,7 +188,7 @@ void Kubo_solver_FFT_postProcess::Sea_postProcess(const std::vector<type>& final
   
   
   int nump = parent_solver_.parameters().num_p_;
-  size_t SUBDIM = parent_solver_.device().parameters().SUBDIM_;    
+  
 
   r_type a = parent_solver_.parameters().a_,
     b = parent_solver_.parameters().b_,
@@ -196,7 +196,7 @@ void Kubo_solver_FFT_postProcess::Sea_postProcess(const std::vector<type>& final
 
   
   //  r_type omega = DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
-  r_type omega = 2.0 * SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.
+  r_type omega = 2.0 /( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.
   //r_value_t tmp, max=0, av=0;
 
   
@@ -354,7 +354,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
   
   
   int nump = parent_solver_.parameters().num_p_;
-  size_t SUBDIM = parent_solver_.device().parameters().SUBDIM_;    
+
 
   r_type a = parent_solver_.parameters().a_,
     b = parent_solver_.parameters().b_,
@@ -362,7 +362,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
 
   
   //  r_type omega = DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
-  r_type omega = 2.0 * SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.(REMOVED)
+  r_type omega = 2.0 / ( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.(REMOVED)
   //r_value_t tmp, max=0, av=0;
 
   
@@ -523,13 +523,13 @@ void Kubo_solver_FFT_postProcess::Greenwood_postProcess(const std::vector<type>&
   //    R = parameters_.R_,
   //  D = parameters_.dis_real_;
   
-  size_t SUBDIM = parent_solver_.device().parameters().SUBDIM_;    
+
 
   r_type a = parent_solver_.parameters().a_,
          b = parent_solver_.parameters().b_,
          sysSubLength = parent_solver_.device().sysSubLength();
   
-  r_type omega = 2.0 * SUBDIM/( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant (MINUS REMOVED)
+  r_type omega = 2.0 / ( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant (MINUS REMOVED)
   
   //  r_value_t tmp, max=0, av=0;
 

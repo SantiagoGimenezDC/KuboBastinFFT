@@ -9,7 +9,7 @@
 #include "../kernel.hpp"
 #include "../vec_base.hpp"
 
-#include<eigen-3.4.0/Eigen/Core>
+#include<eigen3/Eigen/Core>
 
 #include "solver_vars.hpp"
 

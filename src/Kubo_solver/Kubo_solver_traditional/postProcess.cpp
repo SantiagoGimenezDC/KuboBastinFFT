@@ -4,7 +4,7 @@
 #include<thread>
 #include<complex>
 
-#include<eigen-3.4.0/Eigen/Core>
+#include<eigen3/Eigen/Core>
 
 #include "Kubo_solver_traditional.hpp"
 
@@ -58,7 +58,7 @@ const std::complex<r_type> im(0,1);
          b = parameters_.b_,
          sysSubLength = device_.sysSubLength();
 
-  r_type omega = SUBDIM/( a * a * sysSubLength * sysSubLength );//Dimensional and normalizing constant
+  r_type omega = 1.0/( a * a * sysSubLength * sysSubLength );//Dimensional and normalizing constant
 
 
 
@@ -105,13 +105,13 @@ const std::complex<r_type> im(0,1);
               filename = parameters_.filename_;
 
 
-  int SUBDIM = device_.parameters().SUBDIM_;
+
     
   r_type a = parameters_.a_,
          b = parameters_.b_,
          sysSubLength = device_.sysSubLength();
 
-  r_type omega = SUBDIM/( a * a * sysSubLength * sysSubLength );//Dimensional and normalizing constant
+  r_type omega = 1.0/( a * a * sysSubLength * sysSubLength );//Dimensional and normalizing constant
 
 
   

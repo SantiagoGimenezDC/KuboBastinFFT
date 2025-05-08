@@ -9,7 +9,8 @@
 
 
 
-Graphene_KaneMele::Graphene_KaneMele(int is_k_space, r_type range, r_type stgr_str, r_type m_str, r_type rashba_str, r_type KM_str, r_type HLD_str, device_vars& parameters): Graphene(parameters), stgr_str_(stgr_str), m_str_(m_str), rashba_str_(rashba_str), KM_str_(KM_str){
+Graphene_KaneMele::Graphene_KaneMele(int is_k_space, r_type range, r_type stgr_str, r_type m_str, r_type rashba_str, r_type KM_str, r_type HLD_str, device_vars& parameters):
+  Graphene(parameters), stgr_str_(stgr_str), m_str_(m_str), rashba_str_(rashba_str), KM_str_(KM_str){
     
   this->parameters().DIM_*=4;
   this->parameters().SUBDIM_*=4;
@@ -127,42 +128,44 @@ Graphene_KaneMele::Graphene_KaneMele(int is_k_space, r_type range, r_type stgr_s
   H_k0_KM_.block( 2, 2, 2, 2 ) = -( KM_PF * sz  );
 
 
-  if(k_space_)
+  if(k_space_ || true){
+    time_station_2 hamilt_time;
+
+    hamilt_time.start();
+		     
     this->build_Hk();
 
 
-  
+    
+    hamilt_time.stop("     Hamiltonian setting up time:            ");    
 
-  size_t W = this->parameters().W_;
-  size_t Le = this->parameters().LE_;
- 
+    if( this->parameters().dis_str_ != 0.0  || true){
+      size_t W = this->parameters().W_;
+      size_t Le = this->parameters().LE_;
 
-
-  int threads = omp_get_max_threads();
-  
-  fftw_plan_with_nthreads( threads );
-
-  fft_input_  = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * Le );
-  fft_output_ = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * Le );
-
-
-  time_station_2 planning_time;
-  planning_time.start();
-  /*
-  if(double(W*Le)>3E9 && this->parameters().dis_str_ != 0.0 ){
-    fftw_plan_FORWD_= fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_FORWARD, FFTW_PATIENT),//you could use EXHAUSTIVE even
-    fftw_plan_BACK_ = fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_BACKWARD, FFTW_PATIENT);
-  }
-  else{*/
-  fftw_plan_FORWD_= fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_FORWARD, FFTW_MEASURE),
-  fftw_plan_BACK_ = fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_BACKWARD, FFTW_MEASURE);
-    //}
-  planning_time.stop("       FFTW planning time:            ");
+      int threads = omp_get_max_threads();
 
   
+      fftw_plan_with_nthreads( threads );
+
+      fft_input_  = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * Le );
+      fft_output_ = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * Le );
+
+
+      time_station_2 planning_time;
+      planning_time.start();
+
+      fftw_plan_FORWD_= fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_FORWARD, FFTW_MEASURE),
+      fftw_plan_BACK_ = fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_BACKWARD, FFTW_MEASURE);
+  
+      planning_time.stop("       FFTW planning time:            ");
+    }
+  } 
 
   
 
+  this->parameters().DOS_corr_ = 1.0 / ( Length * Length )  ; // 8.2 here should be the full bandwidth.
+  
 
   
 };
@@ -183,7 +186,7 @@ void Graphene_KaneMele::build_Hk(){
   Eigen::Vector2d  dirac_2 = 2.0 * M_PI / ( 3.0 * a_ ) * Eigen::Vector2d( -1, 3.0/sqrt(3.0) );
 
 
-  
+  /*
   //#pragma omp parallel for
   for(size_t j=0; j<Le; j++){
     for(size_t i=0; i<W; i++){
@@ -205,10 +208,10 @@ void Graphene_KaneMele::build_Hk(){
       }
     }
     }
-
+  */
 
   
-  /*==========================CHATGPT SCRIPT---------------------//
+  //==========================CHATGPT SCRIPT---------------------//
   std::vector<Eigen::Vector2d> local_lists[omp_get_max_threads()];
 
 #pragma omp parallel
@@ -246,9 +249,10 @@ for (int t = 0; t < omp_get_max_threads(); ++t) {
   subdim += local_lists[t].size();
   nonZeroList_.insert(nonZeroList_.end(), local_lists[t].begin(), local_lists[t].end());
 }
-//================================END CHATGPT SCRIPT ================================*/
+//================================END CHATGPT SCRIPT ================================//
 
 
+    parameters().SUBDIM_ = 4 * subdim;
 
     H_k_cut_.resize(4, subdim*4);
     v_k_x_cut_.resize(4, subdim*4);
@@ -271,14 +275,11 @@ for (int t = 0; t < omp_get_max_threads(); ++t) {
     }
 
 
-
-  parameters().SUBDIM_ = 4 * subdim;
-
   
   
 
   Eigen::Vector3d v1{ double(this->parameters().W_* 0.5 * sqrt(3.0) ),   double(this->parameters().W_) * 3.0/2.0,  0 },
-    v2{ -double(this->parameters().LE_* 0.5 * sqrt(3.0)),    double(this->parameters().LE_) * 3.0 /2.0,  0 },
+                  v2{ -double(this->parameters().LE_* 0.5 * sqrt(3.0)),    double(this->parameters().LE_) * 3.0 /2.0,  0 },
 	          cross_p = v1.cross(v2);
       
   r_type Length = a0_ * sqrt( abs(cross_p(2)) );
@@ -290,17 +291,21 @@ for (int t = 0; t < omp_get_max_threads(); ++t) {
   std::cout<< "AREA:  "<< Length * Length <<std::endl;
 
 
-  
-  eig_ket_re_.resize(this->parameters().DIS_DIM_);
-  eig_ket_re_sub_.resize(this->parameters().SUBDIM_);
+
+  if( this->parameters().dis_str_ != 0.0){
+    eig_ket_re_.resize(this->parameters().DIS_DIM_);
+    eig_ket_re_sub_.resize(this->parameters().SUBDIM_);
+  }
 
 
+  // this->set_sysSubLength(Length * sqrt(double(this->parameters().SUBDIM_)/double(this->parameters().DIM_)));
+  //this->set_sysLength(Length  * sqrt(double(this->parameters().SUBDIM_)/double(this->parameters().DIM_)));
 
-  this->set_sysSubLength(Length * sqrt(double(this->parameters().SUBDIM_)/double(this->parameters().DIM_)));
-  this->set_sysLength(Length  * sqrt(double(this->parameters().SUBDIM_)/double(this->parameters().DIM_)));
+  double a = this->a();
 
-  
-  parameters().DIM_ = 4 * subdim; //TO USE cut_1, just erase this.
+
+    
+  parameters().DIM_ = 4 * subdim; 
 
   
 
@@ -498,65 +503,6 @@ void Graphene_KaneMele::Hk_update_cheb ( type ket[], type p_ket[], type pp_ket[]
 
 void Graphene_KaneMele::Hk_ket_cut (r_type a, r_type b, type* ket, type* p_ket){
 
-  size_t W = parameters().W_,
-    DIM = parameters().DIM_;
-
-
-  
-  r_type * disorder_potential = dis();
-  //  Eigen::Map<Eigen::VectorXd>dis(disorder_potential,DIM);
-
-  
-  Eigen::Map<Eigen::VectorXcd>
-    eig_ket(ket,DIM),
-    eig_p_ket(p_ket, DIM);
-
-
-
-
-
-  //eig_ket_re = projector_.asDiagonal() * eig_ket_re;
-  
-    #pragma omp parallel for
-    for(size_t i = 0; i < DIM; i++)
-      eig_ket_re_[i] = projector_[i] * eig_p_ket[i] ;
-
-  
-    to_kSpace(eig_ket_re_.data(), eig_ket_re_.data(), 1);  
-
-    #pragma omp parallel for
-    for(size_t i = 0; i < DIM/2; i++){
-      eig_ket_re_[2 * i ] = disorder_potential[i] * eig_ket_re_[ 2 * i] / a;
-      eig_ket_re_[2 * i + 1] = disorder_potential[i] * eig_ket_re_[ 2 * i + 1 ] / a;
-    }
-    to_kSpace(eig_ket_re_.data(), eig_ket_re_.data(), -1);
-
-    #pragma omp parallel for
-    for(size_t i = 0; i < DIM; i++)
-      eig_ket_re_[i] = projector_[i] * eig_ket_re_[i];
-    
-    //   eig_ket_re = projector_.asDiagonal() * eig_ket_re;
-    
- 
-  Eigen::Matrix4cd Id = Eigen::Matrix4cd::Zero(); 
-
-#pragma omp parallel for  
-  for (size_t i = 0; i < nonZeroList_.size(); i++) {
-    const auto& vec = nonZeroList_[i]; 
-    size_t i2 = vec(0);
-    size_t j2 = vec(1);
-      eig_ket.segment( ( i2 + j2 * W ) * 4, 4 ) = ( H_k_cut_.block( 0, i* 4, 4, 4 ) - b * Id ) / a   *   eig_p_ket.segment( ( i2 + j2 * W ) * 4, 4 );
-  }
-
-  eig_ket += eig_ket_re_;
-  
-};
-
-
-
-
-void Graphene_KaneMele::Hk_ket_cut_2 (r_type a, r_type b, type* ket, type* p_ket){
-
   size_t SUBDIM = parameters().SUBDIM_,
     DIS_DIM = parameters().DIS_DIM_;
   r_type * disorder_potential = dis();
@@ -569,45 +515,29 @@ void Graphene_KaneMele::Hk_ket_cut_2 (r_type a, r_type b, type* ket, type* p_ket
   
   Eigen::Matrix4cd Id = Eigen::Matrix4cd::Zero(); 
 
-  eig_ket_re_.setZero();
-  to_rSpace_pruned_2(eig_ket_re_.data(), eig_p_ket.data());  
+  if(this->parameters().dis_str_ != 0.0 ){
+    eig_ket_re_.setZero();
+    to_rSpace_pruned(eig_ket_re_.data(), eig_p_ket.data());  
 
-  #pragma omp parallel for
-  for(size_t i = 0; i < DIS_DIM/2; i++){
-    eig_ket_re_[2*i] = disorder_potential[i] * eig_ket_re_[2*i] / a;
-    eig_ket_re_[2*i+1] = disorder_potential[i] * eig_ket_re_[2*i+1] / a;
+    #pragma omp parallel for
+    for(size_t i = 0; i < DIS_DIM/2; i++){
+      eig_ket_re_[2*i] = disorder_potential[i] * eig_ket_re_[2*i] / a;
+      eig_ket_re_[2*i+1] = disorder_potential[i] * eig_ket_re_[2*i+1] / a;
+    }
+    to_kSpace_pruned(eig_ket_re_sub_.data(), eig_ket_re_.data());
   }
-  to_kSpace_pruned_2(eig_ket_re_sub_.data(), eig_ket_re_.data());
-
 
   
 #pragma omp parallel for  
   for (size_t i = 0; i < nonZeroList_.size(); i++) 
       eig_ket.segment( i * 4, 4 ) = ( H_k_cut_.block( 0, i* 4, 4, 4 ) - b * Id ) / a   *   eig_p_ket.segment( i * 4, 4 );
 
-  eig_ket += eig_ket_re_sub_;
+  if(this->parameters().dis_str_ != 0.0 )
+    eig_ket += eig_ket_re_sub_;
   
 };
 
 
-
-
-void Graphene_KaneMele::Hk_ket_cut_clean (r_type a, r_type b, type* ket, type* p_ket){
-
-  size_t DIM = parameters().DIM_;
-
-
-  Eigen::Map<Eigen::VectorXcd>
-    eig_ket(ket,DIM),
-    eig_p_ket(p_ket, DIM);
- 
-  Eigen::Matrix4cd Id = Eigen::Matrix4cd::Zero(); 
-
-#pragma omp parallel for  
-  for (size_t i = 0; i < nonZeroList_.size(); i++) 
-      eig_ket.segment( i * 4, 4 ) = ( H_k_cut_.block( 0, i* 4, 4, 4 ) - b * Id ) / a   *   eig_p_ket.segment( i * 4, 4 );
-
-};
 
 
 
@@ -615,91 +545,9 @@ void Graphene_KaneMele::Hk_ket_cut_clean (r_type a, r_type b, type* ket, type* p
 
 void Graphene_KaneMele::Hk_update_cheb_cut (type* ket, type* p_ket, type* pp_ket){
 
-  size_t W = parameters().W_,
-    DIM = parameters().DIM_;
-
-  r_type a = this->a();
-  r_type b = this->b(); 
-
-
-  r_type * disorder_potential = dis();
-  Eigen::Map<Eigen::VectorXd>dis(disorder_potential,DIM);
-
-
-  
-  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,DIM),
-    eig_p_ket(p_ket, DIM),
-    eig_pp_ket(pp_ket, DIM);
-
-
-
-
-  //eig_ket_re = projector_.asDiagonal() * eig_ket_re;
-  
-    #pragma omp parallel for
-    for(size_t i = 0; i < DIM; i++)
-      eig_ket_re_[i] = projector_[i] * eig_p_ket[i] ;
-
-  
-    to_kSpace(eig_ket_re_.data(), eig_ket_re_.data(), 1);  
-
-    #pragma omp parallel for
-    for(size_t i = 0; i < DIM/2; i++){
-      eig_ket_re_[ 2 * i ] = disorder_potential[i] * eig_ket_re_[2 * i] / a;
-      eig_ket_re_[ 2 * i + 1 ] = disorder_potential[i] * eig_ket_re_[ 2 * i + 1] / a;
-
-    }
-    //eig_ket_re = dis.asDiagonal() * eig_ket_re / a;
- 
-    to_kSpace(eig_ket_re_.data(), eig_ket_re_.data(), -1);
-
-    #pragma omp parallel for
-    for(size_t i = 0; i < DIM; i++)
-      eig_ket_re_[i] = projector_[i] * eig_ket_re_[i];
-  
-    //   eig_ket_re = projector_.asDiagonal() * eig_ket_re;
-
-
-    /*
-  if( this->parameters().dis_str_ != 0.0 ){
-    eig_ket_re = projector_.asDiagonal() * eig_ket_re;
-  
-    to_kSpace(eig_ket_re.data(), eig_ket_re.data(), 1);  
-    eig_ket_re = dis.asDiagonal() * eig_ket_re / a;
-    to_kSpace(eig_ket_re.data(), eig_ket_re.data(), -1);
-
-    eig_ket_re = projector_.asDiagonal() * eig_ket_re;
-    }*/
-  
-  
-  Eigen::Matrix4cd Id = Eigen::Matrix4cd::Zero(); 
-
-#pragma omp parallel for  
-  for (size_t i = 0; i < nonZeroList_.size(); i++) {
-    const auto& vec = nonZeroList_[i]; 
-    size_t i2 = vec(0);
-    size_t j2 = vec(1); 
-    eig_ket.segment( ( i2 + j2 * W ) * 4, 4 ) = 2.0 * ( H_k_cut_.block( 0, i * 4, 4, 4 ) - b * Id ) / a   *   eig_p_ket.segment( ( i2 + j2 * W ) * 4, 4 )  -  eig_pp_ket.segment( ( i2 + j2 * W ) * 4, 4 );
-  }
-
-  
-  eig_ket += 2.0 * eig_ket_re_;
-
-  
-  eig_pp_ket = eig_p_ket;
-  eig_p_ket = eig_ket;
- 
-};
-
-
-
-
-
-void Graphene_KaneMele::Hk_update_cheb_cut_2 (type* ket, type* p_ket, type* pp_ket){
-
   size_t SUBDIM = parameters().SUBDIM_,
     DIS_DIM = parameters().DIS_DIM_;
-  r_type * disorder_potential = dis();
+
   r_type a = this->a();
   r_type b = this->b(); 
 
@@ -711,17 +559,21 @@ void Graphene_KaneMele::Hk_update_cheb_cut_2 (type* ket, type* p_ket, type* pp_k
   
   Eigen::Matrix4cd Id = Eigen::Matrix4cd::Zero(); 
 
-  eig_ket_re_.setZero();
-  to_rSpace_pruned_2(eig_ket_re_.data(), eig_p_ket.data());  
 
-  #pragma omp parallel for
-  for(size_t i = 0; i < DIS_DIM/2; i++){
-    eig_ket_re_[2*i] = disorder_potential[i] * eig_ket_re_[2*i] / a;
-    eig_ket_re_[2*i+1] = disorder_potential[i] * eig_ket_re_[2*i+1] / a;
+
+  if(this->parameters().dis_str_ != 0.0 ){
+    r_type * disorder_potential = dis();
+    eig_ket_re_.setZero();
+    to_rSpace_pruned(eig_ket_re_.data(), eig_p_ket.data());  
+
+    #pragma omp parallel for
+    for(size_t i = 0; i < DIS_DIM/2; i++){
+      eig_ket_re_[2*i] = disorder_potential[i] * eig_ket_re_[2*i] / a;
+      eig_ket_re_[2*i+1] = disorder_potential[i] * eig_ket_re_[2*i+1] / a;
+    }
+
+    to_kSpace_pruned(eig_ket_re_sub_.data(), eig_ket_re_.data());
   }
-
-  to_kSpace_pruned_2(eig_ket_re_sub_.data(), eig_ket_re_.data());
-
 
 
 
@@ -730,8 +582,9 @@ void Graphene_KaneMele::Hk_update_cheb_cut_2 (type* ket, type* p_ket, type* pp_k
   for (size_t i = 0; i < nonZeroList_.size(); i++) 
       eig_ket.segment( i * 4, 4 ) = 2.0 * ( H_k_cut_.block( 0, i* 4, 4, 4 ) - b * Id ) / a   *   eig_p_ket.segment( i * 4, 4 ) - eig_pp_ket.segment( i * 4, 4 ) ;
 
-   
-  eig_ket += 2.0 * eig_ket_re_sub_;
+  
+  if(this->parameters().dis_str_ != 0.0 )
+    eig_ket += 2.0 * eig_ket_re_sub_;
 
   
   eig_pp_ket = eig_p_ket;
@@ -739,59 +592,11 @@ void Graphene_KaneMele::Hk_update_cheb_cut_2 (type* ket, type* p_ket, type* pp_k
  
 };
 
-
-
-
-void Graphene_KaneMele::Hk_update_cheb_cut_clean (type* ket, type* p_ket, type* pp_ket){
-
-  size_t W = parameters().W_,
-    DIM = parameters().DIM_;
-
-  r_type a = this->a();
-  r_type b = this->b(); 
-  
-  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,DIM),
-    eig_p_ket(p_ket, DIM),
-    eig_pp_ket(pp_ket, DIM);
-
-
-  Eigen::Matrix4cd Id = Eigen::Matrix4cd::Zero(); 
-
-#pragma omp parallel for  
-  for (size_t i = 0; i < nonZeroList_.size(); i++)
-    eig_ket.segment( i * 4, 4 ) = 2.0 * ( H_k_cut_.block( 0, i * 4, 4, 4 ) - b * Id ) / a   *   eig_p_ket.segment( i * 4, 4 )  -  eig_pp_ket.segment( i * 4, 4 );
-
-  
-  eig_pp_ket = eig_p_ket;
-  eig_p_ket = eig_ket;
- 
-};
 
 
 
 
 void Graphene_KaneMele::k_vel_op_x_cut (type* ket, type* p_ket){
-
-  size_t W = parameters().W_,
-    DIM = parameters().DIM_;
-
-  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,DIM),
-    eig_p_ket(p_ket, DIM);
-
-
-
-#pragma omp parallel for  
-  for (size_t i = 0; i < nonZeroList_.size(); i++) {
-    const auto& vec = nonZeroList_[i]; 
-    size_t i2 = vec(0);
-    size_t j2 = vec(1); 
-    eig_ket.segment( ( i2 + j2 * W ) * 4, 4 ) = v_k_x_cut_.block( 0, i* 4, 4, 4 )  *   eig_p_ket.segment( ( i2 + j2 * W ) * 4, 4 );
-  }
- 
-};
-
-
-void Graphene_KaneMele::k_vel_op_x_cut_clean (type* ket, type* p_ket){
 
   size_t W = parameters().W_,
     SUBDIM = parameters().SUBDIM_;
@@ -810,31 +615,8 @@ void Graphene_KaneMele::k_vel_op_x_cut_clean (type* ket, type* p_ket){
 
 
 
-void Graphene_KaneMele::k_vel_op_y_cut (type* ket, type* p_ket){
 
-  size_t W = parameters().W_,
-    DIM = parameters().DIM_;
-
-  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,DIM),
-    eig_p_ket(p_ket, DIM);
-
-  
-
-
-#pragma omp parallel for  
-  for (size_t i = 0; i < nonZeroList_.size(); i++) {
-    const auto& vec = nonZeroList_[i]; 
-    int i2 = vec(0);
-    int j2 = vec(1); 
-    eig_ket.segment( ( i2 + j2 * W ) * 4, 4 ) = v_k_y_cut_.block( 0, i * 4, 4, 4 )   *   eig_p_ket.segment( ( i2 + j2 * W ) * 4, 4 );
-  }
- 
-};
-
-
-
-
-void Graphene_KaneMele::k_vel_op_y_cut_clean (type* ket, type* p_ket){
+void Graphene_KaneMele::k_vel_op_y_cut(type* ket, type* p_ket){
 
   size_t SUBDIM = parameters().SUBDIM_;
 
@@ -847,64 +629,6 @@ void Graphene_KaneMele::k_vel_op_y_cut_clean (type* ket, type* p_ket){
     eig_ket.segment( i * 4, 4 ) = v_k_y_cut_.block( 0, i * 4, 4, 4 )   *   eig_p_ket.segment( i * 4, 4 );
   
  
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void Graphene_KaneMele::Uk_ket ( type* ket, type* p_ket){
-
-  int W = parameters().W_,
-    Le = parameters().LE_,
-    SUBDIM = parameters().SUBDIM_;
-
-  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,SUBDIM),
-    eig_p_ket(p_ket, SUBDIM);
-
-
-  #pragma omp parallel for
-  for(int j=0; j<Le; j++)
-    for(int i=0; i<W; i++)
-      eig_ket.segment( ( i + j * W ) * 4, 4 ) =  U_k_.block( 0, ( i + j * W ) * 4, 4, 4 )    *   eig_p_ket.segment( ( i + j * W ) * 4, 4 );
-    
-};
-
-
-eigenSol Graphene_KaneMele::Uk_single(Eigen::Vector2d k) {
-
-  Eigen::Matrix4cd H_k = this->Hk_single(k), U_k;
-  eigenSol solution;
-
-
-  Eigen::SelfAdjointEigenSolver<Eigen::Matrix4cd> solver(H_k);
-
-  solution.eigenvalues_ = solver.eigenvalues();
-  U_k = solver.eigenvectors();
-
-  // for(int i = 0; i<4;i++)
-  //  U_k.col(i).normalize();
-  
-  solution.Uk_ = U_k;
-
-  // std::cout<< U_k.col(0).norm()<<" "<<U_k.col(1).norm()<<"  "<< U_k.col(2).norm() <<std::endl<<std::endl;  
-  // std::cout<< solution.Uk_.adjoint()   *  H_k   *   solution.Uk_  <<std::endl<<std::endl<<std::endl;  
-  
-  return solution;
 };
 
 
@@ -1075,78 +799,7 @@ void Graphene_KaneMele::J (type* ket, type* p_ket, int dir){
  
     }
     }*/
- 
 };
-
-
-void Graphene_KaneMele::print_hamiltonian(){
-  size_t dim = this->parameters().DIM_;
-  size_t DIM = this->parameters().DIM_;
-
-  Eigen::MatrixXcd H_r(dim,dim), H_r_2(dim,dim), S(dim,dim);
-
-  std::ofstream dataP;
-  dataP.open("vx_diff.txt");
-
-  
-    for(size_t j=0;j<dim;j++){
-      for(size_t i=0;i<dim;i++){
-
-	Eigen::Vector<std::complex<double>, -1>
-	  term_i=Eigen::Vector<std::complex<double>, -1>::Zero(DIM),
-	  tmp=term_i,
-	  term_j=term_i,
-	  null=Eigen::Vector<std::complex<double>, -1>::Zero(DIM);
-
-	Eigen::Matrix<std::complex<double>, -1, 1>  null2=Eigen::Matrix<std::complex<double>, -1, 1>::Zero(DIM);
-	term_i(i)=1;
-	term_j(j)=1;
-
-
-	Eigen::Vector<std::complex<double>, -1> term_i_2=term_i, term_j_2=term_j;
-
-
-
-	
-	
-	//this->Hr_ket(1.0, 0.0, tmp.data(),term_j.data());
-        //this->Hr_update_cheb(tmp.data(),term_j.data(),null.data());
-	
-	//vel_op_x(tmp.data(),term_j.data());
-        vel_op_y(tmp.data(),term_j.data());
-	std::complex<double> termy = term_i.dot(tmp);
-
-	 H_r(i,j)=termy;
-
-
-	to_kSpace_pruned_2(term_j_2.data(), term_j_2.data());
-	//this->Hk_ket_cut(1.0, 0.0, tmp.data(),term_j_2.data()); //k_vel_op_x_cut(tmp.data(),term_j_2.data());//
-	//this->Hk_update_cheb_cut(tmp.data(),term_j_2.data(),null2.data());
-	k_vel_op_y_cut(tmp.data(),term_j_2.data());
-        //k_vel_op_y_cut(tmp.data(),term_j_2.data());
-	
-	to_rSpace_pruned_2(tmp.data(), tmp.data());
-	
-	std::complex<double> termy2 = term_i_2.dot(tmp);
-
-	std::complex<double> res =   termy - termy2 ; 
-       	if(abs(real(res)) < 0.00001)
-	  res = std::complex<double>(0.0, imag(res));
-	if(abs(imag(res)) < 0.00001)
-	  res = std::complex<double>(real(res), 0.0);
-	
-	//if(abs(termy2-termy)>0.0000001)
-	  H_r_2(i,j)=res;
-      }
-    }
-
-    dataP<<H_r_2;
-
-    std::cout<<"IS ZERO??  "<<H_r_2.norm()<<std::endl;
-    std::cout<<(H_r-H_r.adjoint()).norm()<<std::endl;
-  dataP.close();
-
-  }
 
 
 void Graphene_KaneMele::traceover(type* traced, type* full_vec, int s, int num_reps){
@@ -1192,7 +845,7 @@ void Graphene_KaneMele::traceover(type* traced, type* full_vec, int s, int num_r
 
 
  
-
+//This is for comparing to the full real space method.
 void Graphene_KaneMele::rearrange_initial_vec(type* r_vec){
 
   if(!k_space_)
@@ -1225,6 +878,137 @@ void Graphene_KaneMele::rearrange_initial_vec(type* r_vec){
   
   eig_r_vec = eig_rearranged__r_vec;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void Graphene_KaneMele::Uk_ket ( type* ket, type* p_ket){
+
+  int W = parameters().W_,
+    Le = parameters().LE_,
+    SUBDIM = parameters().SUBDIM_;
+
+  Eigen::Map<Eigen::VectorXcd> eig_ket(ket,SUBDIM),
+    eig_p_ket(p_ket, SUBDIM);
+
+
+  #pragma omp parallel for
+  for(int j=0; j<Le; j++)
+    for(int i=0; i<W; i++)
+      eig_ket.segment( ( i + j * W ) * 4, 4 ) =  U_k_.block( 0, ( i + j * W ) * 4, 4, 4 )    *   eig_p_ket.segment( ( i + j * W ) * 4, 4 );
+    
+};
+
+
+eigenSol Graphene_KaneMele::Uk_single(Eigen::Vector2d k) {
+
+  Eigen::Matrix4cd H_k = this->Hk_single(k), U_k;
+  eigenSol solution;
+
+
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix4cd> solver(H_k);
+
+  solution.eigenvalues_ = solver.eigenvalues();
+  U_k = solver.eigenvectors();
+
+  // for(int i = 0; i<4;i++)
+  //  U_k.col(i).normalize();
+  
+  solution.Uk_ = U_k;
+
+  // std::cout<< U_k.col(0).norm()<<" "<<U_k.col(1).norm()<<"  "<< U_k.col(2).norm() <<std::endl<<std::endl;  
+  // std::cout<< solution.Uk_.adjoint()   *  H_k   *   solution.Uk_  <<std::endl<<std::endl<<std::endl;  
+  
+  return solution;
+};
+
+
+
+
+
+void Graphene_KaneMele::print_hamiltonian(){
+  size_t dim = this->parameters().DIM_;
+  size_t DIM = this->parameters().DIM_;
+
+  Eigen::MatrixXcd H_r(dim,dim), H_r_2(dim,dim), S(dim,dim);
+
+  std::ofstream dataP;
+  dataP.open("vx_diff.txt");
+
+  
+    for(size_t j=0;j<dim;j++){
+      for(size_t i=0;i<dim;i++){
+
+	Eigen::Vector<std::complex<double>, -1>
+	  term_i=Eigen::Vector<std::complex<double>, -1>::Zero(DIM),
+	  tmp=term_i,
+	  term_j=term_i,
+	  null=Eigen::Vector<std::complex<double>, -1>::Zero(DIM);
+
+	
+	Eigen::Matrix<std::complex<double>, -1, 1>  null2=Eigen::Matrix<std::complex<double>, -1, 1>::Zero(DIM);
+	term_i(i)=1;
+	term_j(j)=1;
+
+
+	Eigen::Vector<std::complex<double>, -1> term_i_2=term_i, term_j_2=term_j;
+
+
+
+	
+	
+	//this->Hr_ket(1.0, 0.0, tmp.data(),term_j.data());
+        //this->Hr_update_cheb(tmp.data(),term_j.data(),null.data());
+	
+	//vel_op_x(tmp.data(),term_j.data());
+        vel_op_y(tmp.data(),term_j.data());
+	std::complex<double> termy = term_i.dot(tmp);
+
+	 H_r(i,j)=termy;
+
+
+	to_kSpace_pruned(term_j_2.data(), term_j_2.data());
+	//this->Hk_ket_cut(1.0, 0.0, tmp.data(),term_j_2.data()); //k_vel_op_x_cut(tmp.data(),term_j_2.data());//
+	//this->Hk_update_cheb_cut(tmp.data(),term_j_2.data(),null2.data());
+	k_vel_op_y_cut(tmp.data(),term_j_2.data());
+        //k_vel_op_y_cut(tmp.data(),term_j_2.data());
+	
+	to_rSpace_pruned(tmp.data(), tmp.data());
+	
+	std::complex<double> termy2 = term_i_2.dot(tmp);
+
+	std::complex<double> res =   termy - termy2 ; 
+       	if(abs(real(res)) < 0.00001)
+	  res = std::complex<double>(0.0, imag(res));
+	if(abs(imag(res)) < 0.00001)
+	  res = std::complex<double>(real(res), 0.0);
+	
+	//if(abs(termy2-termy)>0.0000001)
+	  H_r_2(i,j)=res;
+      }
+    }
+
+    dataP<<H_r_2;
+
+    std::cout<<"IS ZERO??  "<<H_r_2.norm()<<std::endl;
+    std::cout<<(H_r-H_r.adjoint()).norm()<<std::endl;
+  dataP.close();
+
+  }
 
 
 
@@ -1270,7 +1054,7 @@ void Graphene_KaneMele::projector(type* ket ){
 
   sparse_diag_matrix.reserve(Eigen::VectorXi::Constant(DIM, 1));
 
-  for(size_t i = 0; i < diag.size(); ++i) 
+  for(size_t i = 0; i < size_t( diag.size() ); ++i) 
     sparse_diag_matrix.insert(i, i) = diag[i];  // Insert element at (i, i)
   
 
@@ -1363,7 +1147,7 @@ void Graphene_KaneMele::to_kSpace(type ket[], const type p_ket[], int dir) {
 }
 
 
-void Graphene_KaneMele::to_rSpace_pruned_2(type ket[], const type p_ket[]) {
+void Graphene_KaneMele::to_rSpace_pruned(type ket[], const type p_ket[]) {
   
   size_t num_subvectors = 4;
   size_t W = this->parameters().W_,
@@ -1422,7 +1206,7 @@ void Graphene_KaneMele::to_rSpace_pruned_2(type ket[], const type p_ket[]) {
 
 
 
-void Graphene_KaneMele::to_kSpace_pruned_2(type ket[], const type p_ket[]) {
+void Graphene_KaneMele::to_kSpace_pruned(type ket[], const type p_ket[]) {
   
   size_t num_subvectors = 4;
   size_t W = this->parameters().W_,
@@ -1473,101 +1257,6 @@ void Graphene_KaneMele::to_kSpace_pruned_2(type ket[], const type p_ket[]) {
 
 
 
-void Graphene_KaneMele::to_rSpace_pruned(type ket[], const type p_ket[]) {
-  //ket is DIM and pket is SUBDIM
-  
-  size_t num_subvectors = 4;
-  size_t W = this->parameters().W_,
-    LE = this->parameters().LE_,
-    SUBDIM = this->parameters().SUBDIM_;
-  
-  type im_j = type(0.0,1.0);
-
-
-
-  for (size_t i = 0; i < num_subvectors; i++) {       
-  
-#pragma omp parallel for
-      for (size_t y = 0; y < LE; y++) {
-          for (size_t x = 0; x < W; x++) {
-	    if( ( i == 2 || i == 3 )  ){
-	      double k_phase = ( x * b1_(1) + y * b2_(1) ) / double(LE);
-	      type phase = std::exp(std::complex<double>(0, -a0_ * k_phase ) );
-
-	      ket[y * W + x] = 0;
-
-              Eigen::Vector2d R = x * A1_ + y * A2_; 
-
-	      for (size_t ks = 0; i < SUBDIM; ks++ ) {
-		const auto& vec = nonZeroList_[ks]; 
-		size_t kx = vec(0);
-		size_t ky = vec(1);
-		Eigen::Vector2d k = ( kx * b1_ + ky * b2_ ) / double(LE);
-		ket[y * W + x] +=  std::exp(- im_j * R.dot(k) ) * phase * p_ket[ky * W + kx];
-	      }	      
-	    }
-	    else{
-
-	      ket[y * W + x] = 0;
-              Eigen::Vector2d R = x * A1_ + y * A2_; 
-
-	      for (size_t ks = 0; i < SUBDIM; ks++ ) {
-		const auto& vec = nonZeroList_[ks]; 
-		size_t kx = vec(0);
-		size_t ky = vec(1);
-		Eigen::Vector2d k = ( kx * b1_ + ky * b2_ ) / double(LE);
-		ket[y * W + x] +=  std::exp(- im_j * R.dot(k) ) * p_ket[ky * W + kx];
-	      }	      
-	    }
-	  }
-      }
-  }
-}
-
-
-void Graphene_KaneMele::to_kSpace_pruned(type ket[], const type p_ket[]) {
-  //ket is SUBDIM and pket is DIM
-  
-  size_t num_subvectors = 4;
-  size_t W = this->parameters().W_,
-    LE = this->parameters().LE_,
-    SUBDIM = this->parameters().SUBDIM_;
-  
-  type im_j = type(0.0,1.0);
-
-
-  for (size_t i = 0; i < num_subvectors; i++) {       
-  
-#pragma omp parallel for
- for (size_t ks = 0; ks < SUBDIM; ks++ ) {
-    const auto& vec = nonZeroList_[i]; 
-    size_t kx = vec(0);
-    size_t ky = vec(1);
-    Eigen::Vector2d k = ( kx * b1_ + ky * b2_ ) / double(LE);
-	
-
-    for (size_t y = 0; y < LE; y++) {
-          for (size_t x = 0; x < W; x++) {
-	      ket[y * W + x] = 0;
-              Eigen::Vector2d R = x * A1_ + y * A2_; 
-
-	    if( ( i == 2 || i == 3 )  ){
-	      double k_phase = ( y * b1_(1) + x * b2_(1) ) / double(LE); //The transpose
-	      type phase = conj(std::exp(std::complex<double>(0, -a0_ * k_phase ) )); //The conj
-
-	      ket[ks] +=  std::exp( im_j * R.dot(k) ) * phase * p_ket[y * W + x ];
-	    }	      
-	  
-	    else
-	      ket[ks] +=  std::exp( im_j * R.dot(k) ) * p_ket[ky * W + kx];
-	      	      
-	    }
-	  }
-      }
-  }
-}
-
-
 
 
 void Graphene_KaneMele::Hr_ket (r_type a, r_type b, type* ket, type* p_ket){
@@ -1576,7 +1265,7 @@ void Graphene_KaneMele::Hr_ket (r_type a, r_type b, type* ket, type* p_ket){
     W  = this->parameters().W_,
     Dim = this->parameters().DIM_;
 
-
+  
   r_type b_a = b/a;
 
 
@@ -1588,7 +1277,7 @@ void Graphene_KaneMele::Hr_ket (r_type a, r_type b, type* ket, type* p_ket){
   H_4 = H_4_/a;
 
 
-  r_type *dmp_op = damp_op();  
+  //r_type *dmp_op = damp_op();  
   r_type * disorder_potential = dis();
 
   Eigen::Map<Eigen::VectorXcd> eig_ket(ket,Dim),
@@ -1611,38 +1300,34 @@ void Graphene_KaneMele::Hr_ket (r_type a, r_type b, type* ket, type* p_ket){
       n2 = ( ( ( j + 1 ) % Le ) * W + i ) * 4;
       eig_ket.segment(n1, 4) +=  H_3  * eig_p_ket.segment(n2, 4);
       
-      n2 = ( ( ( j + 1 ) % Le ) * W    +    ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
+      n2 = ( ( ( j + 1 ) % Le ) * W    +    ( ( i - 1 ) == size_t(-1) ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
       eig_ket.segment(n1,4) += H_4 * eig_p_ket.segment(n2,4);
       
 
       
       //Adjoints      
-      n2 = ( j * W + ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
+      n2 = ( j * W + ( ( i - 1 ) == size_t(-1) ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
       eig_ket.segment(n1,4) += H_2.adjoint() * eig_p_ket.segment(n2,4);
       
-      n2 = (  ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W + i ) * 4;
+      n2 = (  ( ( j - 1 ) == size_t(-1) ? ( Le - 1 ) : ( j - 1 ) ) * W + i ) * 4;
       eig_ket.segment(n1, 4) += H_3.adjoint() * eig_p_ket.segment(n2, 4);
       
-      n2 = ( ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W +   ( i + 1 ) % W  ) * 4;
+      n2 = ( ( ( j - 1 ) == size_t(-1) ? ( Le - 1 ) : ( j - 1 ) ) * W +   ( i + 1 ) % W  ) * 4;
       eig_ket.segment(n1,4) += H_4.adjoint() * eig_p_ket.segment(n2,4);
       
 
-      eig_ket.segment(n1,4) *= dmp_op[n1/4];
+      //eig_ket.segment(n1,4) *= dmp_op[n1/4];
     }
  }
 
- if( disorder_potential != NULL ){
+ if( this->parameters().dis_str_ != 0.0 ){
   #pragma omp parallel for
- for(size_t i = 0; i < this->parameters().DIM_/2; i++){
-    eig_ket[2*i] += disorder_potential[i] * eig_p_ket[2*i] / a;
+  for(size_t i = 0; i < this->parameters().DIM_/2; i++){
+    eig_ket[2*i]   += disorder_potential[i] * eig_p_ket[2*i] / a;
     eig_ket[2*i+1] += disorder_potential[i] * eig_p_ket[2*i+1] / a;
   }
 }
-  /*
- if( disorder_potential != NULL )
-   for( size_t i = 0; i < 2 * W * Le ; i ++ )
-     eig_ket.segment(i,2) += dmp_op[i/2] * disorder_potential[ i ] * eig_p_ket.segment(i,2) / a;
-  */
+ 
 };
 
 
@@ -1668,21 +1353,23 @@ void Graphene_KaneMele::Hr_update_cheb ( type ket[], type p_ket[], type pp_ket[]
   H_3 = H_3_/a;
   H_4 = H_4_/a;
 
-  r_type *dmp_op = damp_op();  
-  r_type * disorder_potential = dis();
+  //r_type *dmp_op = damp_op();  
+  r_type *disorder_potential = dis();
 
 
   Eigen::Map<Eigen::VectorXcd> eig_ket(ket,Dim),
     eig_p_ket(p_ket, Dim),
     eig_pp_ket(pp_ket, Dim);
 
-    
+
+
+  
 #pragma omp parallel for 
  for(size_t j=0; j<Le; j++){
     for(size_t i=0; i<W; i++){      
       size_t n1 = ( j * W + i ) * 4;
       
-      eig_ket.segment(n1,4) = b_a  * eig_p_ket.segment(n1,4) - 0.5 * dmp_op[n1/4] * eig_pp_ket.segment(n1,4);
+      eig_ket.segment(n1,4) = b_a  * eig_p_ket.segment(n1,4) - 0.5 */* dmp_op[n1/4] */ eig_pp_ket.segment(n1,4);
 
       
       eig_ket.segment(n1,4) += H_1 * eig_p_ket.segment(n1,4);
@@ -1696,44 +1383,42 @@ void Graphene_KaneMele::Hr_update_cheb ( type ket[], type p_ket[], type pp_ket[]
       n2 = ( ( ( j + 1 ) % Le ) * W + i ) * 4;
       eig_ket.segment(n1, 4) +=  H_3  * eig_p_ket.segment(n2, 4);
 
-      n2 = ( ( ( j + 1 ) % Le ) * W    +    ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
+      n2 = ( ( ( j + 1 ) % Le ) * W    +    ( ( i - 1 ) == size_t(-1) ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
       eig_ket.segment(n1,4) += H_4 * eig_p_ket.segment(n2,4);
       
 
 
 
       //Adjoints
-      n2 = ( j * W + ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
+      n2 = ( j * W + ( ( i - 1 ) == size_t(-1) ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
       eig_ket.segment(n1,4) += H_2.adjoint() * eig_p_ket.segment(n2,4);
 
-      n2 = (  ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W + i ) * 4;
+      n2 = (  ( ( j - 1 ) == size_t(-1) ? ( Le - 1 ) : ( j - 1 ) ) * W + i ) * 4;
       eig_ket.segment(n1, 4) += H_3.adjoint() * eig_p_ket.segment(n2, 4);
       
-      n2 = ( ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W  +   ( i + 1 ) % W  ) * 4;
+      n2 = ( ( ( j - 1 ) == size_t(-1) ? ( Le - 1 ) : ( j - 1 ) ) * W  +   ( i + 1 ) % W  ) * 4;
       eig_ket.segment(n1,4) += H_4.adjoint() * eig_p_ket.segment(n2,4);
 
 
       
-      eig_ket.segment(n1,4) *= 2.0 * dmp_op[n1/4];
+      //eig_ket.segment(n1,4) *= 2.0 * dmp_op[n1/4];
+      eig_ket.segment(n1,4) *= 2.0;
       
       eig_pp_ket.segment(n1,4) = eig_p_ket.segment(n1,4); 
     }
  }
 
- if( disorder_potential != NULL ){
+ 
+ if( this->parameters().dis_str_ != 0.0 ){
   #pragma omp parallel for
  for(size_t i = 0; i < this->parameters().DIM_/2; i++){
     eig_ket[2*i] += 2.0 * disorder_potential[i] * eig_p_ket[2*i] / a;
     eig_ket[2*i+1] += 2.0 * disorder_potential[i] * eig_p_ket[2*i+1] / a;
   }
  }
- /*
- if( disorder_potential != NULL )
-   for( size_t i = 0; i < 2 * W * Le ; i ++ )
-     eig_ket.segment(i,2) += 2.0 * dmp_op[i] * disorder_potential[ i ] * eig_p_ket.segment(i,2) / a;
- */
  
  eig_p_ket = eig_ket;
+
  
 };
 
@@ -1760,7 +1445,7 @@ void Graphene_KaneMele::update_cheb_filtered ( type ket[], type p_ket[], type pp
   H_3 = H_3_/a;
   H_4 = H_4_/a;
 
-  r_type *dmp_op = damp_op();  
+  // r_type *dmp_op = damp_op();  
   r_type * disorder_potential = dis();
 
 
@@ -1774,7 +1459,7 @@ void Graphene_KaneMele::update_cheb_filtered ( type ket[], type p_ket[], type pp
     for(size_t i=0; i<W; i++){      
       size_t n1 = ( j * W + i ) * 4;
       
-      eig_ket.segment(n1,4) = b_a  * eig_p_ket.segment(n1,4) - 0.5 * disp_factor * dmp_op[n1/4] * eig_pp_ket.segment(n1,4);
+      eig_ket.segment(n1,4) = b_a  * eig_p_ket.segment(n1,4) - 0.5 * disp_factor */* dmp_op[n1/4] */ eig_pp_ket.segment(n1,4);
 
       
       eig_ket.segment(n1,4) += H_1 * eig_p_ket.segment(n1,4);
@@ -1795,18 +1480,18 @@ void Graphene_KaneMele::update_cheb_filtered ( type ket[], type p_ket[], type pp
 
 
       //Adjoints
-      n2 = ( j * W + ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
+      n2 = ( j * W + ( ( i - 1 ) == size_t(-1) ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
       eig_ket.segment(n1,4) += H_2.adjoint() * eig_p_ket.segment(n2,4);
 
-      n2 = (  ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W + i ) * 4;
+      n2 = (  ( ( j - 1 ) == size_t(-1) ? ( Le - 1 ) : ( j - 1 ) ) * W + i ) * 4;
       eig_ket.segment(n1, 4) += H_3.adjoint() * eig_p_ket.segment(n2, 4);
       
-      n2 = ( ( ( j - 1 ) == -1 ? ( Le - 1 ) : ( j - 1 ) ) * W +  ( ( i - 1 ) == -1 ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
+      n2 = ( ( ( j - 1 ) == size_t(-1) ? ( Le - 1 ) : ( j - 1 ) ) * W +  ( ( i - 1 ) == size_t(-1) ? ( W - 1 ) : ( i - 1 ) )  ) * 4;
       eig_ket.segment(n1,4) += H_4.adjoint() * eig_p_ket.segment(n2,4);
 
 
       
-      eig_ket.segment(n1,4) *= 2.0 * disp_factor * dmp_op[n1/4];
+      eig_ket.segment(n1,4) *= 2.0 * disp_factor ;//* dmp_op[n1/4];
       
       eig_pp_ket.segment(n1,4) = eig_p_ket.segment(n1,4); 
     }
@@ -1816,7 +1501,7 @@ void Graphene_KaneMele::update_cheb_filtered ( type ket[], type p_ket[], type pp
  
  if( disorder_potential != NULL )
    for( size_t i = 0; i < 2 * W * Le ; i ++ )
-     eig_ket.segment(i,2) += 2.0 * dmp_op[i] * disorder_potential[ i ] * eig_p_ket.segment(i,2)/a;
+     eig_ket.segment(i,2) += 2.0 */* dmp_op[i] */ disorder_potential[ i ] * eig_p_ket.segment(i,2)/a;
 
  
  eig_p_ket = eig_ket;
@@ -1832,10 +1517,6 @@ void Graphene_KaneMele::vel_op_y (type* ket, type* p_ket){
   size_t Le = this->parameters().LE_,
     W  = this->parameters().W_,
     Dim = this->parameters().DIM_;
-
-  r_type a = this->a(),
-    b = this->b(),
-    b_a = b/a;
   
 
   Eigen::Matrix4cd H_KM, H_1, H_2, H_3, H_4;
@@ -1905,12 +1586,12 @@ void Graphene_KaneMele::vel_op_y (type* ket, type* p_ket){
 
 
       
-      n2 = ( ( j ) * W + ( ( i - 1 ) == -1 ? (W-1) : (i-1) )  ) * 4;
+      n2 = ( ( j ) * W + ( ( i - 1 ) == size_t(-1) ? (W-1) : (i-1) )  ) * 4;
       //if(i-1>=0)
       eig_ket.segment(n1,4) += H_2.adjoint() * eig_p_ket.segment(n2,4);
 
       
-      n2 = (  ( ( j - 1 ) == -1 ? (Le - 1) : (j-1) ) * W + i ) * 4;
+      n2 = (  ( ( j - 1 ) == size_t(-1) ? (Le - 1) : (j-1) ) * W + i ) * 4;
       //if(j-1>=0)
       eig_ket.segment(n1, 4) +=  H_3.adjoint() * eig_p_ket.segment(n2, 4);
        
@@ -1930,10 +1611,6 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
     W  = this->parameters().W_,
     Dim = this->parameters().DIM_;
 
-
-  r_type a = this->a(),
-    b = this->b(),
-    b_a = b/a;
   
   Eigen::Vector3d
     v1{ this->parameters().W_* 0.5 * sqrt( 3.0 ),   this->parameters().W_* 3.0 / 2.0,  0 },
@@ -1941,7 +1618,6 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
 
   
   Eigen::Matrix4cd
-    Id = Eigen::Matrix4d::Identity(),
     H_KM,
     H_1,
     H_2,
@@ -2000,19 +1676,19 @@ void Graphene_KaneMele::vel_op_x (type* ket, type* p_ket){
       n2 = ( ( ( j + 1 ) % Le ) * W + i ) * 4;
       eig_ket.segment(n1, 4) +=  H_3 * eig_p_ket.segment(n2, 4);
 
-      n2 = ( ( ( j + 1 ) % Le )* W + ( ( i - 1 ) == -1 ? (W-1) : (i-1) )  ) * 4;
+      n2 = ( ( ( j + 1 ) % Le )* W + ( ( i - 1 ) == size_t(-1) ? (W-1) : (i-1) )  ) * 4;
       eig_ket.segment(n1,4)  +=  H_4 * eig_p_ket.segment(n2,4);
 
       
 
       //Adjoints
-      n2 = ( ( j ) * W + ( ( i - 1 ) == -1 ? (W-1) : (i-1) )  ) * 4;
+      n2 = ( ( j ) * W + ( ( i - 1 ) == size_t(-1) ? (W-1) : (i-1) )  ) * 4;
       eig_ket.segment( n1, 4 ) +=   H_2.adjoint() * eig_p_ket.segment(n2,4);
       
-      n2 = (  ( ( j - 1 ) == -1 ? (Le - 1) : (j-1) ) * W + i ) * 4;
+      n2 = (  ( ( j - 1 ) == size_t(-1) ? (Le - 1) : (j-1) ) * W + i ) * 4;
       eig_ket.segment( n1, 4 ) +=  H_3.adjoint() * eig_p_ket.segment(n2, 4);
 	
-      n2 = ( ( ( j - 1 ) == -1 ? (Le-1) : (j-1) ) * W  + ( i + 1 ) % W   ) * 4;
+      n2 = ( ( ( j - 1 ) == size_t(-1) ? (Le-1) : (j-1) ) * W  + ( i + 1 ) % W   ) * 4;
       eig_ket.segment( n1, 4 ) +=  H_4.adjoint() * eig_p_ket.segment(n2,4);
 
     }

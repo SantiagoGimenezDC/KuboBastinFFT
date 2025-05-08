@@ -16,7 +16,7 @@
 
 #include "KPM_base/KPM_base.hpp"
 #include "Kubo_solver/Kubo_solver_FFT/Kubo_solver_FFT.hpp"
-#include "Kubo_solver/Kubo_solver_SSD.hpp"
+//#include "Kubo_solver/Kubo_solver_SSD.hpp"
 #include "Kubo_solver/Kubo_solver_filtered/Kubo_solver_filtered.hpp"
 #include "Kubo_solver/Kubo_solver_traditional/Kubo_solver_traditional.hpp"
 
@@ -58,6 +58,9 @@ int main(int , char **argv){
   Input>>s_vars.num_parts_,   Input>>nump_factor;
   Input>>s_vars.a_, Input>>s_vars.b_;
 
+
+
+  
   s_vars.num_p_= s_vars.M_*nump_factor;
   
   Input>>s_vars.E_start_,   Input>>s_vars.E_end_;
@@ -181,11 +184,12 @@ int main(int , char **argv){
     KPM_DOS_solver solver( s_vars,  *device);
     solver.compute();
   }
-  
+  /*  
   if(sim_type == "SSD"){
     Kubo_solver_SSD solver( s_vars, RAM_size,  *device);
     solver.compute();
   }
+  */
 
   if(sim_type == "normal"){
     Kubo_solver_FFT solver( s_vars, *device);
