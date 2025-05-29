@@ -145,7 +145,7 @@ void Kubo_solver_FFT::compute(){
       
       //--------------------------------All hacks sesh------------------------------//
       int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
-      bool do_test=false;
+      bool do_test=true;
       if(dynamic_cast<Graphene_KaneMele*>(&device_) && do_test )
         device_.parameters().SUBDIM_ = device_.parameters().DIS_DIM_;
       

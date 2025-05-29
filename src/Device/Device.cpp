@@ -3,7 +3,7 @@
 #include<eigen3/Eigen/SparseCore>
 #include<chrono>
 #include<iostream>
-
+#include<fstream>
 
 
 void Device::Anderson_disorder(r_type disorder_vec[]){
@@ -29,12 +29,19 @@ void Device::Anderson_disorder(){
   size_t SUBDIM = device_vars_.SUBDIM_;
   r_type str = device_vars_.dis_str_;
   
-  
+
+        
+
   for(size_t i=0;i<SUBDIM; i++){
     r_type random_potential = str * this->rng().get()-str/2;
     
     dis_[i] = random_potential;
   }
+
+
+  
+
+
   
 }
 

@@ -13,6 +13,7 @@
 #include "Device/Read_Hamiltonian.hpp"
 #include "Device/Read_ConTable.hpp"
 #include "Device/TBG/TBG.hpp"
+#include "Device/Graphene_nanoribbon_kspace.hpp"
 
 #include "KPM_base/KPM_base.hpp"
 #include "Kubo_solver/Kubo_solver_FFT/Kubo_solver_FFT.hpp"
@@ -154,6 +155,7 @@ int main(int , char **argv){
   std::cout<<"The min max eigv are fixed;"<<std::endl;
   
 
+
   
   if(device_choice==0)
     device = new Graphene(graphene_vars);
@@ -171,6 +173,8 @@ int main(int , char **argv){
     device = new SupercellGraph_RashbaSOC(m_str,rashba_str,graphene_vars);
   if(device_choice==7)
     device = new Graphene_KaneMele(is_k_space, range, stgr_str, m_str,rashba_str,KM_str, HLD_str, graphene_vars);
+  if(device_choice==8)
+    device = new Graphene_nanoribon_kspace(is_k_space, range, stgr_str, m_str,rashba_str,KM_str, HLD_str, graphene_vars);
 
   
   //Graphene_KaneMele test(is_k_space, range, stgr_str, m_str, rashba_str, KM_str,  HLD_str, graphene_vars);

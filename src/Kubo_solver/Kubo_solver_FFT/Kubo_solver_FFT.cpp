@@ -159,7 +159,7 @@ void Kubo_solver_FFT::allocate_memory(){
   
   
   //Recursion Vectors
-  bool do_test=false;//This is only for comparing with the real space method.
+  bool do_test=true;//This is only for comparing with the real space method.
   if(dynamic_cast<Graphene_KaneMele*>(&device_) && do_test )
     rand_vec_ = new type [ device_.parameters().DIS_DIM_ ];
   else

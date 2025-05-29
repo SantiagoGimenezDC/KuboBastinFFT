@@ -1,5 +1,5 @@
-#ifndef GRAPHENE_KANEMELE_H
-#define GRAPHENE_KANEMELE_H
+#ifndef GRAPHENE_NANORIBBON_KSPACE_H
+#define GRAPHENE_NANORIBBON_KSPACE_H
 
 #include "../static_vars.hpp"
 #include "../CAP.hpp"
@@ -14,14 +14,9 @@
 
 
 
-struct eigenSol {
-    Eigen::Vector4cd eigenvalues_;  // Complex vector with 4 entries
-    Eigen::Matrix4cd Uk_;  // 4x4 complex matrix
-};
 
 
-
-class Graphene_KaneMele: public Graphene{
+class Graphene_nanoribon_kspace: public Graphene{
 
   typedef Eigen::SparseMatrix<std::complex<r_type>,Eigen::RowMajor> SpMatrixXpc;
   typedef Eigen::SparseMatrix<r_type,Eigen::RowMajor> SpMatrixXp;
@@ -94,7 +89,7 @@ class Graphene_KaneMele: public Graphene{
 
     Eigen::MatrixXcd phases_;
 
-    std::vector<eigenSol> diagonalized_Hk_;
+
     Eigen::VectorXcd eigenvalues_k_, projector_, eig_ket_re_, eig_ket_re_sub_;
     Eigen::MatrixXcd H_k_, U_k_, v_k_x_, v_k_y_, v_k_z_,
       H_k_cut_, v_k_x_cut_, v_k_y_cut_;
@@ -113,7 +108,8 @@ class Graphene_KaneMele: public Graphene{
   
   
   public:
-    ~Graphene_KaneMele(){
+  
+    ~Graphene_nanoribon_kspace(){
         if(k_space_){
           fftw_destroy_plan(fftw_plan_FORWD_);
 	  fftw_destroy_plan(fftw_plan_FORWD_);
@@ -121,8 +117,8 @@ class Graphene_KaneMele: public Graphene{
           fftw_free(fft_output_);
         }
       };
-    Graphene_KaneMele();
-    Graphene_KaneMele(int, r_type, r_type, r_type, r_type , r_type, r_type, device_vars&);
+    Graphene_nanoribon_kspace();
+    Graphene_nanoribon_kspace(int, r_type, r_type, r_type, r_type , r_type, r_type, device_vars&);
 
     void print_hamiltonian();
     virtual void rearrange_initial_vec(type*);
@@ -178,6 +174,7 @@ class Graphene_KaneMele: public Graphene{
     
     void Hr_ket  ( r_type, r_type, type*, type* );
     void Hr_update_cheb ( type*, type*,  type* );
+    void Hr_ket_BC( r_type, r_type, type*, type* );
   
     virtual void update_cheb_filtered ( type ket[], type p_ket[], type pp_ket[], r_type*, r_type*, type disp_factor){
       update_cheb_filtered ( ket, p_ket, pp_ket, disp_factor );
@@ -196,7 +193,6 @@ class Graphene_KaneMele: public Graphene{
   
     void diagonalize_kSpace();
     void build_Hk();
-    eigenSol  Uk_single(Eigen::Vector2d );
   
     Eigen::Matrix4cd Hk_single(Eigen::Vector2d );
     Eigen::MatrixXcd vk_single(Eigen::Vector2d );
