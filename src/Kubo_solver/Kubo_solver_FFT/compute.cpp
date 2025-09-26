@@ -280,7 +280,7 @@ void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states& ch
   
   if(vel)
     device_.vel_op( cheb_vectors(0), rand_vec_, parameters_.vel_dir_1_ );
-
+  
   if(vel){
     device_.vel_op( tmp_, cheb_vectors(0), parameters_.vel_dir_2_ );
     device_.traceover(polys[0], tmp_, s, num_parts);  

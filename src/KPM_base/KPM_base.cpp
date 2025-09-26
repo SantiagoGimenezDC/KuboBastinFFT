@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 void KPM_base::initialize_device(){
 
   device_.build_Hamiltonian();
-  device_.setup_velOp();
+  //device_.setup_velOp();
   
   if(parameters_.a_ == 1.0){
     r_type Emin, Emax;
@@ -48,6 +48,8 @@ void KPM_base::initialize_device(){
   
   device_.adimensionalize( parameters_.a_, parameters_.b_ );
 }
+
+
 
 
 
@@ -271,7 +273,7 @@ void KPM_DOS_solver::compute_rand_vec(int r){
   
   
   cheb_vectors_.reset( rand_vec() );
-      
+  
 //=================================KPM Step 0======================================//
   moments_r_[0] = cdot ( l_r_vec.data() , (cheb_vectors_)(0), device().parameters().DIM_ );
 
@@ -285,6 +287,7 @@ void KPM_DOS_solver::compute_rand_vec(int r){
   
 //=================================KPM Steps 2 and on==============================//
   for( int m = 2; m < M; m++ ){
+  
     cheb_vectors_.update();
     moments_r_[m] = cdot ( l_r_vec.data(), (cheb_vectors_)(2), device().parameters().DIM_ );
   }

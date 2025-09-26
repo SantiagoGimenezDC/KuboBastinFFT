@@ -1,13 +1,15 @@
-#ifndef READ_HAMILTONIAN_HPP
-#define READ_HAMILTONIAN_HPP
+#ifndef READ_SIESTA_HPP
+#define READ_SIESTA_HPP
 
 
 #include "Device.hpp"
 #include <eigen3/Eigen/Sparse>
 #include "Coordinates.hpp"
 
+typedef std::complex<double> cmplx;
 
-class Read_Hamiltonian: public Device{
+
+class Read_Siesta: public Device{
   typedef long int indexType;
   typedef Eigen::SparseMatrix<r_type,Eigen::RowMajor, indexType> SpMatrixXp;
   typedef Eigen::SparseMatrix<type,Eigen::RowMajor, indexType> SpMatrixXcp;
@@ -23,10 +25,15 @@ private:
   r_type a_ = 1.0,
          b_ = 0.0;
 
+  indexType *HK_nnz_, **HK_row_index_, **HK_col_index_;
+  indexType *VK_nnz_, **VK_row_index_, **VK_col_index_;
+  std::complex<double> **HK_values_, **VK_values_;
+
+  
   
 public:
-  ~Read_Hamiltonian(){};
-  Read_Hamiltonian(device_vars& );
+  ~Read_Siesta(){};
+  Read_Siesta(device_vars& );
 
   Coordinates& coordinates(){return coordinates_;};
   void set_coordinates(Coordinates new_coordinates){coordinates_ = new_coordinates;};
@@ -38,6 +45,30 @@ public:
   SpMatrixXp& H(){return H_;};
   SpMatrixXp& vx(){return vx_;};
 
+
+  void create_csr_sparse_matrix(const double,
+                                     const int ,
+                                     const int ,
+                                     const int ,
+                                     const int ,
+                                     const cmplx *,
+                                     indexType **,
+                                     indexType **,
+                                     cmplx **,
+				     indexType *);
+
+  int read_siesta_reciprocal_matrix(const char *,
+                                  const double ,
+                                  int *,
+                                  int *,
+                                  int *,
+                                  int *,
+                                  indexType **,
+                                  indexType ***,
+                                  indexType ***,
+                                  cmplx ***,
+				    char* ); 
+  
   
   virtual r_type Hamiltonian_size(){
     if(H_.size()>0)
@@ -95,4 +126,4 @@ public:
 
 };
 
-#endif //READ_HAMILTONIAN_HPP
+#endif //READ_SIESTA_HPP

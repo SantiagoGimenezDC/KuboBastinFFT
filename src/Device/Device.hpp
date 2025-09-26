@@ -32,7 +32,7 @@ public:
 
     
 
-    if(this->parameters().dis_str_ !=0 ){
+    if(true/*this->parameters().dis_str_ !=0*/ ){
 
       dis_ = new r_type[ 4*device_vars_.DIM_ ]; // the 4 is a hack to make it work with the RashbaSOC!!
       #pragma omp parallel for
@@ -41,7 +41,7 @@ public:
     }
 
 
-    if(false){//Turned off for KaneMele simulations
+    if(true){//Turned off for KaneMele simulations
       std::cout<< "Heres the damp op dim:  "<<device_vars_.DIM_<<std::endl;
       damp_ = new r_type[ device_vars_.DIM_ ];
       #pragma omp parallel for

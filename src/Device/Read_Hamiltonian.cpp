@@ -3,6 +3,10 @@
 #include<chrono>
 #include "Read_Hamiltonian.hpp"
 #include<fstream>
+#include <eigen3/Eigen/Eigenvalues>
+
+
+
 
 
 Read_Hamiltonian::Read_Hamiltonian(device_vars& device_vars):Device(device_vars){};
@@ -20,8 +24,8 @@ void Read_Hamiltonian::build_Hamiltonian(){
   inFile.precision(14);
   inFile.open(run_dir+"operators/"+filename+".HAM.CSR");
 
-  std::cout<<"REMEMBER: vcx/hcx hack!!  Imaginary part of the Hamiltonian is being dumped on read; "<<run_dir+"operators/"+filename+".HAM.CSR"  <<std::endl<<std::endl;
-    
+  std::cout<<run_dir+"operators/"+filename+".HAM.CSR"  <<std::endl<<std::endl;
+  //"REMEMBER: vcx/hcx hack!!  Imaginary part of the Hamiltonian is being dumped on read; "<<
 
   std::size_t DIM, NNZ;
   inFile>>DIM;
@@ -56,10 +60,32 @@ void Read_Hamiltonian::build_Hamiltonian(){
 
 
 
+
   
-  //  Hc_.resize(DIM,DIM);
+
   Hc_=Eigen::Map<Eigen::SparseMatrix<type, Eigen::RowMajor,indexType> > (DIM, DIM, NNZ, outerIndexPtr, innerIndices,values);
 
+  /*  
+  auto Hc_conj=Eigen::SparseMatrix<type, Eigen::RowMajor,indexType>(Hc_.transpose().conjugate());
+  Hc_+=Hc_conj;
+  Hc_/=2;
+  int block_size= 20;
+  */
+  /*
+  for(int i=0;i<2;i++){
+    Eigen::MatrixXcd H_dense = Eigen::MatrixXcd(Hc_.block(i*block_size, i*block_size, block_size, block_size));
+    //Eigen::ComplexEigenSolver<Eigen::MatrixXcd> solver(H_dense);
+
+
+    std::cout<<H_dense.real()<<std::endl;
+    //        std::cout<<solver.eigenvalues()<<std::endl;
+	
+    for(int j=0;j<300;j++){
+      if(solver.eigenvalues()[j].imag()!=0)
+
+      }
+  }*/
+  
   inFile.close();
 };
 
@@ -91,25 +117,26 @@ void Read_Hamiltonian::H_ket ( type* vec, type* p_vec, r_type* dmp_op, r_type* d
       W = this->parameters().W_,
       C = this->parameters().C_;
   
-
+  /*
 #pragma omp parallel for
   for(int i = 0; i < Dim; i++)
     p_vec[ i ] *= dmp_op[ i ];
-  
+  */
 
   Eigen::Map<VectorXdT> eig_vec(vec,Dim),
     eig_p_vec(p_vec, Dim);
   
-  if(H_.size()>0)  
-    eig_vec = H_ * eig_p_vec;   
+  if(H_.size()>0)
+    eig_vec = H_ * eig_p_vec;
+  
   else if(Hc_.size()>0)  
     eig_vec = Hc_ * eig_p_vec;
 
-  
+  /*
 #pragma omp parallel for
   for(int i = 0; i < subDim; i++) 
     vec[ i + C * W ]    +=  dis_vec[ i ] * p_vec[ i + C * W ]/a_;
-  
+  */
 }
 
 void Read_Hamiltonian::update_cheb ( type vec[], type p_vec[], type pp_vec[]){
@@ -120,11 +147,11 @@ void Read_Hamiltonian::update_cheb ( type vec[], type p_vec[], type pp_vec[]){
 void Read_Hamiltonian::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_type damp_op[], r_type*){
 
   int Dim = this->parameters().DIM_;
-
+  /*
 #pragma omp parallel for
   for(int i = 0; i < Dim; i++)
     pp_vec[ i ] *= damp_op[ i ] * damp_op[ i ];
-
+  */
 
   
   Eigen::Map<VectorXdT> eig_vec(vec,Dim),
@@ -136,9 +163,10 @@ void Read_Hamiltonian::update_cheb ( type vec[], type p_vec[], type pp_vec[], r_
 
   if(H_.size()>0)
     eig_vec = 2.0 * H_ * eig_p_vec - eig_pp_vec;
+  
   if(Hc_.size()>0)
     eig_vec = 2.0 * Hc_ * eig_p_vec - eig_pp_vec;
-
+  
     
   eig_pp_vec = eig_p_vec;
   eig_p_vec = eig_vec;
@@ -157,6 +185,10 @@ void Read_Hamiltonian::damp ( r_type damp_op[]){
   gamma = Id;
 
 
+
+  
+
+  
   #pragma omp parallel for
   for(int i=0; i<Dim;i++)
     gamma.coeffRef(i,i) *=damp_op[ i ];
@@ -176,7 +208,7 @@ void Read_Hamiltonian::setup_velOp(){
 
   inFile.open(run_dir+"operators/"+filename+".VX.CSR");
 
-  std::cout<<"  /Remember vx/vcx hack. /real part of the Velocity is being dumped on read;"<<std::endl<<std::endl;
+  //std::cout<<"  /Remember vx/vcx hack. /real part of the Velocity is being dumped on read;"<<std::endl<<std::endl;
     
     
   std::size_t DIM, NNZ;

@@ -11,6 +11,7 @@
 #include "Device/Graphene_supercell.hpp"
 #include "Device/SupercellGraph_RashbaSOC.hpp"
 #include "Device/Read_Hamiltonian.hpp"
+#include "Device/Read_Siesta.hpp"
 #include "Device/Read_ConTable.hpp"
 #include "Device/TBG/TBG.hpp"
 #include "Device/Graphene_nanoribbon_kspace.hpp"
@@ -157,6 +158,7 @@ int main(int , char **argv){
 
 
   
+  
   if(device_choice==0)
     device = new Graphene(graphene_vars);
   if(device_choice==1)
@@ -175,14 +177,39 @@ int main(int , char **argv){
     device = new Graphene_KaneMele(is_k_space, range, stgr_str, m_str,rashba_str,KM_str, HLD_str, graphene_vars);
   if(device_choice==8)
     device = new Graphene_nanoribon_kspace(is_k_space, range, stgr_str, m_str,rashba_str,KM_str, HLD_str, graphene_vars);
+  if(device_choice==9)
+    device = new Read_Siesta(graphene_vars); 
+
+
+  /*Christians siesta difference to sisl test:  
+  Read_Siesta siesta(graphene_vars);
+  Read_Hamiltonian sisl(graphene_vars);
+
+
+  siesta.build_Hamiltonian();
+  sisl.build_Hamiltonian();
 
   
-  //Graphene_KaneMele test(is_k_space, range, stgr_str, m_str, rashba_str, KM_str,  HLD_str, graphene_vars);
-  //test.print_hamiltonian();
-  
-  //Graphene_supercell test( graphene_vars);
-  //test.print_hamiltonian();
+  Eigen::SparseMatrix<std::complex<double>,Eigen::RowMajor, long int>  H_siesta = Eigen::SparseMatrix<std::complex<double>,Eigen::RowMajor, long int>(siesta.H(0));
+  Eigen::SparseMatrix<std::complex<double>,Eigen::RowMajor, long int> H_sisl = sisl.H(0);
 
+  
+    H_siesta*=13.605693122994;
+
+    Eigen::SparseMatrix<std::complex<double>,Eigen::RowMajor, long int> diff = H_siesta - H_sisl;
+
+        std::cout<<"Here the matrices:  "<<H_sisl.nonZeros()<<std::endl;
+	std::cout<<Eigen::MatrixXcd(H_siesta.block(0,0,10,10)).diagonal()<<std::endl<<std::endl<<std::endl;
+	std::cout<<Eigen::MatrixXcd(H_sisl.block(0,0,10,10)).diagonal()<<std::endl<<std::endl<<std::endl;
+
+    diff.pruned(1e-4);
+
+    diff.makeCompressed();
+    
+    std::cout<<"Here:  "<<diff.norm()<<"   nnzs diff:"<<diff.nonZeros()<<"     nnzs original:"<<H_sisl.nonZeros()<<std::endl;
+*/
+
+    
   
   if(sim_type == "DOS"){
     KPM_DOS_solver solver( s_vars,  *device);

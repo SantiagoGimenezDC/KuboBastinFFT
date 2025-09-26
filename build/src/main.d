@@ -5,12 +5,12 @@ build/src/main.o: src/main.cpp src/static_vars.hpp src/Device/Device.hpp \
  src/Device/Graphene_KaneMele.hpp src/Device/Graphene.hpp \
  src/Device/Graphene_supercell.hpp \
  src/Device/SupercellGraph_RashbaSOC.hpp src/Device/Read_Hamiltonian.hpp \
- src/Device/Read_ConTable.hpp src/Device/Read_Hamiltonian.hpp \
- src/Device/TBG/TBG.hpp src/Device/TBG/../../static_vars.hpp \
- src/Device/TBG/../Coordinates.hpp src/Device/TBG/../Device.hpp \
- src/Device/Graphene_nanoribbon_kspace.hpp src/KPM_base/KPM_base.hpp \
- src/KPM_base/../static_vars.hpp src/KPM_base/../Device/Device.hpp \
- src/KPM_base/../Device/Graphene.hpp \
+ src/Device/Read_Siesta.hpp src/Device/Read_ConTable.hpp \
+ src/Device/Read_Hamiltonian.hpp src/Device/TBG/TBG.hpp \
+ src/Device/TBG/../../static_vars.hpp src/Device/TBG/../Coordinates.hpp \
+ src/Device/TBG/../Device.hpp src/Device/Graphene_nanoribbon_kspace.hpp \
+ src/KPM_base/KPM_base.hpp src/KPM_base/../static_vars.hpp \
+ src/KPM_base/../Device/Device.hpp src/KPM_base/../Device/Graphene.hpp \
  src/KPM_base/../Device/ArmchairGraph_RashbaSOC.hpp \
  src/KPM_base/../Device/../static_vars.hpp \
  src/KPM_base/../Device/../CAP.hpp src/KPM_base/../Device/../Random.hpp \
@@ -64,6 +64,7 @@ src/Device/Graphene.hpp:
 src/Device/Graphene_supercell.hpp:
 src/Device/SupercellGraph_RashbaSOC.hpp:
 src/Device/Read_Hamiltonian.hpp:
+src/Device/Read_Siesta.hpp:
 src/Device/Read_ConTable.hpp:
 src/Device/Read_Hamiltonian.hpp:
 src/Device/TBG/TBG.hpp:

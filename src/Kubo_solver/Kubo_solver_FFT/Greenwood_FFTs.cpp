@@ -77,6 +77,21 @@ void Kubo_solver_FFT::Greenwood_FFTs( storageType bras, storageType kets, std::v
 
 	re_kets.input()[m] = pre_factors[m] * real( kets[m][l] );
         im_kets.input()[m] = pre_factors[m] * imag( kets[m][l] ); 
+
+        if ((std::isnan(std::real(re_bras.input()[m])) || std::isnan(std::imag(im_bras.input()[m])))) {
+	  //std::cout<<"Bras: "<<l<<"  "<<m<<"  "<<std::real(re_bras.input()[m])<<std::endl;
+	  re_bras.input()[m]=0.0;
+	  im_bras.input()[m]=0.0;
+
+        }
+
+        if ((std::isnan(std::real(re_kets.input()[m])) || std::isnan(std::imag(im_kets.input()[m])))) {
+	  //std::cout<<"Kets: "<<l<<"  "<<m<<"  "<<std::real(re_kets.input()[m])<<std::endl;
+	  re_kets.input()[m]=0.0;
+	  im_kets.input()[m]=0.0;
+
+        }
+
       }
 
       
@@ -85,13 +100,26 @@ void Kubo_solver_FFT::Greenwood_FFTs( storageType bras, storageType kets, std::v
       re_kets.execute();
       im_kets.execute();
 
-
+      
       for(int k=0; k<nump; k++ ){
-        thread_data[k] += real (
+      /*        
+if ((std::isnan(std::real(re_bras(k))) || std::isnan(std::imag(im_bras(k))))) {
+	  std::cout<<"Result Bras: "<<l<<"  "<<k<<"  "<<std::real(re_bras(k))<<std::endl;
+	 
+        }
+
+        else if ((std::isnan(std::real(re_kets(k))) || std::isnan(std::imag(im_kets(k))))) {
+	  std::cout<<"Result Kets: "<<l<<"  "<<k<<"  "<<std::real(re_kets(k))<<std::endl;
+	
+        }
+
+	else*/
+	thread_data[k] += real (
 				 ( real( re_bras(k) ) - im * real( im_bras(k) ) ) *
 				 ( real( re_kets(k) ) + im * real( im_kets(k) ) )
 			       );
       }
+      
     }
 
     # pragma omp critical
