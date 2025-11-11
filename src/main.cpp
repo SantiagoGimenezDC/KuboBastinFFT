@@ -12,6 +12,7 @@
 #include "Device/SupercellGraph_RashbaSOC.hpp"
 #include "Device/Read_Hamiltonian.hpp"
 #include "Device/Read_Siesta.hpp"
+#include "Device/Read_Siesta_Cropped.hpp"
 #include "Device/Read_ConTable.hpp"
 #include "Device/TBG/TBG.hpp"
 #include "Device/Graphene_nanoribbon_kspace.hpp"
@@ -179,6 +180,8 @@ int main(int , char **argv){
     device = new Graphene_nanoribon_kspace(is_k_space, range, stgr_str, m_str,rashba_str,KM_str, HLD_str, graphene_vars);
   if(device_choice==9)
     device = new Read_Siesta(graphene_vars); 
+  if(device_choice==10)
+    device = new Read_Siesta_Cropped(graphene_vars); 
 
 
   /*Christians siesta difference to sisl test:  
