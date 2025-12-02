@@ -1,4 +1,4 @@
-CXX := g++
+CXX := mpicxx #g++
 
 
 NAME   = KuboBastinFFT
