@@ -29,8 +29,6 @@ void Kubo_solver_FFT::compute(){
   time_station_2 solver_station;
   solver_station.start();
   
-
-  
   //----------------Initializing the Device---------------//
   //------------------------------------------------------//
   time_station_2 hamiltonian_setup_time;
