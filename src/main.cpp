@@ -23,7 +23,7 @@
 #include "Kubo_solver/Kubo_solver_filtered/Kubo_solver_filtered.hpp"
 #include "Kubo_solver/Kubo_solver_traditional/Kubo_solver_traditional.hpp"
 
-int main(int , char **argv){
+int main(int argc, char **argv){
 
   solver_vars s_vars;
   device_vars graphene_vars;
@@ -33,7 +33,8 @@ int main(int , char **argv){
 
   s_vars.para_file_ = std::string(argv[1]);
 
-  
+
+  std::cout<<"Inputs: "<<argc<<"   argv[0]: "<<argv[0]<<"   argv[1]: "<< argv[1] <<std::endl; //<<"  argv[2]"<<argv[2] <<std::endl;
   Input>>s_vars.run_dir_;
 
 
@@ -227,7 +228,7 @@ int main(int , char **argv){
 
   if(sim_type == "normal"){
     Kubo_solver_FFT solver( s_vars, *device);
-    solver.compute();
+    solver.compute(argc, argv);
   }
 
   if(sim_type == "traditional"){

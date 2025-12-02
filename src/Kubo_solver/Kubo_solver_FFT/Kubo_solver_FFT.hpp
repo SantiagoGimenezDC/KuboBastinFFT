@@ -85,8 +85,8 @@ public:
 
 
   //Heavy duty
-  void compute();
-  void polynomial_cycle ( storageType, Chebyshev_states&, int, bool);
+  void compute(int, char**);
+  void polynomial_cycle (int,  storageType, Chebyshev_states&, int, bool);
 
   
   void Greenwood_FFTs( storageType, storageType, std::vector<type>&, int);

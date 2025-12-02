@@ -24,8 +24,17 @@
 
 
 
-void Kubo_solver_FFT::compute(){
+void Kubo_solver_FFT::compute(int argc, char** argv){
 
+
+  
+  MPI_Init(&argc, &argv);
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+  
+    
   time_station_2 solver_station;
   solver_station.start();
   
@@ -36,8 +45,10 @@ void Kubo_solver_FFT::compute(){
 
   initialize_device();  
 
-  hamiltonian_setup_time.stop("    Time to setup the Hamiltonian:            ");
-  std::cout<<std::endl;
+  if (rank == 0){ 
+    hamiltonian_setup_time.stop("    Time to setup the Hamiltonian:            ");
+    std::cout<<std::endl;
+  }
 
   //------------------------------------------------------//
   //------------------------------------------------------//  
@@ -93,8 +104,8 @@ void Kubo_solver_FFT::compute(){
   
   Kubo_solver_FFT_postProcess postProcess( (*this) );
 
-  
-  allocation_time.stop("\n \nAllocation time:            ");
+  if (rank == 0)  
+    allocation_time.stop("\n \nAllocation time:            ");
 
 
   
@@ -135,8 +146,9 @@ void Kubo_solver_FFT::compute(){
 
       time_station_2 randVec_time;
       randVec_time.start();
-      
-      std::cout<<std::endl<< std::to_string( ( d - 1 ) * R + r)+"/"+std::to_string( D * R )+"-Vector/disorder realization;"<<std::endl;
+
+      if (rank == 0)  
+        std::cout<<std::endl<< std::to_string( ( d - 1 ) * R + r)+"/"+std::to_string( D * R )+"-Vector/disorder realization;"<<std::endl;
 
 
 
@@ -178,11 +190,22 @@ void Kubo_solver_FFT::compute(){
       reset_data(r_data_);
       
 
-    
+
+
+
+
+      
+      int sections_per_rank = (num_parts + size - 1) / size;
+      int start_section = rank * sections_per_rank;
+      int end_section   = std::min(num_parts, start_section + sections_per_rank);
+
+
+
+      
       for(int s = 0; s < num_parts; s++){
 
-	
-	std::cout<< "   -Section: "<<s+1<<"/"<<num_parts<<std::endl;
+	if (rank == 0)  
+	  std::cout<< "   -Section: "<<s+1<<"/"<<num_parts<<std::endl;
 
 
 	
@@ -190,9 +213,10 @@ void Kubo_solver_FFT::compute(){
         time_station_2 csrmv_time_kets;
         csrmv_time_kets.start();
 	
-        polynomial_cycle( kets_, cheb_vectors, s, true );
+        polynomial_cycle(rank, kets_, cheb_vectors, s, true );
 
-	csrmv_time_kets.stop("           Kets cycle time:            ");
+	if (rank == 0)  
+	  csrmv_time_kets.stop("           Kets cycle time:            ");
         total_csrmv_time += csrmv_time_kets;
 
 
@@ -201,9 +225,10 @@ void Kubo_solver_FFT::compute(){
 	time_station_2 csrmv_time_bras;
         csrmv_time_bras.start();
 	
-	polynomial_cycle( bras_, cheb_vectors, s , false );	
+	polynomial_cycle( rank, bras_, cheb_vectors, s , false );	
 
-	csrmv_time_bras.stop("           Bras cycle time:            ");
+	if (rank == 0)  
+	  csrmv_time_bras.stop("           Bras cycle time:            ");
         total_csrmv_time += csrmv_time_bras;
 
 
@@ -222,17 +247,23 @@ void Kubo_solver_FFT::compute(){
 	if( sym_formula_ == KUBO_SEA )
 	  Kubo_sea_FFTs(bras_, kets_, r_data_, s);	
 
-	FFTs_time.stop("           FFT operations time:        ");
+	if (rank == 0)  
+	  FFTs_time.stop("           FFT operations time:        ");
 	total_FFTs_time += FFTs_time;
 	
 	
 	
       }
+      
+    
+      MPI_Reduce(r_data_.data(), final_data_.data(), M, MPI_DOUBLE,
+                 MPI_SUM, 0, MPI_COMM_WORLD);
+      
 
-
-      total_csrmv_time.print_time_msg( "\n       Total CSRMV time:           ");
-      total_FFTs_time.print_time_msg("       Total FFTs time:            ");
-
+      if (rank == 0){  
+        total_csrmv_time.print_time_msg( "\n       Total CSRMV time:           ");
+        total_FFTs_time.print_time_msg("       Total FFTs time:            ");
+      }
 
 
 
@@ -243,11 +274,12 @@ void Kubo_solver_FFT::compute(){
       update_data(final_data_, r_data_, ( d - 1 ) * R + r );
       postProcess(final_data_, r_data_, ( d - 1 ) * R + r );
 
-      time_postProcess.stop( "       Post-processing time:       ");
+      if (rank == 0)  
+        time_postProcess.stop( "       Post-processing time:       ");
 
 
-      
-      randVec_time.stop("       Total RandVec time:         ");
+      if (rank == 0)  
+        randVec_time.stop("       Total RandVec time:         ");
       std::cout<<std::endl;
      
     }
@@ -255,8 +287,8 @@ void Kubo_solver_FFT::compute(){
   }
 
 
-  
-  solver_station.stop("Total case execution time:              ");
+  if (rank == 0)  
+    solver_station.stop("Total case execution time:              ");
 }
 
 
@@ -264,7 +296,7 @@ void Kubo_solver_FFT::compute(){
 
 
 
-void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states& cheb_vectors, int s, bool vel){
+void Kubo_solver_FFT::polynomial_cycle( int rank, storageType polys,  Chebyshev_states& cheb_vectors, int s, bool vel){
 
   int M   = parameters_.M_,
       num_parts = parameters_.num_parts_;
@@ -316,9 +348,10 @@ void Kubo_solver_FFT::polynomial_cycle( storageType polys,  Chebyshev_states& ch
       device_.traceover(polys[m], cheb_vectors(2), s, num_parts);      
 
 
-    if ( ( m + 1 ) % 50 == 0 || m == M-1 ) 
-      std::cout << "\r        Computed: " << m+1 << "/" << M <<" moments."<< std::flush;
-
+    if (rank == 0){  
+      if ( ( m + 1 ) % 50 == 0 || m == M-1 ) 
+        std::cout << "\r        Computed: " << m+1 << "/" << M <<" moments."<< std::flush;
+    }
   }
 }
 
