@@ -42,7 +42,7 @@ public:
 
 
     if(true){//Turned off for KaneMele simulations
-      std::cout<< "Heres the damp op dim:  "<<device_vars_.DIM_<<std::endl;
+
       damp_ = new r_type[ device_vars_.DIM_ ];
       #pragma omp parallel for
       for(size_t i=0; i<device_vars_.DIM_; i++)

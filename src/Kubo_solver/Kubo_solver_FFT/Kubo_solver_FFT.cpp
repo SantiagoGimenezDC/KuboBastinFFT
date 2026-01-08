@@ -39,7 +39,7 @@ void Kubo_solver_FFT::initialize_device(){
 
 
 
-Kubo_solver_FFT::Kubo_solver_FFT(solver_vars& parameters, Device& device) : parameters_(parameters), device_(device)
+Kubo_solver_FFT::Kubo_solver_FFT(int rank, int size, solver_vars& parameters, Device& device) : rank_(rank), size_(size), parameters_(parameters), device_(device)
 {
 
   if(parameters_.cap_choice_ == 0)
@@ -135,15 +135,16 @@ void Kubo_solver_FFT::allocate_memory(){
 
   Total = buffer_mem + Ham_mem + recursion_mem + FFT_mem;
 
-  
-  std::cout<<std::endl;
-  std::cout<<"Expected memory cost breakdown:"<<std::endl;
-  std::cout<<"   Chebyshev buffers:    "<< buffer_mem<<" GBs"<<std::endl;  
-  std::cout<<"   Operators size:       "<< Ham_mem<<" GBs"<<std::endl;  
-  std::cout<<"   Recursion vectors:    "<<  recursion_mem <<" GBs"<<std::endl;
-  std::cout<<"   FFT auxiliary lines:  "<<  FFT_mem <<" GBs"<<std::endl<<std::endl;   
-  std::cout<<"TOTAL:  "<<  Total<<" GBs"<<std::endl<<std::endl;
 
+  if( rank_ == 0 ){
+    std::cout<<std::endl;
+    std::cout<<"Expected memory cost breakdown:"<<std::endl;
+    std::cout<<"   Chebyshev buffers:    "<< buffer_mem<<" GBs"<<std::endl;  
+    std::cout<<"   Operators size:       "<< Ham_mem<<" GBs"<<std::endl;  
+    std::cout<<"   Recursion vectors:    "<<  recursion_mem <<" GBs"<<std::endl;
+    std::cout<<"   FFT auxiliary lines:  "<<  FFT_mem <<" GBs"<<std::endl<<std::endl;   
+    std::cout<<"TOTAL:  "<<  Total<<" GBs"<<std::endl<<std::endl;
+  }
   
   
 /*------------Big memory allocation--------------*/
