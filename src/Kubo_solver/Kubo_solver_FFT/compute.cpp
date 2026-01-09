@@ -249,14 +249,14 @@ void Kubo_solver_FFT::compute(){
 	if (rank_ == 0)  
 	  FFTs_time.stop("           FFT operations time:        ");
 	total_FFTs_time += FFTs_time;
-	
-	
 
-	MPI_Barrier(MPI_COMM_WORLD);
+
+	
+	
         MPI_Reduce(s_data.data(),  
 		   rank_ == 0 ? r_data_.data() : nullptr,
-		   r_data_.size(), MPI_DOUBLE,  MPI_SUM, 0, MPI_COMM_WORLD);
-	MPI_Barrier(MPI_COMM_WORLD);
+		   s_data.size(), MPI_CXX_DOUBLE_COMPLEX,  MPI_SUM, 0, MPI_COMM_WORLD);
+	
 	
       }
       
