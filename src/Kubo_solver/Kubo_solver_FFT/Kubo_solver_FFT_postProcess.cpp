@@ -402,11 +402,11 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
   for(int k = 0; k < nump; k++){
     integrand[k]  = E_points_[k] * real( final_data[ k ] ) - ( sqrt(1.0 - E_points_[ k ] * E_points_[ k ] ) * imag( final_data[ k + nump ] ) );
     integrand[k] *= 1.0 / pow( (1.0 - E_points_[k]  * E_points_[k] ), 2.0);
-    integrand[k] *=  omega ; 
+    integrand[k] *=  - omega ; //Why - sign here? Is the integration inverted? 
 
     rvec_integrand[k]  = E_points_[k] * real( r_data[ k ] ) - ( sqrt(1.0 - E_points_[ k ] * E_points_[ k ] ) * imag( r_data[ k + nump ] ) );
     rvec_integrand[k] *= 1.0 / pow( (1.0 - E_points_[k]  * E_points_[k] ), 2.0);
-    rvec_integrand[k] *=  omega ; 
+    rvec_integrand[k] *=  - omega ; //Why - sign here? Is the integration inverted? 
   }
 
   

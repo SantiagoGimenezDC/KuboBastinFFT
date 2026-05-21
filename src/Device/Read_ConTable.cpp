@@ -267,7 +267,11 @@ void Read_ConTable::setup_velOp(){
   vx().setFromTriplets(tripletList.begin(), tripletList.end(),[] (const r_type &,const r_type &b) { return b; });  
   vx().makeCompressed();
   std::cout<<"  Finished Generating VX from Hamiltonian"<<std::endl<<std::endl;
-    
+
+
+  setup_vy();
+
+  
   bool print_CSR =false;
   if(print_CSR){
     auto start_wr = std::chrono::steady_clock::now();    
