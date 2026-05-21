@@ -182,6 +182,7 @@ void projected_FullTrace::generate_vec_im( std::complex<r_type> rand_vec[], int 
   size_t SUBDIM = this->parameters().SUBDIM_;
 
 
+
   for( size_t j = 0; j <  SUBDIM; j++ ){
     rand_vec [j] = 0;
     if( ( j - ( r - 1 ) ) % stride_ == 0){

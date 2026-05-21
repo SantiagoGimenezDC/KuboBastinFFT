@@ -156,7 +156,7 @@ int main(int argc, char **argv){
   std::cout<<"Read_Hamiltonian only works for COMPLEX Hamiltonian;"<<std::endl;
   std::cout<<"Min max eigenvalues is using H_ket with the 4 entries;"<<std::endl;
   std::cout<<"The min max eigv are fixed;"<<std::endl;
-  
+  std::cout<<"Read_Siesta default unit cell size is 92;"<<std::endl;  
 
 
   
