@@ -51,6 +51,7 @@ public:
   
   virtual void build_Hamiltonian();
   virtual void setup_velOp();
+  virtual void setup_vy();
   
   //  void generate_Hamiltonian();
   //void generate_velOp();    

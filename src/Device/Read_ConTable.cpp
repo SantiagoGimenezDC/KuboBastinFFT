@@ -318,3 +318,120 @@ void Read_ConTable::setup_velOp(){
 
 
 }
+
+
+
+void Read_ConTable::setup_vy(){
+  
+  int Dim = this->parameters().DIM_;
+  vy().resize(Dim,Dim);
+  vy().setZero();
+
+  typedef Eigen::Triplet<r_type,  indexType> T;
+
+  std::vector<T> tripletList;
+  tripletList.reserve( 5 * Dim);
+
+  MatrixXp coords = coordinates().data();
+
+  std::cout<<"  Generating VY from Hamiltonian"<<std::endl;
+  for (int k=0; k<H().outerSize(); ++k)
+    for (typename SpMatrixXp::InnerIterator it(H(),k); it; ++it)
+    {
+
+      int i = it.row(),
+	  j = it.col();
+
+      Eigen::Vector3d dist = Eigen::Vector3d::Zero(),
+	  pos_i = coords.row(i),
+	  pos_j = coords.row(j);	  
+	  
+      dist(0) = ( pos_j(0) - pos_i(0) );
+      dist(1) = ( pos_j(1) - pos_i(1) );
+
+	
+
+      double atmp = ( dist(0) * U_(1,1) - dist(1) * U_(1,0) ) / ( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1) ),
+	     btmp = ( dist(0) * U_(0,1) - dist(1) * U_(0,0) ) / ( U_(1,0) * U_(0,1) - U_(0,0) * U_(1,1) );          
+	
+	if( atmp > 0.5)
+	  dist(0) -= U_(0,0);
+	
+	    
+	if( atmp < -0.5)
+	  dist(0) += U_(0,0);
+	
+	     
+	if( btmp > 0.5)
+	  dist(0) -= U_(1,0);
+	
+	    
+	if( btmp < -0.5)
+	  dist(0) += U_(1,0);
+	
+	  
+	  
+
+      r_type ijHam = it.value(), v_ij;
+
+      r_type a0_ = 1.42;
+      v_ij  =  a0_ * dist(1) * ijHam;
+      tripletList.push_back(T(i,j, v_ij) );
+
+  }
+
+
+  vy().setFromTriplets(tripletList.begin(), tripletList.end(),[] (const r_type &,const r_type &b) { return b; });  
+  vy().makeCompressed();
+  std::cout<<"  Finished Generating VX from Hamiltonian"<<std::endl<<std::endl;
+    
+  bool print_CSR =false;
+  if(print_CSR){
+    auto start_wr = std::chrono::steady_clock::now();    
+
+    Eigen::SparseMatrix<type,Eigen::ColMajor> printVY(vy().cast<type>());
+    
+  
+    int nnz = printVY.nonZeros(), cols = printVY.cols();
+    type * valuePtr = printVY.valuePtr();//(nnz)
+    int * innerIndexPtr = printVY.innerIndexPtr(),//(nnz)
+      * outerIndexPtr = printVY.outerIndexPtr();//(cols+1)
+  
+    std::ofstream data2;
+    data2.open("ARM.VY.CSR");
+
+    data2.setf(std::ios::fixed,std::ios::floatfield);
+    data2.precision(18);
+
+    data2<<cols<<" "<<nnz<<std::endl;
+
+    for (int i=0;i<nnz;i++)
+      data2<<real(valuePtr[i])<<" "<<imag(valuePtr[i])<<" ";
+
+    data2<<std::endl;
+    for (int i=0;i<nnz;i++)
+      data2<<innerIndexPtr[i]<<" ";
+
+  
+    data2<<std::endl;
+    for (int i=0;i<cols;i++)
+      data2<<outerIndexPtr[i]<<" ";
+
+  
+    data2.close();
+    auto end_wr = std::chrono::steady_clock::now();
+
+
+  std::cout<<"   Time to write vel. OP Y on disk:     ";
+  int millisec=std::chrono::duration_cast<std::chrono::milliseconds>
+    (end_wr - start_wr).count();
+  int sec=millisec/1000;
+  int min=sec/60;
+  int reSec=sec%60;
+  std::cout<<min<<" min, "<<reSec<<" secs;"<<" ("<< millisec<<"ms) "
+           <<std::endl<<std::endl;
+
+  }
+
+
+}
