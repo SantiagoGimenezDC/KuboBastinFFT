@@ -40,6 +40,7 @@ void Read_Hamiltonian::build_Hamiltonian(){
   parameters().LE_     = DIM;
 
 
+
   
   indexType outerIndexPtr[DIM+1];
   indexType innerIndices[NNZ];
@@ -49,7 +50,9 @@ void Read_Hamiltonian::build_Hamiltonian(){
   for(std::size_t j=0; j<NNZ; j++){
     double re_part=0 , im_part;
      inFile>>re_part, inFile>>im_part;
+
      values[j] = re_part + std::complex<r_type>(0,1) * type( im_part );
+
   }
 
   for(std::size_t j=0; j<NNZ; j++)  
@@ -65,6 +68,10 @@ void Read_Hamiltonian::build_Hamiltonian(){
 
   Hc_=Eigen::Map<Eigen::SparseMatrix<type, Eigen::RowMajor,indexType> > (DIM, DIM, NNZ, outerIndexPtr, innerIndices,values);
 
+
+
+  
+  
   /*  
   auto Hc_conj=Eigen::SparseMatrix<type, Eigen::RowMajor,indexType>(Hc_.transpose().conjugate());
   Hc_+=Hc_conj;
@@ -278,6 +285,8 @@ void Read_Hamiltonian::update_dis ( r_type dis_vec[], r_type damp_op[]){
   for(int i=0; i<subDim;i++)
      H_.coeffRef(C*W + i, C*W +i) = damp_op[i] * b_/a_;
      
+
+
   
   #pragma omp parallel for
   for(int i=0; i<subDim;i++)

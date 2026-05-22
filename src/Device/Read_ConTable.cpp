@@ -177,14 +177,23 @@ void Read_ConTable::build_Hamiltonian(){
 	  double sinphi = sqrt( 1.0 - cosphi * cosphi );
 
 	  double hopping = cosphi * cosphi * Vsigma  +  sinphi * sinphi * Vpi;
-	  
+
+
+	 
 	  //hopping *= exp( std::complex<double>(0,1) * ( X(i,j) * K(0) + X(i,j) * K(1) ) );
+
+
+	  if(dist(2)==0 && sqrt ( dist(0) * dist(0) + dist(1) * dist(1) )< a0_-0.08 )
+	    std::cout<<hopping<<"  dist: "<<sqrt ( dist(0) * dist(0) + dist(1) * dist(1) )<< "  a0: "<<a0_<<"    "<<atmp<<" "<<btmp<<"   positions - i:  "<<pos_i.transpose()<<"    j: "<<  pos_j.transpose()<<std::endl;
+	  //i<<"  "<<j<<"       "<< Vpi<<"   "<<"   "<<Vsigma<<
 	  
 	  local_tripletList.push_back(T(i,j_ele , hopping ) );
       	  
+	  
 
 	  
 	}
+
     }
    }
    
