@@ -23,8 +23,20 @@
 #include "Kubo_solver/Kubo_solver_filtered/Kubo_solver_filtered.hpp"
 #include "Kubo_solver/Kubo_solver_traditional/Kubo_solver_traditional.hpp"
 
+#include<mpi.h>
+
 int main(int argc, char **argv){
 
+
+    
+  MPI_Init(&argc, &argv);
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+
+
+  
   solver_vars s_vars;
   device_vars graphene_vars;
 
@@ -34,7 +46,7 @@ int main(int argc, char **argv){
   s_vars.para_file_ = std::string(argv[1]);
 
 
-  std::cout<<"Inputs: "<<argc<<"   argv[0]: "<<argv[0]<<"   argv[1]: "<< argv[1] <<std::endl; //<<"  argv[2]"<<argv[2] <<std::endl;
+
   Input>>s_vars.run_dir_;
 
 
@@ -151,12 +163,17 @@ int main(int argc, char **argv){
   */
 
 
+  /*
   std::cout<<"Ongoing gimmicks:"<<std::endl;
   std::cout<<"AUTO BOUND DETECTION NOT WORKING - on normal mode only???"<<std::endl;
   std::cout<<"Read_Hamiltonian only works for COMPLEX Hamiltonian;"<<std::endl;
   std::cout<<"Min max eigenvalues is using H_ket with the 4 entries;"<<std::endl;
   std::cout<<"The min max eigv are fixed;"<<std::endl;
+<<<<<<< HEAD
   std::cout<<"Read_Siesta default unit cell size is 92;"<<std::endl;  
+=======
+  */
+>>>>>>> 1d16c600842f9a9109feef462d340ef6d43096f6
 
 
   
@@ -227,8 +244,8 @@ int main(int argc, char **argv){
   */
 
   if(sim_type == "normal"){
-    Kubo_solver_FFT solver( s_vars, *device);
-    solver.compute(argc, argv);
+    Kubo_solver_FFT solver(rank, size, s_vars, *device);
+    solver.compute();
   }
 
   if(sim_type == "traditional"){
@@ -280,6 +297,7 @@ int main(int argc, char **argv){
   }
 
 
+  MPI_Finalize();
   return 0;
 }
 

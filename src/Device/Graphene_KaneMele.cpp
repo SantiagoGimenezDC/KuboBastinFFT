@@ -137,7 +137,7 @@ Graphene_KaneMele::Graphene_KaneMele(int is_k_space, r_type range, r_type stgr_s
 
 
     
-    hamilt_time.stop("     Hamiltonian setting up time:            ");    
+    //hamilt_time.stop("     Hamiltonian setting up time:            ");    
 
     if( this->parameters().dis_str_ != 0.0  || true){
       size_t W = this->parameters().W_;
@@ -158,7 +158,7 @@ Graphene_KaneMele::Graphene_KaneMele(int is_k_space, r_type range, r_type stgr_s
       fftw_plan_FORWD_= fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_FORWARD, FFTW_MEASURE),
       fftw_plan_BACK_ = fftw_plan_dft_2d(W, Le, fft_input_, fft_output_, FFTW_BACKWARD, FFTW_MEASURE);
   
-      planning_time.stop("       FFTW planning time:            ");
+      //planning_time.stop("       FFTW planning time:            ");
     }
   } 
 
@@ -284,12 +284,12 @@ for (int t = 0; t < omp_get_max_threads(); ++t) {
       
   r_type Length = a0_ * sqrt( abs(cross_p(2)) );
 
-
+  /*
   std::cout<< "SUBDIM:  "<<this->parameters().SUBDIM_<<std::endl;
   std::cout<< "DIM:  "<< this->parameters().DIM_<<std::endl;
   std::cout<< "DIS_DIM:  "<< this->parameters().DIS_DIM_<<std::endl;
   std::cout<< "AREA:  "<< Length * Length <<std::endl;
-
+  */
 
 
   if( this->parameters().dis_str_ != 0.0){

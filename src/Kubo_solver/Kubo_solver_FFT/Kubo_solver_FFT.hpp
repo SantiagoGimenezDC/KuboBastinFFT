@@ -25,6 +25,11 @@ class Kubo_solver_FFT{
   typedef  type** storageType;
   //typedef  States_buffer_sliced< State<type> >& storageType;
 private:
+
+
+  //MPI variables:
+  int rank_, size_;
+
   solver_vars parameters_;
   formula sym_formula_;
   
@@ -62,7 +67,7 @@ private:
   
 public:
   Kubo_solver_FFT();
-  Kubo_solver_FFT( solver_vars&, Device&);
+  Kubo_solver_FFT(int, int, solver_vars&, Device&);
   ~Kubo_solver_FFT();
 
   Device& device(){ return device_; };
@@ -85,8 +90,8 @@ public:
 
 
   //Heavy duty
-  void compute(int, char**);
-  void polynomial_cycle (int,  storageType, Chebyshev_states&, int, bool);
+  void compute();
+  void polynomial_cycle (  storageType, Chebyshev_states&, int, bool);
 
   
   void Greenwood_FFTs( storageType, storageType, std::vector<type>&, int);
