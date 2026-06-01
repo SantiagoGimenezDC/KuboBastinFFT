@@ -19,7 +19,7 @@ class Read_Siesta: public Device{
 private:
   bool print_CSR = true;
   SpMatrixXp H_, vx_;
-  SpMatrixXcp Hc_, vxc_; 
+  SpMatrixXcp Hc_, vxc_, J_SZVY_; 
   Coordinates coordinates_;
 
   r_type a_ = 1.0,
@@ -27,14 +27,20 @@ private:
 
   indexType *HK_nnz_, **HK_row_index_, **HK_col_index_;
   indexType *VK_nnz_, **VK_row_index_, **VK_col_index_;
-  std::complex<double> **HK_values_, **VK_values_;
+  indexType *JSK_nnz_, **JSK_row_index_, **JSK_col_index_;
 
+
+  
+  std::complex<double> **HK_values_, **VK_values_, **JSK_values_;
+
+
+  int unit_cell_size_ = 92;
   
   
 public:
   ~Read_Siesta(){};
   Read_Siesta(device_vars& );
-
+  virtual int unit_cell_size(){return unit_cell_size_;};
   Coordinates& coordinates(){return coordinates_;};
   void set_coordinates(Coordinates new_coordinates){coordinates_ = new_coordinates;};
   void set_H(Eigen::Map<Eigen::SparseMatrix<type, Eigen::RowMajor >> & new_H){ Hc_ = new_H; };
@@ -79,7 +85,7 @@ public:
 
 
 
-
+  std::vector<double> read_VKp_weights(const std::string& , int );
   virtual void build_Hamiltonian();
   virtual void setup_velOp() ;
   virtual void adimensionalize ( r_type a,  r_type b){
@@ -109,8 +115,13 @@ public:
   virtual void H_ket ( type*, type*) ;
   virtual void H_ket ( type*, type*, r_type*, r_type*) ;
   virtual void vel_op (type*, type*) ;
-  virtual void vel_op (type* vec, type* p_vec, int){vel_op (vec, p_vec);};
+  virtual void vel_op (type* vec, type* p_vec, int option ){
+    if(option == 0) vel_op (vec, p_vec);
+    if(option == 5) SZVY_op(vec, p_vec);
+  };
 
+  void setup_JSop();
+  void SZVY_op (type*, type*) ;
 
 
 

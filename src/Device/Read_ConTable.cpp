@@ -42,6 +42,9 @@ Read_ConTable::Read_ConTable(device_vars& device_vars):Read_Hamiltonian(device_v
 
 
 
+  set_sysLength(    sqrt( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1)));
+  set_sysSubLength( sqrt( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1)));
+    
 
   
   MatrixXp coords(DIM, 3);
@@ -108,8 +111,6 @@ void Read_ConTable::build_Hamiltonian(){
 
     // double U0_norm = ( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1) ),
     // U1_norm = ( U_(0,0) * U_(1,1) - U_(1,0) * U_(0,1) );
-
-
 
  #pragma omp parallel 
   {

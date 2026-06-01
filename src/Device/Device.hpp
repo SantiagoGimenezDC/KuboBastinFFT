@@ -76,7 +76,7 @@ public:
   virtual void update_dis( r_type*, r_type* ){}; 
   virtual void adimensionalize ( r_type,  r_type ) = 0;
   
-  virtual void rearrange_initial_vec(type*) ; //very hacky
+  virtual void rearrange_initial_vec(type*); //very hacky
   virtual void traceover(type*, type*, int, int) ;
   
   Random& rng(){return rng_;};

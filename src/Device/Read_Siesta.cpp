@@ -18,6 +18,7 @@ Read_Siesta::Read_Siesta(device_vars& device_vars):Device(device_vars){};
 
 
 
+
 /** Encodes the ispin multi-index used by SIESTA */
 inline int ispin_of_sigmas(const int is1, const int is2) {
     if (is1 == is2) { // diagonal terms
@@ -155,10 +156,10 @@ int Read_Siesta::read_siesta_reciprocal_matrix(const char *fn,
     nspin_blocks = num_spin_configurations(*spin_flag);
     block_count = no_u*no_u*(*spin_flag);
     block_ext_count = no_u*no_u*nspin_blocks;
-    *block_size = sqrt(block_ext_count); 
+    *block_size = sqrt(block_ext_count);
 
-
-
+    unit_cell_size_=int(*block_size);
+    
     
     file_count = block_ext_count*(*ncomp)*(*nk);
     buffer = reinterpret_cast<cmplx*>( std::malloc(file_count*sizeof(cmplx)) );
@@ -191,6 +192,9 @@ int Read_Siesta::read_siesta_reciprocal_matrix(const char *fn,
     }
     std::fclose(file);
 
+
+
+    
     /** buffer[ (((ik*ncomp + icomp)*nspin_blocks + ispin)*no_u + jo_u)*no_u + io_u ]
      *  contains <io_u, k, sigma | O | jo_u, k, sigma'>, where
      * 
@@ -235,6 +239,49 @@ int Read_Siesta::read_siesta_reciprocal_matrix(const char *fn,
     std::free(buffer);
 
     return 0;
+}
+
+
+
+// Helper: read nk weights from .VKp file.
+// Format: first line = number of k-points; then nk lines of
+//   <index> <kx> <ky> <kz> <weight>
+std::vector<double> Read_Siesta::read_VKp_weights(const std::string& path, int nk) {
+    std::ifstream f(path);
+    if (!f) {
+        throw std::runtime_error("Cannot open VKp file: " + path);
+    }
+
+    int nk_file;
+    f >> nk_file;
+    if (!f) {
+        throw std::runtime_error("VKp file: failed to read header (nk).");
+    }
+    if (nk_file != nk) {
+        throw std::runtime_error(
+            "VKp file has " + std::to_string(nk_file) +
+            " k-points, but .HK has " + std::to_string(nk));
+    }
+
+    std::vector<double> weights(nk);
+    int idx;
+    double kx, ky, kz, w;
+    for (int i = 0; i < nk; ++i) {
+        f >> idx >> kx >> ky >> kz >> w;
+        if (!f) {
+            throw std::runtime_error(
+                "VKp file: failed to read row " + std::to_string(i + 1));
+        }
+        // Optional consistency check: the index column should be 1-based and sequential
+        if (idx != i + 1) {
+            throw std::runtime_error(
+                "VKp file: expected index " + std::to_string(i + 1) +
+                ", got " + std::to_string(idx) +
+                " (ordering must match .HK)");
+        }
+        weights[i] = w;
+    }
+    return weights;
 }
 
 
@@ -300,11 +347,10 @@ void Read_Siesta::build_Hamiltonian(){
     }
 
 
-
-    
+ 
     DIM = nk*block_size;
 
-
+ 
   parameters().DIM_    = DIM;
   parameters().SUBDIM_ = DIM;  
   parameters().C_      = 0;
@@ -312,10 +358,46 @@ void Read_Siesta::build_Hamiltonian(){
   parameters().LE_     = DIM;
   
 
+  //WARNING: FOR CHRISTIAN BISMUTHENE MODEL ONLY:
+
+  set_sysLength(sqrt(6.776230343080986e-06) );  
+  set_sysSubLength(sqrt(6.776230343080986e-06));
+
+
   
+  std::cout<<"    Unit cell size:    "<<this->unit_cell_size()<<std::endl;
   //  Hc_.resize(DIM,DIM);
   Hc_=Eigen::Map<Eigen::SparseMatrix<type, Eigen::RowMajor,indexType> > (DIM, DIM, HK_nnz_[0], HK_row_index_[0], HK_col_index_[0],HK_values_[0]);
 
+
+
+
+  
+  // --- Apply per-k weights from .VKp via a diagonal sparse matrix ---
+{
+    const std::string vkp_path = run_dir + "operators/" + filename + ".VKp";
+    std::cout << "Reading k-point weights from: " << vkp_path << std::endl;
+    std::vector<double> weights = read_VKp_weights(vkp_path, nk);
+
+    // Build diagonal weight matrix W: W(r,r) = weights[r / block_size]
+    Eigen::SparseMatrix<type, Eigen::RowMajor, indexType> W(DIM, DIM);
+    W.reserve(Eigen::VectorXi::Constant(DIM, 1));   // 1 nnz per row
+    for (int r = 0; r < static_cast<int>(DIM); ++r) {
+        const int k = r / block_size;
+        W.insert(r, r) = static_cast<type>(weights[k]);
+    }
+    W.makeCompressed();
+
+    W *= nk;
+
+    // Weight the Hamiltonian: Hc_ <- W * Hc_
+    Hc_ = W * Hc_;
+
+    
+    std::cout << "Applied " << nk << " k-point weights via diagonal W ("
+              << DIM << "x" << DIM << ")." << std::endl;
+}
+// --- end VKp weighting ---
   /*
   auto Hc_adjoint = Eigen::SparseMatrix<type, Eigen::RowMajor,indexType>(Hc_.transpose().conjugate());
 
@@ -343,6 +425,20 @@ for (int k = 0; k < diff.outerSize(); ++k) {
   inFile.close();
 };
 
+
+
+void Read_Siesta::SZVY_op(type vec[], type p_vec[]){
+  int Dim = this->parameters().DIM_;
+  
+  Eigen::Map<VectorXdT> eig_vec(vec,Dim),
+    eig_p_vec(p_vec, Dim);
+
+
+  
+  eig_vec = J_SZVY_ * eig_p_vec;
+
+ 
+};
 
 
 void Read_Siesta::vel_op (type vec[], type p_vec[]){
@@ -492,6 +588,8 @@ void Read_Siesta::setup_velOp(){
                                          &VK_values_,
                                          errmsg);
 
+
+      
     if(ierr!=0){
       std::cout<<errmsg<<std::endl;
       return;
@@ -530,6 +628,88 @@ void Read_Siesta::setup_velOp(){
    */
     
   vxc_=Eigen::Map<Eigen::SparseMatrix<type, Eigen::RowMajor,indexType> > (DIM, DIM, VK_nnz_[0], VK_row_index_[0], VK_col_index_[0],VK_values_[0]);
+    
+
+    setup_JSop();
+
+  //vxc_.setIdentity();
+
+
+};
+
+void Read_Siesta::setup_JSop(){
+  std::ifstream inFile;
+  std::string run_dir  = parameters().run_dir_,
+    filename = parameters().filename_;
+
+  inFile.open(run_dir+"operators/"+filename+".JSK");
+
+  //std::cout<<"  /Remember vx/vcx hack. /real part of the Velocity is being dumped on read;"<<std::endl<<std::endl;
+    
+    
+  std::size_t DIM, NNZ;
+  
+
+
+  std::cout<<run_dir+"Reading Spin Current operator on:  operators/"+filename+".JSK"  <<std::endl<<std::endl;
+
+    int ierr, icomp, j, spin_flag, block_size, nk, ncomp;
+    //indexType *nnz, **row_index, **col_index;
+    //std::complex<double> **values;
+    char *errmsg = new char[256];
+
+    // "../crte2/crte2.HK"
+    ierr = read_siesta_reciprocal_matrix( (run_dir+"operators/"+filename+".JSK").c_str(),
+                                         1.e-3,
+                                         &spin_flag,
+                                         &block_size,
+                                         &nk,
+                                         &ncomp,
+                                         &JSK_nnz_,
+                                         &JSK_row_index_,
+                                         &JSK_col_index_,
+                                         &JSK_values_,
+                                         errmsg);
+
+    if(ierr!=0){
+      std::cout<<errmsg<<std::endl;
+      return;
+    }
+    
+    DIM = nk*block_size;
+
+
+   for (icomp = 0; icomp < ncomp; icomp++) {
+        std::printf("Spin Current Component %d \n", icomp);
+        std::printf("Number of non-zero entries: %d \n", JSK_nnz_[icomp]);
+        std::printf("Row indices: ");
+        for (j = 0; j < 10; j++) std::printf("%d ", JSK_row_index_[icomp][j]);
+        std::printf("...\nColumn indices: ");
+        for (j = 0; j < 20; j++) std::printf("%d ", JSK_col_index_[icomp][j]);
+        std::printf("...\nValues: ");
+        for (j = 0; j < 20; j++) std::printf("(%.3e, %.3e) ", std::real(JSK_values_[icomp][j]), std::imag(JSK_values_[icomp][j]));
+        std::printf("...\n");
+   }
+
+   /*   
+      for (icomp = 0; icomp < ncomp; icomp++) {
+        std::printf("Searching for NaNs: Component %d \n", icomp);
+        std::printf("Number of non-zero entries: %d \n", VK_nnz_[icomp]);
+
+
+	for (int j = 0; j < VK_nnz_[icomp]; j++){
+	  std::complex<double> val = VK_values_[icomp][j];
+          if (abs(val)>270 ){
+	    std::printf("(%d, %.3e, %.3e) ",j, std::real(VK_values_[icomp][j]), std::imag(VK_values_[icomp][j]));
+	    std::printf("...\n");
+	  }
+	}
+   	
+    }
+   */
+
+   
+  J_SZVY_=Eigen::Map<Eigen::SparseMatrix<type, Eigen::RowMajor,indexType> > (DIM, DIM, JSK_nnz_[2], JSK_row_index_[2], JSK_col_index_[2],JSK_values_[2]);
     
  
   //vxc_.setIdentity();

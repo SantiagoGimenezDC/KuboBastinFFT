@@ -55,6 +55,7 @@ void Device::rearrange_initial_vec(type r_vec[]){ //supe duper hacky; Standard f
 
   type tmp[subDim];
 
+  
 #pragma omp parallel for
     for(size_t n=0;n<subDim;n++)
       tmp[n]=r_vec[n];

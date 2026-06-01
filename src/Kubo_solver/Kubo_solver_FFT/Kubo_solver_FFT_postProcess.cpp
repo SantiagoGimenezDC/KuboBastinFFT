@@ -96,7 +96,7 @@ void Kubo_solver_FFT_postProcess::integration(const std::vector<r_type>& E_point
     for(int j=0; j<k; j++ ){//IMPLICIT PARTITION FUNCTION. Energies are decrescent with e (bottom of the band structure is at e=M);
       r_value_t ej  = E_points[j+1],
 	ej1      = E_points[j],
-	de       = ej-ej1,
+	de       = ej1-ej,
         integ    = ( integrand[j+1] + integrand[j] )/2;     
       
       result[k] +=  de * integ;
@@ -362,7 +362,7 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
 
   
   //  r_type omega = DIM/( a * a );//* sysSubLength * sysSubLength );//Dimensional and normalizing constant
-  r_type omega = 2.0 / ( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant. The minus is due to the vel. op being conjugated.(REMOVED)
+  r_type omega = 2.0 / ( a * a * sysSubLength * sysSubLength ) /* ( 2 * M_PI )*/;//Dimensional and normalizing constant.
   //r_value_t tmp, max=0, av=0;
 
   
@@ -402,11 +402,11 @@ void Kubo_solver_FFT_postProcess::Bastin_postProcess(const std::vector<type>& fi
   for(int k = 0; k < nump; k++){
     integrand[k]  = E_points_[k] * real( final_data[ k ] ) - ( sqrt(1.0 - E_points_[ k ] * E_points_[ k ] ) * imag( final_data[ k + nump ] ) );
     integrand[k] *= 1.0 / pow( (1.0 - E_points_[k]  * E_points_[k] ), 2.0);
-    integrand[k] *=  - omega ; //Why - sign here? Is the integration inverted? 
+    integrand[k] *= omega ; //Why - sign here? Is the integration inverted? 
 
     rvec_integrand[k]  = E_points_[k] * real( r_data[ k ] ) - ( sqrt(1.0 - E_points_[ k ] * E_points_[ k ] ) * imag( r_data[ k + nump ] ) );
     rvec_integrand[k] *= 1.0 / pow( (1.0 - E_points_[k]  * E_points_[k] ), 2.0);
-    rvec_integrand[k] *=  - omega ; //Why - sign here? Is the integration inverted? 
+    rvec_integrand[k] *=  omega ; //Why - sign here? Is the integration inverted? 
   }
 
   

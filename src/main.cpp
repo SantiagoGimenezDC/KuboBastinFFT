@@ -247,6 +247,7 @@ int main(int , char **argv){
     Input>>f_vars.energy_center_, Input>>cutoff_fact;
     Input>>f_vars.att_;
 
+
     //    if(!f_vars.post_filter_ && !f_vars.filter_)
     //  f_vars.decRate_ = 1;
 
