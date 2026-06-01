@@ -91,17 +91,24 @@ void Read_Hamiltonian::build_Hamiltonian(){
 
 
 
-void Read_Hamiltonian::vel_op (type vec[], type p_vec[]){
+void Read_Hamiltonian::vel_op (type vec[], type p_vec[], int dir){
   int Dim = this->parameters().DIM_;
   
   Eigen::Map<VectorXdT> eig_vec(vec,Dim),
     eig_p_vec(p_vec, Dim);
 
 
-  if(vx_.size()>0)
-    eig_vec = vx_ * eig_p_vec;
-  if(vxc_.size()>0)
-    eig_vec = vxc_ * eig_p_vec;
+  if(dir == 0)
+    if(vx_.size()>0)
+      eig_vec = vx_ * eig_p_vec;
+    if(vxc_.size()>0)
+      eig_vec = vxc_ * eig_p_vec;
+
+  if(dir == 1)
+    if(vy_.size()>0)
+      eig_vec = vy_ * eig_p_vec;
+    if(vyc_.size()>0)
+      eig_vec = vyc_ * eig_p_vec;
 
   
 };

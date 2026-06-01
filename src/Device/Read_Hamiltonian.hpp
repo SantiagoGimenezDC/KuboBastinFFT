@@ -16,8 +16,8 @@ class Read_Hamiltonian: public Device{
 
 private:
   bool print_CSR = true;
-  SpMatrixXp H_, vx_;
-  SpMatrixXcp Hc_, vxc_; 
+  SpMatrixXp H_, vx_, vy_;
+  SpMatrixXcp Hc_, vxc_, vyc_; 
   Coordinates coordinates_;
 
   r_type a_ = 1.0,
@@ -33,11 +33,12 @@ public:
   void set_H(Eigen::Map<Eigen::SparseMatrix<type, Eigen::RowMajor >> & new_H){ Hc_ = new_H; };
   SpMatrixXcp& H(int){return Hc_;};
   SpMatrixXcp& vx(int){return vxc_;};
+  SpMatrixXcp& vy(int){return vyc_;};
 
   void set_H(Eigen::Map<Eigen::SparseMatrix<r_type, Eigen::RowMajor >> & new_H){ H_ = new_H; };
   SpMatrixXp& H(){return H_;};
   SpMatrixXp& vx(){return vx_;};
-
+  SpMatrixXp& vy(){return vy_;};
   
   virtual r_type Hamiltonian_size(){
     if(H_.size()>0)
@@ -66,7 +67,7 @@ public:
       }
      if(Hc_.size()>0){
       Hc_=(Hc_+b*Id2)/a;
-      vxc_=vxc_/a;
+      vxc_=vxc_/a;   //Check necesity of this adimensionalization!
      }
   };
   virtual void damp   ( r_type*) ;
@@ -77,8 +78,8 @@ public:
 
   virtual void H_ket ( type*, type*) ;
   virtual void H_ket ( type*, type*, r_type*, r_type*) ;
-  virtual void vel_op (type*, type*) ;
-  virtual void vel_op (type* vec, type* p_vec, int){vel_op (vec, p_vec);};
+  virtual void vel_op (type* ket, type* p_ket ) {vel_op (ket, p_ket, 0 );};
+  virtual void vel_op (type* , type*, int);
 
 
 
