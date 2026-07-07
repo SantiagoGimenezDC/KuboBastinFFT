@@ -372,7 +372,7 @@ void Read_Siesta::build_Hamiltonian(){
 
 
 
-  
+  /*
   // --- Apply per-k weights from .VKp via a diagonal sparse matrix ---
 {
     const std::string vkp_path = run_dir + "operators/" + filename + ".VKp";
@@ -396,7 +396,9 @@ void Read_Siesta::build_Hamiltonian(){
     
     std::cout << "Applied " << nk << " k-point weights via diagonal W ("
               << DIM << "x" << DIM << ")." << std::endl;
-}
+ }
+
+ */
 // --- end VKp weighting ---
   /*
   auto Hc_adjoint = Eigen::SparseMatrix<type, Eigen::RowMajor,indexType>(Hc_.transpose().conjugate());
@@ -626,7 +628,8 @@ void Read_Siesta::setup_velOp(){
    	
     }
    */
-    
+
+   delete[] errmsg;
   vxc_=Eigen::Map<Eigen::SparseMatrix<type, Eigen::RowMajor,indexType> > (DIM, DIM, VK_nnz_[0], VK_row_index_[0], VK_col_index_[0],VK_values_[0]);
     
 
@@ -708,7 +711,8 @@ void Read_Siesta::setup_JSop(){
     }
    */
 
-   
+
+   delete[] errmsg;   
   J_SZVY_=Eigen::Map<Eigen::SparseMatrix<type, Eigen::RowMajor,indexType> > (DIM, DIM, JSK_nnz_[2], JSK_row_index_[2], JSK_col_index_[2],JSK_values_[2]);
     
  
