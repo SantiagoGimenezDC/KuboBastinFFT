@@ -1,0 +1,82 @@
+# KuboBastinFFT input file.
+# Run with:  ./KuboBastinFFT input.toml
+#
+# Keys marked (optional) can be left out; their default is shown.
+# Any key that the chosen device or solver does not use is reported as an error,
+# so typos and leftover parameters are caught before the run starts.
+
+run_dir = "./"            # (optional) directory for input/output files
+output  = "testie.dat"    # name of the output data
+
+
+# ---------------------------------------------------------------------------
+[device]
+# One of: Graphene, TBG, Read_Hamiltonian, Read_ConTable, ArmchairGraph_RashbaSOC,
+#         Graphene_supercell, SupercellGraph_RashbaSOC, Graphene_KaneMele,
+#         Graphene_nanoribbon_kspace, Read_Siesta, Read_Siesta_Cropped
+type = "Graphene_KaneMele"
+
+W  = 300
+LE = 300
+C  = 0                    # (optional, 0) CAP length; 0 means periodic boundaries
+
+disorder = { strength = 0.0, seed = 1001 }   # (optional table, no disorder)
+
+# --- Graphene family only (Graphene, *_RashbaSOC, Graphene_supercell, Graphene_KaneMele, Graphene_nanoribbon_kspace)
+Bz = 0.0                  # (optional, 0.0) magnetic flux, as phi/phi_0
+
+# --- Graphene_KaneMele and Graphene_nanoribbon_kspace only
+projector = 0             # (optional, 0) 0 = none, 1 = spin up, 2 = spin down, ...
+k_space   = false         # (optional, false) work in k-space
+k_range   = 1.0           # (optional, 1.0) k-points kept within k_range*|b1| of the Dirac points
+
+# --- TBG only
+# theta = 1.5             # twist angle, degrees
+# d_min = 4.01
+
+# --- Read_Hamiltonian, Read_ConTable, Read_Siesta, Read_Siesta_Cropped only
+# filename = "Viet"
+
+# --- Graphene_KaneMele and Graphene_nanoribbon_kspace use all couplings;
+#     the *_RashbaSOC devices use only exchange and rashba. Each is optional (0.0).
+[device.couplings]
+staggered = 0.1
+exchange  = 0.25
+rashba    = 0.0
+kane_mele = 1.0
+haldane   = 0.0
+
+
+# ---------------------------------------------------------------------------
+[solver]
+type     = "filtered"     # DOS | normal | traditional | filtered
+equation = "SEA"          # GREENWOOD | BASTIN | SEA   (not needed for DOS)
+
+M = 6000                  # number of Chebyshev moments
+R = 1                     # (optional, 1) random vectors
+disorder_realizations = 1 # (optional, 1)
+seed = 1000               # (optional, 0) seed for the random vectors
+num_parts    = 1          # (optional, 1)
+num_p_factor = 4          # (optional, 1) number of energy points = num_p_factor * M
+
+kernel = "Jackson"        # None | Jackson
+base   = "Complex_Phase"  # Direct | Complex_Phase | Complex_Phase_real | FullTrace | projected_FullTrace
+cap    = "Mandelshtam"    # (optional, "Mandelshtam") Mandelshtam | Effective_Contact
+cap_E_min = 0.0           # (optional, 0.0)
+eta    = 0.0              # broadening
+
+velocities = [0, 0]       # velocity operator directions (vel_dir_1, vel_dir_2)
+
+[solver.spectrum]
+# Rescaling H -> (H + b)/a. Leave out both a and b to detect the spectral bounds automatically.
+a    = 9.1
+b    = 0.0
+edge = 0.2
+
+# Only for type = "filtered"
+[solver.filter]
+decimation_rate = 8
+energy_center   = 0.0
+cutoff_factor   = 0.9
+L_factor        = 40      # (optional, 40)
+attenuation     = 96      # (optional, 96)

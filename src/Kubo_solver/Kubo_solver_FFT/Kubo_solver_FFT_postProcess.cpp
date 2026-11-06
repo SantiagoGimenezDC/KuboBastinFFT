@@ -37,8 +37,9 @@ Kubo_solver_FFT_postProcess::Kubo_solver_FFT_postProcess(Kubo_solver_FFT& parent
   mkdir( ( "./" + filename + "/"  + "vecs" ).c_str(), 0755);
   
 
-  const std::string sourceFile = "./" + parent_solver_.parameters().para_file_ ;  // Source file path
-  const std::string destinationFile =  "./" + filename + "/" +  parent_solver_.parameters().para_file_;  // Destination file path
+  // Keep a copy of the input file next to the results.
+  const std::string sourceFile = parent_solver_.parameters().para_file_;
+  const std::string destinationFile = "./" + filename + "/" + fs::path(sourceFile).filename().string();
 
 
   fs::copy(sourceFile, destinationFile, fs::copy_options::overwrite_existing);

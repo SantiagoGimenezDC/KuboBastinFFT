@@ -73,8 +73,9 @@ Kubo_solver_filtered::Kubo_solver_filtered(solver_vars& parameters, Device& devi
   mkdir( ( "./" + filename + "/"  + "vecs" ).c_str(), 0755);
   
 
-  const std::string sourceFile = "./SimData.dat";  // Source file path
-  const std::string destinationFile =  "./" + filename + "/SimData.dat" ;  // Destination file path
+  // Keep a copy of the input file next to the results.
+  const std::string sourceFile = parameters_.para_file_;
+  const std::string destinationFile = "./" + filename + "/" + fs::path(sourceFile).filename().string();
 
   fs::copy(sourceFile, destinationFile, fs::copy_options::overwrite_existing);
 

@@ -343,8 +343,9 @@ DOS_output::DOS_output(device_vars& device_parameters, solver_vars& parent_solve
   mkdir( ( "./" + filename + "/"  + "vecs" ).c_str(), 0755);
   
 
-  const std::string sourceFile = "./"+ parent_solver_vars.para_file_ ;  // Source file path
-  const std::string destinationFile =  "./" + filename + "/"+  parent_solver_vars.para_file_;  // Destination file path
+  // Keep a copy of the input file next to the results.
+  const std::string sourceFile = parent_solver_vars.para_file_;
+  const std::string destinationFile = "./" + filename + "/" + fs::path(sourceFile).filename().string();
 
   fs::copy(sourceFile, destinationFile, fs::copy_options::overwrite_existing);
 
