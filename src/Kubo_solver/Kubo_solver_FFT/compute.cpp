@@ -146,17 +146,15 @@ void Kubo_solver_FFT::compute(){
       //--------------------------------All hacks sesh------------------------------//
       int subdim = device_.parameters().SUBDIM_; //Jesus stop all this hacking plz
       bool do_test=true;
-      if(dynamic_cast<Graphene_KaneMele*>(&device_) && do_test )
+      if(dynamic_cast<Graphene_KaneMele*>(&device_) && do_test ){
         device_.parameters().SUBDIM_ = device_.parameters().DIS_DIM_;
       
-      vec_base_->generate_vec_im( rand_vec_, r);
-      
-
-
-
-      if(dynamic_cast<Graphene_KaneMele*>(&device_) && do_test ){ //god forbid
+	vec_base_->generate_vec_im( rand_vec_, r);
         device_.rearrange_initial_vec( rand_vec_ ); //very hacky
         device_.parameters().SUBDIM_ = subdim;
+      }
+      else{
+	  vec_base_->generate_vec_im( rand_vec_, r);
       }
 
 
@@ -166,7 +164,7 @@ void Kubo_solver_FFT::compute(){
       //if(dynamic_cast<Graphene_KaneMele*>(&device_) && device_.isKspace() && parameters_.base_choice_ == 0)
       //device_.Uk_ket(rand_vec_, rand_vec_);
 
-      //The next will only work if I initialize the FFTs insize KaneMele.
+      //The next will only work if I initialize the FFTs inside KaneMele.
       if(dynamic_cast<Graphene_KaneMele*>(&device_)   &&   !device_.isKspace()   &&   parameters_.base_choice_ == 4  )
 	device_.to_kSpace(rand_vec_, rand_vec_, 1);
       
