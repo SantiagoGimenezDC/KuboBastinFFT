@@ -662,7 +662,7 @@ void Read_Siesta::setup_JSop(){
     char *errmsg = new char[256];
 
     // "../crte2/crte2.HK"
-    ierr = read_siesta_reciprocal_matrix( (run_dir+"operators/"+filename+".JSK").c_str(),
+    ierr = read_siesta_reciprocal_matrix( (run_dir+"operators/"+filename+".JSKy").c_str(),
                                          1.e-3,
                                          &spin_flag,
                                          &block_size,
