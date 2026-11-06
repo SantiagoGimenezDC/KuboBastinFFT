@@ -1,4 +1,5 @@
 #include<iostream>
+#include<memory>
 #include<string>
 
 #include "static_vars.hpp"
@@ -19,7 +20,7 @@ int main(int argc, char **argv){
   }
 
   input_config cfg;
-  Device *device;
+  std::unique_ptr<Device> device;  // freed automatically when main() returns
 
   try{
     cfg    = read_input(argv[1]);

@@ -101,22 +101,22 @@ const std::string& device_name(int legacy_choice){
 
 
 
-Device* make_device(input_config& cfg){
+std::unique_ptr<Device> make_device(input_config& cfg){
   device_vars&      d = cfg.d_vars;
   const model_vars& m = cfg.m_vars;
   const std::string& type = cfg.device_type;
 
-  if( type == "Graphene" )                   return new Graphene(d);
-  if( type == "TBG" )                        return new TBG(d);
-  if( type == "Read_Hamiltonian" )           return new Read_Hamiltonian(d);
-  if( type == "Read_ConTable" )              return new Read_ConTable(d);
-  if( type == "ArmchairGraph_RashbaSOC" )    return new ArmchairGraph_RashbaSOC(m.m_str_, m.rashba_str_, d);
-  if( type == "Graphene_supercell" )         return new Graphene_supercell(d);
-  if( type == "SupercellGraph_RashbaSOC" )   return new SupercellGraph_RashbaSOC(m.m_str_, m.rashba_str_, d);
-  if( type == "Graphene_KaneMele" )          return new Graphene_KaneMele(m.k_space_, m.range_, m.stgr_str_, m.m_str_, m.rashba_str_, m.KM_str_, m.HLD_str_, d);
-  if( type == "Graphene_nanoribbon_kspace" ) return new Graphene_nanoribon_kspace(m.k_space_, m.range_, m.stgr_str_, m.m_str_, m.rashba_str_, m.KM_str_, m.HLD_str_, d);
-  if( type == "Read_Siesta" )                return new Read_Siesta(d);
-  if( type == "Read_Siesta_Cropped" )        return new Read_Siesta_Cropped(d);
+  if( type == "Graphene" )                   return std::make_unique<Graphene>(d);
+  if( type == "TBG" )                        return std::make_unique<TBG>(d);
+  if( type == "Read_Hamiltonian" )           return std::make_unique<Read_Hamiltonian>(d);
+  if( type == "Read_ConTable" )              return std::make_unique<Read_ConTable>(d);
+  if( type == "ArmchairGraph_RashbaSOC" )    return std::make_unique<ArmchairGraph_RashbaSOC>(m.m_str_, m.rashba_str_, d);
+  if( type == "Graphene_supercell" )         return std::make_unique<Graphene_supercell>(d);
+  if( type == "SupercellGraph_RashbaSOC" )   return std::make_unique<SupercellGraph_RashbaSOC>(m.m_str_, m.rashba_str_, d);
+  if( type == "Graphene_KaneMele" )          return std::make_unique<Graphene_KaneMele>(m.k_space_, m.range_, m.stgr_str_, m.m_str_, m.rashba_str_, m.KM_str_, m.HLD_str_, d);
+  if( type == "Graphene_nanoribbon_kspace" ) return std::make_unique<Graphene_nanoribon_kspace>(m.k_space_, m.range_, m.stgr_str_, m.m_str_, m.rashba_str_, m.KM_str_, m.HLD_str_, d);
+  if( type == "Read_Siesta" )                return std::make_unique<Read_Siesta>(d);
+  if( type == "Read_Siesta_Cropped" )        return std::make_unique<Read_Siesta_Cropped>(d);
 
   throw input_error("unknown device type '" + type + "'");
 }

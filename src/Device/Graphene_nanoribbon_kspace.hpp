@@ -101,22 +101,21 @@ class Graphene_nanoribon_kspace: public Graphene{
   
     std::vector<Eigen::Vector2d> nonZeroList_;
 
-    fftw_complex *fft_input_;// = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * LE );
-    fftw_complex *fft_output_;// = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * W * LE );
-    fftw_plan fftw_plan_FORWD_, fftw_plan_BACK_;// = fftw_plan_dft_2d(W, LE, fft_input, fft_output, FFTW_BACKWARD, FFTW_ESTIMATE);
+    fftw_complex *fft_input_  = nullptr;
+    fftw_complex *fft_output_ = nullptr;
+    fftw_plan fftw_plan_FORWD_ = nullptr, fftw_plan_BACK_ = nullptr;
 
   
   
   public:
   
-    ~Graphene_nanoribon_kspace(){
-        if(k_space_){
-          fftw_destroy_plan(fftw_plan_FORWD_);
-	  fftw_destroy_plan(fftw_plan_FORWD_);
-          fftw_free(fft_input_);
-          fftw_free(fft_output_);
-        }
-      };
+    // The FFTW buffers and plans are created in the constructor whether or not k_space_ is set.
+    virtual ~Graphene_nanoribon_kspace(){
+      if( fftw_plan_FORWD_ ) fftw_destroy_plan( fftw_plan_FORWD_ );
+      if( fftw_plan_BACK_  ) fftw_destroy_plan( fftw_plan_BACK_  );
+      fftw_free( fft_input_ );   // fftw_free(nullptr) is a no-op
+      fftw_free( fft_output_ );
+    };
     Graphene_nanoribon_kspace();
     Graphene_nanoribon_kspace(int, r_type, r_type, r_type, r_type , r_type, r_type, device_vars&);
 

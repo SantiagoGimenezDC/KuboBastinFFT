@@ -1,3 +1,4 @@
+#include <vector>
 #include"Device.hpp"
 #include<eigen3/Eigen/Core>
 #include<eigen3/Eigen/SparseCore>
@@ -96,16 +97,13 @@ void Device::minMax_EigenValues( int maxIter, r_type& eEmax, r_type& eEmin){ //P
   Eigen::Matrix<type, -1, 1> y = Eigen::Matrix<type, -1, 1>::Constant(DIM,1, 1.0/sqrt(DIM) ),
             y_Ant=y;
 
-  r_type filler_vec_2[DIM], filler_vec[DIM];
+  // Run the power method without disorder or damping. The arrays in use are restored at the end,
+  // so the device is not left pointing at these temporaries.
+  r_type *prev_dis = dis_, *prev_damp = damp_;
+  std::vector<r_type> filler_vec( DIM, 0.0 ), filler_vec_2( DIM, 1.0 );
 
-
-  
-  for(int k=0; k<DIM; k++){
-    filler_vec[k] = 0;
-    filler_vec_2[k] = 1.0;
-  }
-  set_dis(filler_vec);
-  set_damp_op(filler_vec_2);
+  set_dis(filler_vec.data());
+  set_damp_op(filler_vec_2.data());
 
   r_type y_norm = 0;
   r_type Emax, Emin, Emax_2, Emin_2;
@@ -170,6 +168,9 @@ void Device::minMax_EigenValues( int maxIter, r_type& eEmax, r_type& eEmin){ //P
   Emin += Emax;
 
   this->adimensionalize(1.0,Emax);
+
+  set_dis(prev_dis);
+  set_damp_op(prev_damp);
    
   auto end = std::chrono::steady_clock::now();
   std::cout<<"   Time to perform Lanczos Recursion:    ";

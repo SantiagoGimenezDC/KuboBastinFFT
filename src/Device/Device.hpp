@@ -5,6 +5,7 @@
 #include "../CAP.hpp"
 #include "../Random.hpp"
 #include <iostream>
+#include <memory>
 
 
 struct device_vars{
@@ -24,31 +25,36 @@ private:
   r_type sysLength_;
   r_type sysSubLength_;
 
+  // Storage owned by the device, freed automatically.
+  std::unique_ptr<r_type[]> own_dis_, own_damp_;
+
+  // Arrays currently in use. They point either to the owned storage above or to arrays
+  // passed in through set_dis()/set_damp_op() (e.g. by the solvers), which the device does not own.
   r_type *dis_, *damp_;
-  
+
 public:
-  ~Device(){ delete []dis_; };
+  virtual ~Device() = default;
+
+  // The device holds pointers into its own storage, so copying it would leave them dangling.
+  Device( const Device& ) = delete;
+  Device& operator=( const Device& ) = delete;
+
   Device( device_vars& device_vars ) : device_vars_( device_vars ), rng_( device_vars.dis_seed_ ){
 
-    
+    const size_t DIM = device_vars_.DIM_;
 
-    if(true/*this->parameters().dis_str_ !=0*/ ){
+    own_dis_.reset( new r_type[ 4*DIM ] ); // the 4 is a hack to make it work with the RashbaSOC!!
+    dis_ = own_dis_.get();
+    #pragma omp parallel for
+    for(size_t i=0; i<4*DIM; i++)// the 4 is a hack to make it work with the RashbaSOC!!
+      dis_[i] = 0.0;
 
-      dis_ = new r_type[ 4*device_vars_.DIM_ ]; // the 4 is a hack to make it work with the RashbaSOC!!
-      #pragma omp parallel for
-      for(size_t i=0; i<4*device_vars_.DIM_; i++)// the 4 is a hack to make it work with the RashbaSOC!!
-        dis_[i] = 0.0;
-    }
-
-
-    if(true){//Turned off for KaneMele simulations
-      std::cout<< "Heres the damp op dim:  "<<device_vars_.DIM_<<std::endl;
-      damp_ = new r_type[ device_vars_.DIM_ ];
-      #pragma omp parallel for
-      for(size_t i=0; i<device_vars_.DIM_; i++)
-        damp_[i] = 1.0;
-    }
-
+    std::cout<< "Heres the damp op dim:  "<<DIM<<std::endl;
+    own_damp_.reset( new r_type[ DIM ] );
+    damp_ = own_damp_.get();
+    #pragma omp parallel for
+    for(size_t i=0; i<DIM; i++)
+      damp_[i] = 1.0;
   };
 
 

@@ -1,6 +1,7 @@
 #ifndef INPUT_HPP
 #define INPUT_HPP
 
+#include <memory>
 #include <string>
 #include <stdexcept>
 
@@ -60,7 +61,7 @@ void finalize_input(input_config&);
 // Device names accepted in the input, indexed by the legacy integer device_choice.
 const std::string& device_name(int legacy_choice);
 
-// Builds the device selected in the input. Throws input_error for an unknown device type.
-Device* make_device(input_config&);
+// Builds the device selected in the input; the caller owns it. Throws input_error for an unknown device type.
+std::unique_ptr<Device> make_device(input_config&);
 
 #endif //INPUT_HPP
